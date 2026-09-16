@@ -35,11 +35,11 @@ interface PrediagnosticViewProps {
 const envWebhook =
   (import.meta as any).env?.VITE_GHL_WEBHOOK_URL ||
   'https://services.leadconnectorhq.com/hooks/skgSf0Kg3sY00t6Wdy38/webhook-trigger/75483c9f-2acf-41ee-9694-cebb8cdc4ab4';
-const envBooking = (import.meta as any).env?.VITE_GHL_BOOKING_URL || '';
+const envBooking = (import.meta as any).env?.VITE_GHL_BOOKING_URL || 'https://link.ghlespanol.com/widget/booking/aI6mS973gkCQmeyn08ST';
 
 export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   defaultWebhookUrl = envWebhook,
-  defaultBookingUrl = envBooking || 'https://api.leadconnectorhq.com/widget/booking'
+  defaultBookingUrl = envBooking || 'https://link.ghlespanol.com/widget/booking/aI6mS973gkCQmeyn08ST'
 }) => {
   // Estado del flujo: 0 = Captura de Datos, 1..11 = Preguntas de Evidencia, 12 = Resumen y Agendamiento
   const [currentStep, setCurrentStep] = useState<number>(0);
