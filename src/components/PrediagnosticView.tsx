@@ -32,14 +32,16 @@ interface PrediagnosticViewProps {
   defaultBookingUrl?: string;
 }
 
-const envWebhook =
-  (import.meta as any).env?.VITE_GHL_WEBHOOK_URL ||
+const OFFICIAL_WEBHOOK =
   'https://services.leadconnectorhq.com/hooks/skgSf0Kg3sY00t6Wdy38/webhook-trigger/75483c9f-2acf-41ee-9694-cebb8cdc4ab4';
-const envBooking = (import.meta as any).env?.VITE_GHL_BOOKING_URL || 'https://link.ghlespanol.com/widget/booking/aI6mS973gkCQmeyn08ST';
+const OFFICIAL_BOOKING = 'https://link.ghlespanol.com/widget/booking/aI6mS973gkCQmeyn08ST';
+
+const envWebhook = (import.meta as any).env?.VITE_GHL_WEBHOOK_URL || OFFICIAL_WEBHOOK;
+const envBooking = (import.meta as any).env?.VITE_GHL_BOOKING_URL || OFFICIAL_BOOKING;
 
 export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   defaultWebhookUrl = envWebhook,
-  defaultBookingUrl = envBooking || 'https://link.ghlespanol.com/widget/booking/aI6mS973gkCQmeyn08ST'
+  defaultBookingUrl = envBooking
 }) => {
   // Estado del flujo: 0 = Captura de Datos, 1..11 = Preguntas de Evidencia, 12 = Resumen y Agendamiento
   const [currentStep, setCurrentStep] = useState<number>(0);
@@ -53,13 +55,15 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   const [answers, setAnswers] = useState<PrediagnosticAnswers>({});
   const [result, setResult] = useState<PrediagnosticResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSendingWebhook, setIsSendingWebhook] = useState<boolean>(false);
+  const [webhookSent, setWebhookSent] = useState<boolean>(false);
 
   // Temporizador de reserva de cupo (FOMO: 14 minutos 59 segundos)
   const [timeLeft, setTimeLeft] = useState<number>(14 * 60 + 59);
 
   // Parámetros de GoHighLevel (leídos desde URL ?webhook=... o ?booking_url=... o localStorage)
-  const [ghlWebhook, setGhlWebhook] = useState<string>('');
-  const [ghlBookingUrl, setGhlBookingUrl] = useState<string>(defaultBookingUrl);
+  const [ghlWebhook, setGhlWebhook] = useState<string>(defaultWebhookUrl || OFFICIAL_WEBHOOK);
+  const [ghlBookingUrl, setGhlBookingUrl] = useState<string>(defaultBookingUrl || OFFICIAL_BOOKING);
 
   useEffect(() => {
     // Si la app está incrustada en un iframe en GoHighLevel, lee los parámetros pasados en el src
@@ -67,11 +71,17 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     const urlHook = params.get('webhook') || params.get('ghl_webhook');
     const urlBooking = params.get('booking_url') || params.get('calendar_url');
 
-    const savedHook = localStorage.getItem('crea_monetiza_ghl_webhook');
-    const savedBooking = localStorage.getItem('crea_monetiza_ghl_booking');
+    // Limpiar localStorage viejo si tenía URLs inválidas
+    let savedHook = localStorage.getItem('crea_monetiza_ghl_webhook');
+    let savedBooking = localStorage.getItem('crea_monetiza_ghl_booking');
 
-    const finalHook = urlHook || savedHook || defaultWebhookUrl;
-    const finalBooking = urlBooking || savedBooking || defaultBookingUrl;
+    if (savedBooking && !savedBooking.includes('aI6mS973gkCQmeyn08ST')) {
+      localStorage.removeItem('crea_monetiza_ghl_booking');
+      savedBooking = null;
+    }
+
+    const finalHook = urlHook || savedHook || defaultWebhookUrl || OFFICIAL_WEBHOOK;
+    const finalBooking = urlBooking || savedBooking || defaultBookingUrl || OFFICIAL_BOOKING;
 
     setGhlWebhook(finalHook);
     setGhlBookingUrl(finalBooking);
@@ -79,22 +89,18 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
 
   // Pre-carga los datos del prospecto en el enlace del calendario de GoHighLevel
   const getBookingUrlWithLead = () => {
-    if (!ghlBookingUrl) return '#';
+    // Garantizar que la base siempre sea el calendario oficial activo
+    const baseBooking = OFFICIAL_BOOKING;
     try {
-      const url = new URL(ghlBookingUrl);
-      if (lead.name) url.searchParams.set('name', lead.name);
-      if (lead.name) url.searchParams.set('first_name', lead.name.split(' ')[0] || '');
-      if (lead.name) url.searchParams.set('last_name', lead.name.split(' ').slice(1).join(' ') || '');
-      if (lead.email) url.searchParams.set('email', lead.email);
-      if (lead.whatsapp) url.searchParams.set('phone', lead.whatsapp);
+      const url = new URL(baseBooking);
+      if (lead.name) url.searchParams.set('name', lead.name.trim());
+      if (lead.name) url.searchParams.set('first_name', lead.name.trim().split(' ')[0] || '');
+      if (lead.name) url.searchParams.set('last_name', lead.name.trim().split(' ').slice(1).join(' ') || '');
+      if (lead.email) url.searchParams.set('email', lead.email.trim());
+      if (lead.whatsapp) url.searchParams.set('phone', lead.whatsapp.trim());
       return url.toString();
     } catch {
-      const separator = ghlBookingUrl.includes('?') ? '&' : '?';
-      const params = new URLSearchParams();
-      if (lead.name) params.set('name', lead.name);
-      if (lead.email) params.set('email', lead.email);
-      if (lead.whatsapp) params.set('phone', lead.whatsapp);
-      return `${ghlBookingUrl}${separator}${params.toString()}`;
+      return OFFICIAL_BOOKING;
     }
   };
 
@@ -139,10 +145,28 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   // Validar datos antes de avanzar desde el paso 0
   const handleStartQuestions = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!lead.name.trim() || !lead.email.trim() || !lead.whatsapp.trim()) {
-      setErrorMessage('Por favor completa tu Nombre, Correo y WhatsApp para personalizar tu diagnóstico.');
+    const cleanName = lead.name.trim();
+    const cleanEmail = lead.email.trim();
+    const cleanPhone = lead.whatsapp.trim().replace(/[^0-9+]/g, '');
+
+    if (!cleanName || cleanName.length < 3) {
+      setErrorMessage('Por favor ingresa tu Nombre completo para personalizar tu diagnóstico.');
       return;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setErrorMessage('Por favor ingresa un Correo electrónico válido.');
+      return;
+    }
+
+    // Teléfono debe tener al menos 8 dígitos numéricos
+    const digitsOnly = cleanPhone.replace(/[^0-9]/g, '');
+    if (!cleanPhone || digitsOnly.length < 7) {
+      setErrorMessage('Por favor ingresa un número de WhatsApp válido (con código de país, ej. +57 300 123 4567).');
+      return;
+    }
+
     setErrorMessage(null);
     setCurrentStep(1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -191,7 +215,10 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   };
 
   // Despacho de Webhook hacia GoHighLevel (completamente invisible para el prospecto)
-  const executeWebhookDispatch = async (calcResult: PrediagnosticResult, url: string) => {
+  const executeWebhookDispatch = async (calcResult: PrediagnosticResult, url?: string) => {
+    const targetUrl = url || ghlWebhook || OFFICIAL_WEBHOOK;
+    setIsSendingWebhook(true);
+
     try {
       const tagsList = [
         'prediagnostico-completado',
@@ -200,34 +227,97 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
         `servicio-prioritario-${calcResult.recommendedPillar.id}`
       ];
 
-      const ghlPayload = {
-        name: calcResult.lead.name,
-        first_name: calcResult.lead.name.split(' ')[0] || '',
-        last_name: calcResult.lead.name.split(' ').slice(1).join(' ') || '',
-        email: calcResult.lead.email,
-        phone: calcResult.lead.whatsapp,
-        whatsapp: calcResult.lead.whatsapp,
-        company_name: calcResult.lead.company || '',
-        role: calcResult.lead.role || '',
+      // Texto pre-formateado completo para la Nota de GoHighLevel
+      const formattedNoteText = `📋 RESUMEN PREDIAGNÓSTICO ESTRATÉGICO CREA Y MONETIZA®
+👤 Contacto: ${calcResult.lead.name}
+🏢 Empresa: ${calcResult.lead.company || 'No especificada'}
+💼 Cargo: ${calcResult.lead.role || 'Consultor / Dueño de Negocio'}
+📱 WhatsApp: ${calcResult.lead.whatsapp}
+🎯 Perfil: ${calcResult.profile.title}
+📌 Subtítulo: ${calcResult.profile.subtitle}
+--------------------------------------------------
+🔍 SITUACIÓN Y SERVICIO RECOMENDADO:
+• Servicio que busca: ${calcResult.statedPillar.name}
+• SERVICIO PRIORITARIO REAL: ${calcResult.recommendedPillar.name}
+• Programa Oficial: ${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration})
+⚠️ ¿TIENE DISCREPANCIA?: ${calcResult.hasContradiction ? 'SÍ' : 'NO'}
+• Motivo Discrepancia: ${calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia; objetivo alineado con la madurez actual.'}
+• Riesgo de saltarse el paso: ${calcResult.contradictionAnalysis?.riskOfSkipping || 'N/A'}
+🚨 LO QUE NO DEBE HACER:
+${calcResult.notFirstAdvice.warning}
+
+🔎 EVIDENCIAS CLAVE:
+${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
+
+📊 PUNTUACIONES:
+• Pilar 1 (Estructura y Claridad): ${calcResult.scores.pilar1} pts
+• Pilar 2 (Oferta High-Ticket): ${calcResult.scores.pilar2} pts
+• Pilar 3 (Funnels y Prospección): ${calcResult.scores.pilar3} pts
+• Pilar 4 (Escala y Retención): ${calcResult.scores.pilar4} pts`;
+
+      const ghlPayload: Record<string, any> = {
+        name: calcResult.lead.name.trim(),
+        full_name: calcResult.lead.name.trim(),
+        first_name: calcResult.lead.name.trim().split(' ')[0] || '',
+        last_name: calcResult.lead.name.trim().split(' ').slice(1).join(' ') || '',
+        email: calcResult.lead.email.trim(),
+        phone: calcResult.lead.whatsapp.trim(),
+        whatsapp: calcResult.lead.whatsapp.trim(),
+        
+        // Texto consolidado listo para Nota de GHL
+        resumen_ejecutivo: formattedNoteText,
+        'Resumen Ejecutivo': formattedNoteText,
+        'resumen ejecutivo': formattedNoteText,
+        resumen_completo: formattedNoteText,
+        nota_completa: formattedNoteText,
+        resumen: formattedNoteText,
+        note: formattedNoteText,
+        body_text: formattedNoteText,
+        
+        // Empresa y rol (con ambas variantes para mapeo exacto en GHL)
+        'company name': calcResult.lead.company || 'No especificada',
+        company_name: calcResult.lead.company || 'No especificada',
+        role: calcResult.lead.role || 'Consultor / Dueño de Negocio',
+        
+        // Perfil y diagnóstico
+        'perfil profesional': calcResult.profile.title,
+        perfil_profesional: calcResult.profile.title,
+        'perfil subtitulo': calcResult.profile.subtitle,
+        perfil_subtitulo: calcResult.profile.subtitle,
+        
+        // Servicios
+        'servicio deseado': calcResult.statedPillar.name,
+        servicio_deseado: calcResult.statedPillar.name,
+        'servicio recomendado': calcResult.recommendedPillar.name,
+        servicio_recomendado: calcResult.recommendedPillar.name,
+        'programa oficial': calcResult.recommendedPillar.serviceTitle,
+        programa_oficial: calcResult.recommendedPillar.serviceTitle,
+        'duracion estimada': calcResult.recommendedPillar.duration,
+        duracion_estimada: calcResult.recommendedPillar.duration,
+        
+        // Análisis de discrepancia
+        'tiene discrepancia': calcResult.hasContradiction ? 'SÍ' : 'NO',
+        tiene_discrepancia: calcResult.hasContradiction ? 'SÍ' : 'NO',
+        'motivo discrepancia': calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia; objetivo alineado con la madurez actual.',
+        motivo_discrepancia: calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia; objetivo alineado con la madurez actual.',
+        'riesgo de saltarse paso': calcResult.contradictionAnalysis?.riskOfSkipping || 'N/A',
+        riesgo_de_saltarse_paso: calcResult.contradictionAnalysis?.riskOfSkipping || 'N/A',
+        'lo que no debe hacer': calcResult.notFirstAdvice.warning,
+        lo_que_no_debe_hacer: calcResult.notFirstAdvice.warning,
+        
+        // Tags
         tags: tagsList.join(','),
         tags_array: tagsList,
-        perfil_profesional: calcResult.profile.title,
-        perfil_subtitulo: calcResult.profile.subtitle,
-        servicio_deseado: calcResult.statedPillar.name,
-        servicio_recomendado: calcResult.recommendedPillar.name,
-        programa_oficial: calcResult.recommendedPillar.serviceTitle,
-        duracion_estimada: calcResult.recommendedPillar.duration,
-        tiene_discrepancia: calcResult.hasContradiction ? 'SÍ' : 'NO',
-        motivo_discrepancia: calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia; objetivo alineado.',
-        riesgo_de_saltarse_paso: calcResult.contradictionAnalysis?.riskOfSkipping || 'N/A',
+        
+        // Incoherencias y evidencias
         tiene_incoherencias_internas: calcResult.hasInternalIncoherence ? 'SÍ' : 'NO',
         total_incoherencias_detectadas: calcResult.detectedIncoherences.length,
         incoherencias_detalle: calcResult.detectedIncoherences
           .map((i) => `[${i.title}]: ${i.verdict} -> Verdad: ${i.revealedTruth}`)
           .join(' || ') || 'Ninguna incoherencia detectada.',
-        lo_que_no_debe_hacer: calcResult.notFirstAdvice.warning,
         evidencias_clave: calcResult.evidences.join(' | '),
-        resumen_ejecutivo: calcResult.strategicSummary,
+        
+        // Puntajes de los 4 pilares
         puntuacion_pilar1: calcResult.scores.pilar1,
         puntuacion_pilar2: calcResult.scores.pilar2,
         puntuacion_pilar3: calcResult.scores.pilar3,
@@ -236,24 +326,37 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
         fecha_evaluacion: new Date().toISOString()
       };
 
-      // Intentar primero con Content-Type: application/json estándar
+      // 1. Envío prioritario con JSON y keepalive
       try {
-        await fetch(url, {
+        await fetch(targetUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(ghlPayload)
+          body: JSON.stringify(ghlPayload),
+          keepalive: true
         });
-      } catch (corsErr) {
-        // En caso de que el navegador en iframe bloquee CORS en OPTIONS, emitir en fallback seguro
-        await fetch(url, {
+        setWebhookSent(true);
+      } catch (jsonErr) {
+        // 2. Fallback con x-www-form-urlencoded (GHL lo acepta y los navegadores nunca lo bloquean)
+        const formParams = new URLSearchParams();
+        Object.entries(ghlPayload).forEach(([k, v]) => {
+          if (typeof v === 'object') {
+            formParams.set(k, JSON.stringify(v));
+          } else {
+            formParams.set(k, String(v));
+          }
+        });
+        await fetch(targetUrl, {
           method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(ghlPayload)
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: formParams.toString(),
+          keepalive: true
         });
+        setWebhookSent(true);
       }
     } catch (err) {
-      console.warn('Silent webhook dispatch log:', err);
+      console.warn('Webhook dispatch caught:', err);
+    } finally {
+      setIsSendingWebhook(false);
     }
   };
 
@@ -852,6 +955,11 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
                   href={getBookingUrlWithLead()}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => {
+                    if (result && !webhookSent) {
+                      executeWebhookDispatch(result, ghlWebhook);
+                    }
+                  }}
                   className="w-full sm:w-auto px-9 py-4.5 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-base font-black flex items-center justify-center gap-2.5 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 tracking-wide"
                 >
                   <Calendar className="w-5 h-5" />
@@ -860,9 +968,20 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
                 </a>
               </div>
 
-              <div className="flex items-center justify-center gap-2 text-[11px] text-gray-400 pt-1">
-                <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Acceso directo al calendario oficial de Patricia Loaiza · Sin compromiso</span>
+              <div className="flex flex-col items-center justify-center gap-1.5 pt-1">
+                <div className="flex items-center justify-center gap-2 text-[11px] text-gray-400">
+                  <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Acceso directo al calendario oficial de Patricia Loaiza · Sin compromiso</span>
+                </div>
+                {webhookSent ? (
+                  <div className="inline-flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-500/10 px-3 py-0.5 rounded-full border border-emerald-500/20">
+                    <span>✓ Diagnóstico registrado en el sistema</span>
+                  </div>
+                ) : isSendingWebhook ? (
+                  <div className="inline-flex items-center gap-1 text-[11px] text-gray-400 bg-white/5 px-3 py-0.5 rounded-full">
+                    <span>Registrando diagnóstico con tu asesor...</span>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
