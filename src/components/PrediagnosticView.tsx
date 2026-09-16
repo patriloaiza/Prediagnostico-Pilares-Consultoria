@@ -113,6 +113,23 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Notificar al iframe padre (GoHighLevel) sobre cambios de altura
+  useEffect(() => {
+    const notifyHeight = () => {
+      if (typeof window !== 'undefined' && window.parent) {
+        const height = Math.max(
+          document.documentElement.scrollHeight || 0,
+          document.body.scrollHeight || 0,
+          850
+        );
+        window.parent.postMessage({ type: 'bms-resize', height }, '*');
+      }
+    };
+    notifyHeight();
+    const timeout = setTimeout(notifyHeight, 250);
+    return () => clearTimeout(timeout);
+  }, [currentStep, result, errorMessage]);
+
   // Manejar cambio en inputs de datos del prospecto
   const handleLeadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -176,6 +193,13 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   // Despacho de Webhook hacia GoHighLevel (completamente invisible para el prospecto)
   const executeWebhookDispatch = async (calcResult: PrediagnosticResult, url: string) => {
     try {
+      const tagsList = [
+        'prediagnostico-completado',
+        calcResult.hasContradiction ? 'discrepancia-detectada' : 'cimiento-alineado',
+        calcResult.hasInternalIncoherence ? 'incoherencia-interna-detectada' : 'coherencia-confirmada',
+        `servicio-prioritario-${calcResult.recommendedPillar.id}`
+      ];
+
       const ghlPayload = {
         name: calcResult.lead.name,
         first_name: calcResult.lead.name.split(' ')[0] || '',
@@ -185,12 +209,8 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
         whatsapp: calcResult.lead.whatsapp,
         company_name: calcResult.lead.company || '',
         role: calcResult.lead.role || '',
-        tags: [
-          'prediagnostico-completado',
-          calcResult.hasContradiction ? 'discrepancia-detectada' : 'cimiento-alineado',
-          calcResult.hasInternalIncoherence ? 'incoherencia-interna-detectada' : 'coherencia-confirmada',
-          `servicio-prioritario-${calcResult.recommendedPillar.id}`
-        ],
+        tags: tagsList.join(','),
+        tags_array: tagsList,
         perfil_profesional: calcResult.profile.title,
         perfil_subtitulo: calcResult.profile.subtitle,
         servicio_deseado: calcResult.statedPillar.name,
@@ -204,19 +224,34 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
         total_incoherencias_detectadas: calcResult.detectedIncoherences.length,
         incoherencias_detalle: calcResult.detectedIncoherences
           .map((i) => `[${i.title}]: ${i.verdict} -> Verdad: ${i.revealedTruth}`)
-          .join(' || '),
+          .join(' || ') || 'Ninguna incoherencia detectada.',
         lo_que_no_debe_hacer: calcResult.notFirstAdvice.warning,
         evidencias_clave: calcResult.evidences.join(' | '),
         resumen_ejecutivo: calcResult.strategicSummary,
+        puntuacion_pilar1: calcResult.scores.pilar1,
+        puntuacion_pilar2: calcResult.scores.pilar2,
+        puntuacion_pilar3: calcResult.scores.pilar3,
+        puntuacion_pilar4: calcResult.scores.pilar4,
         puntuaciones: calcResult.scores,
         fecha_evaluacion: new Date().toISOString()
       };
 
-      await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ghlPayload)
-      });
+      // Intentar primero con Content-Type: application/json estándar
+      try {
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(ghlPayload)
+        });
+      } catch (corsErr) {
+        // En caso de que el navegador en iframe bloquee CORS en OPTIONS, emitir en fallback seguro
+        await fetch(url, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(ghlPayload)
+        });
+      }
     } catch (err) {
       console.warn('Silent webhook dispatch log:', err);
     }
