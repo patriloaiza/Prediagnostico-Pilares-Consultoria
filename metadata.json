@@ -1,0 +1,8 @@
+{
+  "name": "Prediagnóstico Consultoría Requerida · CREA Y MONETIZA®",
+  "description": "Prediagnóstico de consultoría requerida (CREA Y MONETIZA® - Patricia Loaiza) con verificación de evidencias fácticas, detección de sesgos, agendamiento y webhook para GoHighLevel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
