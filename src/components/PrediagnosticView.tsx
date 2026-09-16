@@ -13,11 +13,7 @@ import {
   Flame,
   Zap,
   Lock,
-  Users,
-  Settings,
-  ExternalLink,
-  Copy,
-  Check
+  Users
 } from 'lucide-react';
 import {
   PREDIAGNOSTIC_QUESTIONS,
@@ -36,9 +32,12 @@ interface PrediagnosticViewProps {
   defaultBookingUrl?: string;
 }
 
+const envWebhook = (import.meta as any).env?.VITE_GHL_WEBHOOK_URL || '';
+const envBooking = (import.meta as any).env?.VITE_GHL_BOOKING_URL || '';
+
 export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
-  defaultWebhookUrl = '',
-  defaultBookingUrl = 'https://api.leadconnectorhq.com/widget/booking'
+  defaultWebhookUrl = envWebhook,
+  defaultBookingUrl = envBooking || 'https://api.leadconnectorhq.com/widget/booking'
 }) => {
   // Estado del flujo: 0 = Captura de Datos, 1..11 = Preguntas de Evidencia, 12 = Resumen y Agendamiento
   const [currentStep, setCurrentStep] = useState<number>(0);
@@ -75,80 +74,6 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     setGhlWebhook(finalHook);
     setGhlBookingUrl(finalBooking);
   }, [defaultWebhookUrl, defaultBookingUrl]);
-
-  // Modal de configuración GoHighLevel para el administrador/consultor
-  const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
-  const [tempWebhook, setTempWebhook] = useState<string>('');
-  const [tempBooking, setTempBooking] = useState<string>('');
-  const [testStatus, setTestStatus] = useState<string | null>(null);
-  const [copiedEmbed, setCopiedEmbed] = useState<boolean>(false);
-
-  const handleOpenConfig = () => {
-    setTempWebhook(ghlWebhook);
-    setTempBooking(ghlBookingUrl);
-    setTestStatus(null);
-    setShowConfigModal(true);
-  };
-
-  const handleSaveConfig = () => {
-    localStorage.setItem('crea_monetiza_ghl_webhook', tempWebhook);
-    localStorage.setItem('crea_monetiza_ghl_booking', tempBooking);
-    setGhlWebhook(tempWebhook);
-    setGhlBookingUrl(tempBooking);
-    setShowConfigModal(false);
-  };
-
-  const handleTestWebhook = async () => {
-    if (!tempWebhook.trim()) {
-      setTestStatus('Por favor ingresa primero la URL del Webhook de GoHighLevel.');
-      return;
-    }
-    setTestStatus('Enviando evento de prueba a GoHighLevel...');
-    try {
-      const testPayload = {
-        name: 'Prueba Patricia Loaiza',
-        first_name: 'Patricia',
-        last_name: 'Loaiza',
-        email: 'prueba@creaymonetiza.com',
-        phone: '+573001234567',
-        whatsapp: '+573001234567',
-        company_name: 'CREA Y MONETIZA',
-        role: 'Consultora',
-        tags: [
-          'prediagnostico-completado',
-          'discrepancia-detectada',
-          'servicio-prioritario-pilar1'
-        ],
-        perfil_profesional: 'Experto Invisible con Alto Valor Oculto',
-        perfil_subtitulo: 'Prueba de integración con GoHighLevel',
-        servicio_deseado: 'Pilar 3: Motor de Contenidos & Prospección',
-        servicio_recomendado: 'Pilar 1: Estrategia Comercial & Oferta BMS',
-        programa_oficial: 'BMS Advisory & Offer Architecture',
-        duracion_estimada: '8 a 12 semanas',
-        tiene_discrepancia: 'SÍ',
-        motivo_discrepancia: 'Prueba de integración técnica exitosa con GoHighLevel.',
-        riesgo_de_saltarse_paso: 'Verificación de webhook y mapeo de campos.',
-        tiene_incoherencias_internas: 'NO',
-        total_incoherencias_detectadas: 0,
-        incoherencias_detalle: 'Ninguna',
-        lo_que_no_debe_hacer: 'No invertir en tráfico antes de validar la oferta.',
-        evidencias_clave: 'Registro de prueba emitido desde el configurador.',
-        resumen_ejecutivo: 'Prueba de mapeo de automatización en GoHighLevel.',
-        puntuaciones: { pilar1: 25, pilar2: 12, pilar3: 10, pilar4: 8 },
-        fecha_evaluacion: new Date().toISOString()
-      };
-
-      await fetch(tempWebhook, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(testPayload),
-        mode: 'no-cors'
-      });
-      setTestStatus('✅ ¡Evento de prueba enviado! En unos segundos aparecerá en tu Inbound Webhook de GHL.');
-    } catch (e: any) {
-      setTestStatus(`⚠️ Error al enviar: ${e?.message || 'Verifica la URL'}`);
-    }
-  };
 
   // Pre-carga los datos del prospecto en el enlace del calendario de GoHighLevel
   const getBookingUrlWithLead = () => {
@@ -901,146 +826,6 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
               <div className="flex items-center justify-center gap-2 text-[11px] text-gray-400 pt-1">
                 <Lock className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Acceso directo al calendario oficial de Patricia Loaiza · Sin compromiso</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Botón flotante discreto de configuración GoHighLevel para Patricia */}
-      <div className="mt-8 pt-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-400">
-        <span className="font-mono text-[11px]">Estado Webhook: {ghlWebhook ? '🟢 Vinculado' : '⚪ Pendiente'}</span>
-        <button
-          onClick={handleOpenConfig}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 hover:border-gray-900 bg-white hover:bg-gray-50 text-gray-700 font-medium text-xs shadow-xs transition-colors"
-        >
-          <Settings className="w-3.5 h-3.5 text-[#D7192B]" />
-          <span>Configurar GoHighLevel / Webhook</span>
-        </button>
-      </div>
-
-      {/* MODAL DE INTEGRACIÓN GOHIGHLEVEL */}
-      {showConfigModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl p-6 sm:p-8">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-[#D7192B]/10 flex items-center justify-center">
-                  <Settings className="w-4 h-4 text-[#D7192B]" />
-                </div>
-                <div>
-                  <h3 className="font-black text-gray-900 text-lg">Integración con GoHighLevel</h3>
-                  <p className="text-xs text-gray-500">Conexión de Webhook, Calendario y Código de Incrustación</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowConfigModal(false)}
-                className="text-gray-400 hover:text-gray-700 text-lg font-bold w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-5 space-y-5">
-              {/* Campo Webhook */}
-              <div>
-                <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1">
-                  1. URL de Inbound Webhook en GoHighLevel:
-                </label>
-                <input
-                  type="url"
-                  value={tempWebhook}
-                  onChange={(e) => setTempWebhook(e.target.value)}
-                  placeholder="https://services.leadconnectorhq.com/hooks/..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-mono focus:ring-2 focus:ring-[#D7192B] focus:outline-hidden"
-                />
-                <p className="text-[11px] text-gray-500 mt-1">
-                  Obtén esta URL en GHL en <strong>Automations &gt; Workflows &gt; Inbound Webhook Trigger</strong>.
-                </p>
-              </div>
-
-              {/* Campo Calendario */}
-              <div>
-                <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1">
-                  2. URL del Calendario de Agendamiento (GoHighLevel):
-                </label>
-                <input
-                  type="url"
-                  value={tempBooking}
-                  onChange={(e) => setTempBooking(e.target.value)}
-                  placeholder="https://api.leadconnectorhq.com/widget/booking/TU_CALENDARIO"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-mono focus:ring-2 focus:ring-[#D7192B] focus:outline-hidden"
-                />
-                <p className="text-[11px] text-gray-500 mt-1">
-                  Al hacer clic en el botón de reservar, se precargarán automáticamente el nombre, email y WhatsApp del prospecto.
-                </p>
-              </div>
-
-              {/* Botón de Prueba */}
-              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-xs font-bold text-gray-800">Probar Conexión Webhook</div>
-                    <div className="text-[11px] text-gray-500">Envía un evento de prueba a tu workflow de GHL para mapear los campos</div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleTestWebhook}
-                    className="px-3.5 py-2 rounded-lg bg-gray-900 hover:bg-black text-white text-xs font-bold transition-colors shrink-0"
-                  >
-                    Enviar Ping de Prueba
-                  </button>
-                </div>
-                {testStatus && (
-                  <p className="text-xs mt-2 font-medium text-emerald-700 bg-emerald-50 p-2 rounded-lg border border-emerald-200">
-                    {testStatus}
-                  </p>
-                )}
-              </div>
-
-              {/* Código Iframe para GHL */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-gray-800 uppercase tracking-wider">
-                    3. Código para insertar en tu Funnel de GoHighLevel:
-                  </label>
-                  <button
-                    onClick={() => {
-                      const code = `<iframe src="${window.location.origin}?webhook=${encodeURIComponent(tempWebhook || ghlWebhook)}&booking_url=${encodeURIComponent(tempBooking || ghlBookingUrl)}" width="100%" height="950px" frameborder="0" style="border:none; width:100%; min-height:900px;" allow="clipboard-write"></iframe>`;
-                      navigator.clipboard.writeText(code);
-                      setCopiedEmbed(true);
-                      setTimeout(() => setCopiedEmbed(false), 2000);
-                    }}
-                    className="text-[11px] text-[#D7192B] font-bold flex items-center gap-1 hover:underline"
-                  >
-                    {copiedEmbed ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                    <span>{copiedEmbed ? '¡Copiado!' : 'Copiar Código HTML'}</span>
-                  </button>
-                </div>
-                <pre className="p-3 bg-gray-900 text-gray-200 rounded-xl text-[11px] font-mono overflow-x-auto whitespace-pre-wrap">
-                  {`<iframe src="${window.location.origin}?webhook=${encodeURIComponent(tempWebhook || ghlWebhook)}&booking_url=${encodeURIComponent(tempBooking || ghlBookingUrl)}" width="100%" height="950px" frameborder="0" style="border:none; width:100%; min-height:900px;" allow="clipboard-write"></iframe>`}
-                </pre>
-                <p className="text-[11px] text-gray-500 mt-1">
-                  En GHL agrega un elemento <strong>Custom Code</strong> o <strong>iFrame</strong> en tu Funnel y pega este código.
-                </p>
-              </div>
-
-              {/* Acciones */}
-              <div className="pt-3 border-t border-gray-200 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowConfigModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveConfig}
-                  className="px-5 py-2 text-xs font-bold text-white bg-[#D7192B] hover:bg-[#b91222] rounded-lg shadow-sm"
-                >
-                  Guardar Parámetros
-                </button>
               </div>
             </div>
           </div>
