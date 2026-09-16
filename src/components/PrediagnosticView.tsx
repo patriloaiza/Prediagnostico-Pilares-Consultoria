@@ -71,8 +71,8 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     const urlHook = params.get('webhook') || params.get('ghl_webhook');
     const urlBooking = params.get('booking_url') || params.get('calendar_url');
 
-    // Limpiar localStorage viejo si tenía URLs inválidas
-    let savedHook = localStorage.getItem('crea_monetiza_ghl_webhook');
+    // Limpiar localStorage viejo si tenía URLs inválidas u obsoletas
+    localStorage.removeItem('crea_monetiza_ghl_webhook');
     let savedBooking = localStorage.getItem('crea_monetiza_ghl_booking');
 
     if (savedBooking && !savedBooking.includes('aI6mS973gkCQmeyn08ST')) {
@@ -80,12 +80,19 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
       savedBooking = null;
     }
 
-    const finalHook = urlHook || savedHook || defaultWebhookUrl || OFFICIAL_WEBHOOK;
-    const finalBooking = urlBooking || savedBooking || defaultBookingUrl || OFFICIAL_BOOKING;
+    const finalHook = urlHook || OFFICIAL_WEBHOOK;
+    const finalBooking = urlBooking || savedBooking || OFFICIAL_BOOKING;
 
     setGhlWebhook(finalHook);
     setGhlBookingUrl(finalBooking);
   }, [defaultWebhookUrl, defaultBookingUrl]);
+
+  // Garantizar envío automático al entrar al paso 12 (resultados)
+  useEffect(() => {
+    if (currentStep === 12 && result && !webhookSent && !isSendingWebhook) {
+      executeWebhookDispatch(result, OFFICIAL_WEBHOOK);
+    }
+  }, [currentStep, result, webhookSent, isSendingWebhook]);
 
   // Pre-carga los datos del prospecto en el enlace del calendario de GoHighLevel
   const getBookingUrlWithLead = () => {
