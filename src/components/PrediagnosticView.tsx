@@ -32,7 +32,9 @@ interface PrediagnosticViewProps {
   defaultBookingUrl?: string;
 }
 
-const envWebhook = (import.meta as any).env?.VITE_GHL_WEBHOOK_URL || '';
+const envWebhook =
+  (import.meta as any).env?.VITE_GHL_WEBHOOK_URL ||
+  'https://services.leadconnectorhq.com/hooks/skgSf0Kg3sY00t6Wdy38/webhook-trigger/75483c9f-2acf-41ee-9694-cebb8cdc4ab4';
 const envBooking = (import.meta as any).env?.VITE_GHL_BOOKING_URL || '';
 
 export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
