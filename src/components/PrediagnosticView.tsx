@@ -326,7 +326,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         fecha_evaluacion: new Date().toISOString()
       };
 
-      // 1. Envío prioritario con JSON y keepalive
+      // 1. Envío prioritario con fetch JSON y keepalive
       try {
         await fetch(targetUrl, {
           method: 'POST',
@@ -336,23 +336,58 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         });
         setWebhookSent(true);
       } catch (jsonErr) {
-        // 2. Fallback con x-www-form-urlencoded (GHL lo acepta y los navegadores nunca lo bloquean)
-        const formParams = new URLSearchParams();
-        Object.entries(ghlPayload).forEach(([k, v]) => {
-          if (typeof v === 'object') {
-            formParams.set(k, JSON.stringify(v));
-          } else {
-            formParams.set(k, String(v));
-          }
-        });
-        await fetch(targetUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: formParams.toString(),
-          keepalive: true
-        });
-        setWebhookSent(true);
+        console.warn('Fetch JSON delivery fallback:', jsonErr);
       }
+
+      // 2. Envío mediante Formulario HTML oculto (100% inmune a CORS, preflights OPTIONS y restricciones de iframes)
+      try {
+        if (typeof document !== 'undefined') {
+          const frameName = 'ghl_delivery_frame_' + Date.now();
+          const hiddenIframe = document.createElement('iframe');
+          hiddenIframe.name = frameName;
+          hiddenIframe.style.display = 'none';
+          hiddenIframe.style.position = 'absolute';
+          hiddenIframe.style.width = '0';
+          hiddenIframe.style.height = '0';
+          hiddenIframe.style.border = '0';
+          document.body.appendChild(hiddenIframe);
+
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = targetUrl;
+          form.target = frameName;
+          form.style.display = 'none';
+
+          Object.entries(ghlPayload).forEach(([key, val]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = typeof val === 'object' ? JSON.stringify(val) : String(val);
+            form.appendChild(input);
+          });
+
+          document.body.appendChild(form);
+          form.submit();
+          setWebhookSent(true);
+
+          setTimeout(() => {
+            try {
+              if (document.body.contains(form)) document.body.removeChild(form);
+              if (document.body.contains(hiddenIframe)) document.body.removeChild(hiddenIframe);
+            } catch (_) {}
+          }, 4000);
+        }
+      } catch (domErr) {
+        console.warn('DOM form delivery log:', domErr);
+      }
+
+      // 3. Respaldo sendBeacon si está disponible
+      try {
+        if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+          const blob = new Blob([JSON.stringify(ghlPayload)], { type: 'application/json' });
+          navigator.sendBeacon(targetUrl, blob);
+        }
+      } catch (_) {}
     } catch (err) {
       console.warn('Webhook dispatch caught:', err);
     } finally {
