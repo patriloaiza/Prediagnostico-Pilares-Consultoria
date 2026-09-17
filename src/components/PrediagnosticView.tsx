@@ -279,7 +279,12 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         nota_completa: formattedNoteText,
         resumen: formattedNoteText,
         note: formattedNoteText,
+        notes: formattedNoteText,
+        nota: formattedNoteText,
+        body: formattedNoteText,
         body_text: formattedNoteText,
+        comentarios: formattedNoteText,
+        observaciones: formattedNoteText,
         
         // Empresa y rol (con ambas variantes para mapeo exacto en GHL)
         'company name': calcResult.lead.company || 'No especificada',
@@ -333,68 +338,79 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         fecha_evaluacion: new Date().toISOString()
       };
 
-      // 1. Envío prioritario con fetch JSON y keepalive
+      let dispatched = false;
+
+      // 1. Envío prioritario con fetch JSON (con CORS verificado)
       try {
-        await fetch(targetUrl, {
+        const res = await fetch(targetUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(ghlPayload),
           keepalive: true
         });
-        setWebhookSent(true);
+        if (res.ok || res.status < 400) {
+          dispatched = true;
+          setWebhookSent(true);
+        }
       } catch (jsonErr) {
         console.warn('Fetch JSON delivery fallback:', jsonErr);
       }
 
-      // 2. Envío mediante Formulario HTML oculto (100% inmune a CORS, preflights OPTIONS y restricciones de iframes)
-      try {
-        if (typeof document !== 'undefined') {
-          const frameName = 'ghl_delivery_frame_' + Date.now();
-          const hiddenIframe = document.createElement('iframe');
-          hiddenIframe.name = frameName;
-          hiddenIframe.style.display = 'none';
-          hiddenIframe.style.position = 'absolute';
-          hiddenIframe.style.width = '0';
-          hiddenIframe.style.height = '0';
-          hiddenIframe.style.border = '0';
-          document.body.appendChild(hiddenIframe);
-
-          const form = document.createElement('form');
-          form.method = 'POST';
-          form.action = targetUrl;
-          form.target = frameName;
-          form.style.display = 'none';
-
-          Object.entries(ghlPayload).forEach(([key, val]) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = typeof val === 'object' ? JSON.stringify(val) : String(val);
-            form.appendChild(input);
-          });
-
-          document.body.appendChild(form);
-          form.submit();
-          setWebhookSent(true);
-
-          setTimeout(() => {
-            try {
-              if (document.body.contains(form)) document.body.removeChild(form);
-              if (document.body.contains(hiddenIframe)) document.body.removeChild(hiddenIframe);
-            } catch (_) {}
-          }, 4000);
-        }
-      } catch (domErr) {
-        console.warn('DOM form delivery log:', domErr);
+      // 2. Respaldo con sendBeacon JSON (solo si fetch falló)
+      if (!dispatched && typeof navigator !== 'undefined' && navigator.sendBeacon) {
+        try {
+          const blob = new Blob([JSON.stringify(ghlPayload)], { type: 'application/json' });
+          const beaconSuccess = navigator.sendBeacon(targetUrl, blob);
+          if (beaconSuccess) {
+            dispatched = true;
+            setWebhookSent(true);
+          }
+        } catch (_) {}
       }
 
-      // 3. Respaldo sendBeacon si está disponible
-      try {
-        if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-          const blob = new Blob([JSON.stringify(ghlPayload)], { type: 'application/json' });
-          navigator.sendBeacon(targetUrl, blob);
+      // 3. Respaldo extremo: Formulario HTML oculto (solo si los anteriores no funcionaron)
+      if (!dispatched) {
+        try {
+          if (typeof document !== 'undefined') {
+            const frameName = 'ghl_delivery_frame_' + Date.now();
+            const hiddenIframe = document.createElement('iframe');
+            hiddenIframe.name = frameName;
+            hiddenIframe.style.display = 'none';
+            hiddenIframe.style.position = 'absolute';
+            hiddenIframe.style.width = '0';
+            hiddenIframe.style.height = '0';
+            hiddenIframe.style.border = '0';
+            document.body.appendChild(hiddenIframe);
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = targetUrl;
+            form.target = frameName;
+            form.style.display = 'none';
+
+            Object.entries(ghlPayload).forEach(([key, val]) => {
+              const input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = key;
+              input.value = typeof val === 'object' ? JSON.stringify(val) : String(val);
+              form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+            setWebhookSent(true);
+
+            setTimeout(() => {
+              try {
+                if (document.body.contains(form)) document.body.removeChild(form);
+                if (document.body.contains(hiddenIframe)) document.body.removeChild(hiddenIframe);
+              } catch (_) {}
+            }, 4000);
+          }
+        } catch (domErr) {
+          console.warn('DOM form delivery log:', domErr);
         }
-      } catch (_) {}
+      }
     } catch (err) {
       console.warn('Webhook dispatch caught:', err);
     } finally {
