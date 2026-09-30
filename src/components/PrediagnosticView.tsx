@@ -17,7 +17,8 @@ import {
   Briefcase,
   HelpCircle,
   ShieldCheck,
-  Ban
+  Ban,
+  SlidersHorizontal
 } from 'lucide-react';
 import {
   PREDIAGNOSTIC_QUESTIONS,
@@ -108,6 +109,25 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
       executeWebhookDispatch(result, OFFICIAL_WEBHOOK);
     }
   }, [currentStep, result, webhookSent, isSendingWebhook, RESULTS_STEP]);
+
+  // Atajo de teclado discreto para la administradora (Alt + T o Ctrl + Shift + T)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        (e.altKey && e.key.toLowerCase() === 't') ||
+        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 't')
+      ) {
+        e.preventDefault();
+        if (onOpenTestModal) {
+          onOpenTestModal();
+        } else {
+          setIsTestModalOpen((prev) => !prev);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onOpenTestModal]);
 
   // Pre-carga los datos del prospecto en el enlace del calendario de GoHighLevel
   const getBookingUrlWithLead = () => {
@@ -496,22 +516,35 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         <div className="relative z-10">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#D7192B] bg-[#D7192B]/10 px-2.5 py-1 rounded">
-                METODOLOGÍA CREA Y MONETIZA®
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#D7192B] bg-[#D7192B]/10 px-2.5 py-1 rounded inline-flex items-center">
+                <span>METODOLOGÍA CREA Y MONETIZA</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenTestModal) onOpenTestModal();
+                    else setIsTestModalOpen(true);
+                  }}
+                  className="hover:text-white transition-colors cursor-default select-none focus:outline-hidden ml-0.5"
+                  title="Metodología Registrada"
+                >
+                  ®
+                </button>
               </span>
               <span className="text-xs text-gray-400 font-mono">Patricia Loaiza</span>
             </div>
+
+            {/* Símbolo discreto para la administradora */}
             <button
               type="button"
               onClick={() => {
                 if (onOpenTestModal) onOpenTestModal();
                 else setIsTestModalOpen(true);
               }}
-              className="text-[11px] text-gray-300 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-all font-semibold flex items-center gap-1.5 border border-white/10"
-              title="Abrir panel de pruebas y escenarios de demostración"
+              className="text-gray-600 hover:text-gray-400 opacity-20 hover:opacity-80 p-1.5 rounded transition-all"
+              title="Configuración"
+              aria-label="Admin"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Modo Pruebas / Escenarios</span>
+              <SlidersHorizontal className="w-3.5 h-3.5" />
             </button>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
