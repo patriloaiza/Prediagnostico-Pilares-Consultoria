@@ -548,6 +548,11 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 
   const currentQuestion = PREDIAGNOSTIC_QUESTIONS.find((q) => q.stepNumber === currentStep);
 
+  // Nombre del usuario/lead para personalización cálida y empática
+  const activeUserName = (result?.lead.name || lead.name || '').trim();
+  const userFirstName = activeUserName ? activeUserName.split(' ')[0] : 'Emprendedor/a';
+  const userFullName = activeUserName || 'Emprendedor/a';
+
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8">
       {/* Encabezado Corporativo CREA Y MONETIZA */}
@@ -980,14 +985,14 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black uppercase tracking-widest bg-black/40 text-amber-300 px-2 py-0.5 rounded">
-                      BENEFICIO POR TIEMPO LIMITADO
+                      BENEFICIO EXCLUSIVO PARA {userFirstName.toUpperCase()}
                     </span>
                     <span className="text-xs font-mono font-bold text-white/90">
                       ⏱ Reserva activa: {formatTimer(timeLeft)}
                     </span>
                   </div>
                   <h4 className="text-sm sm:text-base font-black text-white mt-0.5">
-                    ¡Solo los primeros 5 en agendar reciben la Sesión de Diagnóstico 100% GRATIS!
+                    ¡{userFirstName}, completaste tu diagnóstico a tiempo! Recibes la Sesión de Diagnóstico 1 a 1 100% GRATIS
                   </h4>
                 </div>
               </div>
@@ -1019,15 +1024,35 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 
           {/* Bloque Superior: Ficha del Prospecto y Perfil de Madurez */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+            {/* Tarjeta de Saludo y Bienvenida Personalizada */}
+            <div className="bg-gradient-to-r from-red-50/80 via-white to-gray-50 border border-red-100 rounded-xl p-4 sm:p-5 mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[11px] font-black uppercase tracking-widest text-[#D7192B] bg-[#D7192B]/10 px-2.5 py-1 rounded inline-block mb-1.5">
+                  Informe Personalizado para ti
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-gray-900">
+                  ¡Hola, {userFirstName}! Aquí tienes tu Diagnóstico Estratégico
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                  Hemos procesado tus respuestas y tu situación profesional como <strong className="text-gray-900">{result.lead.profession || 'profesional'}</strong> para diseñar tu ruta más rentable y directa al crecimiento.
+                </p>
+              </div>
+              <div className="shrink-0 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-2xs self-stretch sm:self-auto text-left sm:text-right">
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Titular del Reporte</span>
+                <span className="text-sm font-extrabold text-gray-900 block">{result.lead.name}</span>
+                <span className="text-xs text-gray-500 font-mono block">{result.lead.whatsapp}</span>
+              </div>
+            </div>
+
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-4 mb-4">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#D7192B]" />
                 <span className="text-xs font-extrabold uppercase tracking-widest text-[#D7192B]">
-                  Diagnóstico Personalizado para {result.lead.name}
+                  Contexto Comercial Verificado de {userFirstName}
                 </span>
               </div>
               <span className="text-xs text-gray-500 font-mono">
-                {result.lead.company ? `${result.lead.company} · ` : ''}{result.lead.whatsapp}
+                {result.lead.company ? `${result.lead.company} · ` : ''}{result.lead.email}
               </span>
             </div>
 
@@ -1070,7 +1095,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">
-                  Perfil de Madurez Profesional
+                  Perfil de Madurez Profesional de {userFirstName}
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mt-0.5">
                   {result.profile.title}
@@ -1084,10 +1109,10 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               </div>
 
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-xs shrink-0 self-stretch sm:self-auto sm:w-64">
-                <strong className="block text-gray-900 font-extrabold mb-1">Obstáculo Central:</strong>
+                <strong className="block text-gray-900 font-extrabold mb-1">Obstáculo Central de {userFirstName}:</strong>
                 <p className="text-gray-600 leading-snug">{result.profile.corePain}</p>
                 <strong className="block text-gray-900 font-extrabold mt-3 mb-1">
-                  Paso Inmediato:
+                  Paso Inmediato para {userFirstName}:
                 </strong>
                 <p className="text-gray-600 leading-snug">{result.profile.priorityNeed}</p>
               </div>
@@ -1104,17 +1129,17 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="bg-[#D7192B] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded">
-                      💡 CONSEJO ESTRATÉGICO CLAVE
+                      💡 CONSEJO ESTRATÉGICO PARA {userFirstName.toUpperCase()}
                     </span>
                     <span className="text-xs text-amber-300 font-bold">
                       El orden más inteligente para maximizar tus resultados
                     </span>
                   </div>
                   <h4 className="text-base font-black text-white">
-                    Por qué te conviene consolidar una Oferta Irresistible antes de Sistematizar
+                    {userFirstName}, por qué te conviene consolidar una Oferta Irresistible antes de Sistematizar
                   </h4>
                   <p className="text-xs text-gray-300 leading-relaxed">
-                    Notamos que tu gran meta es la sistematización, activos digitales y agentes de IA. ¡Es un objetivo extraordinario! Sin embargo, la experiencia nos demuestra que automatizar un servicio que aún no se vende con fluidez manual suele generar gastos y desgaste innecesario. Para cuidar tu inversión y asegurar resultados reales, te proponemos construir primero tu cimiento comercial en el <strong>Pilar 1 (Estrategia Comercial & Oferta BMS)</strong>. Una vez que tengas clientes satisfechos comprándote con regularidad, sistematizar será un paso rápido, fluido y verdaderamente rentable.
+                    {userFirstName}, notamos que tu gran meta es la sistematización, activos digitales y agentes de IA. ¡Es un objetivo extraordinario! Sin embargo, la experiencia nos demuestra que automatizar un servicio que aún no se vende con fluidez manual suele generar gastos y desgaste innecesario. Para cuidar tu inversión y asegurar resultados reales, te proponemos construir primero tu cimiento comercial en el <strong>Pilar 1 (Estrategia Comercial & Oferta BMS)</strong>. Una vez que tengas clientes satisfechos comprándote con regularidad, sistematizar será un paso rápido, fluido y verdaderamente rentable.
                   </p>
                 </div>
               </div>
@@ -1137,29 +1162,29 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               )}
               <span className="text-xs font-black uppercase tracking-wider">
                 {result.hasContradiction
-                  ? '🎯 ANÁLISIS DE ENFOQUE: TU RUTA MÁS RÁPIDA AL CRECIMIENTO'
-                  : '✅ ENFOQUE ESTRATÉGICO 100% ALINEADO'}
+                  ? `🎯 ANÁLISIS DE ENFOQUE PARA ${userFirstName.toUpperCase()}: TU RUTA MÁS RÁPIDA AL CRECIMIENTO`
+                  : `✅ ENFOQUE ESTRATÉGICO DE ${userFirstName.toUpperCase()} 100% ALINEADO`}
               </span>
             </div>
 
             <h4 className="text-lg sm:text-xl font-black mb-2">
               {result.contradictionAnalysis
-                ? result.contradictionAnalysis.title
-                : 'Tu objetivo coincide perfectamente con lo que tu negocio necesita para crecer'}
+                ? `${userFirstName}: ${result.contradictionAnalysis.title}`
+                : `${userFirstName}, tu objetivo coincide perfectamente con lo que tu negocio necesita para crecer`}
             </h4>
 
             {/* Comparativa visual de dos cajas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">
               <div className="p-3.5 bg-white rounded-xl border border-gray-200">
                 <span className="text-[10px] uppercase tracking-wider font-extrabold text-gray-500 block">
-                  Tu idea o interés inicial:
+                  Tu idea o preferencia inicial ({userFirstName}):
                 </span>
                 <span className="text-sm font-bold text-gray-800">{result.statedPillar.name}</span>
               </div>
 
               <div className="p-3.5 bg-white rounded-xl border-2 border-[#D7192B] shadow-xs">
                 <span className="text-[10px] uppercase tracking-wider font-extrabold text-[#D7192B] block">
-                  El paso que hoy te dará mayor rentabilidad y tranquilidad:
+                  El paso que hoy te dará mayor rentabilidad a ti, {userFirstName}:
                 </span>
                 <span className="text-sm font-extrabold text-gray-900">
                   {result.recommendedPillar.name}
@@ -1174,7 +1199,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                 </p>
                 <div className="p-3.5 bg-white/90 rounded-xl border border-amber-200">
                   <strong className="text-amber-900 block font-bold mb-0.5">
-                    ¿Por qué este es el camino más inteligente y seguro?
+                    ¿Por qué este es el camino más inteligente y seguro para ti, {userFirstName}?
                   </strong>
                   <p className="text-gray-700">{result.contradictionAnalysis.riskOfSkipping}</p>
                 </div>
@@ -1188,15 +1213,15 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="w-5 h-5 text-[#D7192B] shrink-0" />
                 <span className="text-xs font-black uppercase tracking-wider text-[#D7192B]">
-                  Claves de Crecimiento: {result.detectedIncoherences.length} Oportunidad(es) Identificada(s)
+                  Claves de Crecimiento para {userFirstName}: {result.detectedIncoherences.length} Oportunidad(es) Identificada(s)
                 </span>
               </div>
 
               <h4 className="text-lg sm:text-xl font-black text-gray-900 mb-1">
-                Hallazgos Clave para Acelerar tus Resultados y Cuidar tu Inversión
+                Hallazgos Clave para Acelerar los Resultados de {userFirstName}
               </h4>
               <p className="text-xs sm:text-sm text-gray-700 leading-relaxed mb-4">
-                Al analizar tus respuestas en conjunto, identificamos puntos ciegos comunes que suelen frenar a profesionales talentosos. Conocerlos a tiempo te ahorra meses de esfuerzo y te permite enfocar tu energía donde realmente verás ingresos:
+                Al analizar tus respuestas en conjunto, {userFirstName}, identificamos puntos ciegos comunes que suelen frenar a profesionales talentosos en tu especialidad ({result.lead.profession}). Conocerlos a tiempo te ahorra meses de esfuerzo y te permite enfocar tu energía donde realmente verás ingresos:
               </p>
 
               <div className="space-y-4">
@@ -1224,7 +1249,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
-                            Tu perspectiva inicial ({inc.statementA.questionCategory}):
+                            Tu perspectiva inicial ({userFirstName} · {inc.statementA.questionCategory}):
                           </div>
                           <div className="text-xs sm:text-sm font-semibold text-gray-800 italic">
                             "{inc.statementA.answerText}"
@@ -1233,7 +1258,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 
                         <div className="bg-amber-50/70 rounded-lg p-3 border border-amber-200">
                           <div className="text-[10px] font-bold text-amber-800 uppercase tracking-wide mb-1">
-                            La realidad actual de tu negocio ({inc.statementB.questionCategory}):
+                            La realidad actual de tu negocio ({userFirstName} · {inc.statementB.questionCategory}):
                           </div>
                           <div className="text-xs sm:text-sm font-semibold text-gray-900 italic">
                             "{inc.statementB.answerText}"
@@ -1244,7 +1269,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                       <div className="bg-neutral-900 text-white rounded-xl p-4 space-y-2.5 text-xs sm:text-sm">
                         <div>
                           <span className="text-amber-400 block text-[11px] uppercase tracking-wider font-black mb-0.5">
-                            💡 Lectura Estratégica:
+                            💡 Lectura Estratégica para {userFirstName}:
                           </span>
                           <p className="text-gray-200 leading-relaxed">{inc.verdict}</p>
                         </div>
@@ -1258,7 +1283,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 
                         <div className="pt-2 border-t border-neutral-800 text-xs text-amber-300 font-semibold flex items-start gap-1.5">
                           <span className="shrink-0">🚀</span>
-                          <span><strong>Tu Próximo Paso Recomendado:</strong> {inc.actionRequired}</span>
+                          <span><strong>Próximo Paso Recomendado para {userFirstName}:</strong> {inc.actionRequired}</span>
                         </div>
                       </div>
                     </div>
@@ -1272,7 +1297,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
           <div className="bg-[#111111] text-white rounded-2xl border-4 border-[#D7192B] shadow-xl p-6 sm:p-8 relative overflow-hidden">
             <div className="flex items-center justify-between gap-2 mb-3">
               <span className="bg-[#D7192B] text-white text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded">
-                SOLUCIÓN ESTRATÉGICA RECOMENDADA
+                SOLUCIÓN ESTRATÉGICA RECOMENDADA PARA {userFirstName.toUpperCase()}
               </span>
               <span className="text-xs text-gray-400 font-mono">
                 {result.recommendedPillar.categoryTag}
@@ -1323,7 +1348,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
             <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-200 flex items-start gap-2.5">
               <Sparkles className="w-4 h-4 text-[#D7192B] shrink-0 mt-0.5" />
               <div>
-                <strong className="text-white font-bold block mb-0.5">Transformación esperada:</strong>
+                <strong className="text-white font-bold block mb-0.5">Transformación diseñada para {userFirstName}:</strong>
                 <span>{result.recommendedPillar.transformation}</span>
               </div>
             </div>
@@ -1333,10 +1358,10 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
             <h4 className="text-base font-black text-gray-900 mb-2 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#D7192B]" />
-              <span>Claves Identificadas en tus Respuestas</span>
+              <span>Claves Identificadas en las Respuestas de {userFirstName}</span>
             </h4>
             <p className="text-xs text-gray-600 mb-4">
-              Factores que confirman por qué este es el momento idóneo para concentrar tu energía en este pilar:
+              Factores que confirman por qué este es el momento idóneo para que {userFirstName} concentre su energía en este pilar:
             </p>
             <ul className="space-y-2">
               {result.evidences.map((item, idx) => (
@@ -1364,13 +1389,13 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               </div>
 
               <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-snug">
-                Asegura tu Sesión de Diagnóstico 1 a 1 sin Costo
+                {userFirstName}, Asegura tu Sesión de Diagnóstico 1 a 1 sin Costo
               </h3>
 
               <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 text-xs text-gray-300 max-w-lg mx-auto">
                 <span className="text-gray-400 line-through mr-2">Precio regular: $250 USD</span>
                 <span className="text-amber-300 font-extrabold text-sm uppercase tracking-wide">
-                  GRATIS para las primeras 5 personas
+                  GRATIS para {userFirstName} y las primeras 5 personas
                 </span>
                 <p className="mt-1 text-gray-300 text-[11px]">
                   Al completarse los 2 cupos de esta semana, el calendario se cerrará y la sesión volverá a su costo habitual.
@@ -1378,8 +1403,8 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               </div>
 
               <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-xl mx-auto">
-                Durante esta sesión 1 a 1 de 30 minutos con Patricia Loaiza, profundizaremos en estos hallazgos,
-                resolveremos tus dudas puntuales y trazaremos tu hoja de ruta personalizada para implementar{' '}
+                Durante esta sesión 1 a 1 de 30 minutos con Patricia Loaiza, analizaremos contigo, <strong className="text-white">{userFirstName}</strong>, estos hallazgos a fondo,
+                resolveremos tus dudas sobre tu modelo ({COMMERCIAL_MODELS_LABELS[result.lead.commercializationModel] || 'servicios'}) y trazaremos tu hoja de ruta personalizada para implementar{' '}
                 <strong className="text-white">{result.recommendedPillar.name}</strong>.
               </p>
 
@@ -1396,7 +1421,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                   className="w-full sm:w-auto px-9 py-4.5 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-base font-black flex items-center justify-center gap-2.5 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 tracking-wide"
                 >
                   <Calendar className="w-5 h-5" />
-                  <span>RESERVAR UNO DE LOS 2 CUPOS GRATIS AHORA</span>
+                  <span>RESERVAR EL CUPO GRATIS DE {userFirstName.toUpperCase()} AHORA</span>
                   <ArrowRight className="w-5 h-5" />
                 </a>
               </div>
@@ -1408,11 +1433,11 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                 </div>
                 {webhookSent ? (
                   <div className="inline-flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-500/10 px-3 py-0.5 rounded-full border border-emerald-500/20">
-                    <span>✓ Diagnóstico registrado en el sistema</span>
+                    <span>✓ Diagnóstico de {userFirstName} registrado en el sistema</span>
                   </div>
                 ) : isSendingWebhook ? (
                   <div className="inline-flex items-center gap-1 text-[11px] text-gray-400 bg-white/5 px-3 py-0.5 rounded-full">
-                    <span>Registrando diagnóstico con tu asesor...</span>
+                    <span>Registrando diagnóstico de {userFirstName} con tu asesor...</span>
                   </div>
                 ) : null}
               </div>
