@@ -48,6 +48,57 @@ const OFFICIAL_BOOKING = 'https://link.ghlespanol.com/widget/booking/aI6mS973gkC
 const envWebhook = (import.meta as any).env?.VITE_GHL_WEBHOOK_URL || OFFICIAL_WEBHOOK;
 const envBooking = (import.meta as any).env?.VITE_GHL_BOOKING_URL || OFFICIAL_BOOKING;
 
+// Prefijos de títulos y profesiones comunes para no confundirlos con el nombre de pila
+const HONORIFIC_PREFIXES = new Set([
+  'dr.', 'dr', 'dra.', 'dra', 'lic.', 'lic', 'ing.', 'ing',
+  'psic.', 'psic', 'psicologa', 'psicologo', 'prof.', 'prof',
+  'mtro.', 'mtro', 'mtra.', 'mtra', 'mtr.', 'mtr', 'mg.', 'mg',
+  'phd', 'ph.d.', 'sr.', 'sr', 'sra.', 'sra', 'srta.', 'srta',
+  'abg.', 'abg', 'abogado', 'abogada', 'arq.', 'arq', 'econ.', 'econ',
+  'cont.', 'cp.', 'c.p.', 'doc.', 'doc'
+]);
+
+function extractProperFirstName(fullName: string): string {
+  if (!fullName || !fullName.trim()) return 'Emprendedor/a';
+
+  const tokens = fullName.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return 'Emprendedor/a';
+
+  let idx = 0;
+  while (idx < tokens.length - 1) {
+    const cleanToken = tokens[idx].toLowerCase().replace(/[,.:;]+$/, '');
+    if (HONORIFIC_PREFIXES.has(cleanToken) || HONORIFIC_PREFIXES.has(tokens[idx].toLowerCase())) {
+      idx++;
+    } else {
+      break;
+    }
+  }
+
+  const candidate = tokens[idx] || tokens[0];
+  const cleaned = candidate.replace(/[,.:;]+$/, '');
+  return cleaned || 'Emprendedor/a';
+}
+
+function extractCleanFullName(fullName: string): string {
+  if (!fullName || !fullName.trim()) return 'Emprendedor/a';
+
+  const tokens = fullName.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return 'Emprendedor/a';
+
+  let idx = 0;
+  while (idx < tokens.length - 1) {
+    const cleanToken = tokens[idx].toLowerCase().replace(/[,.:;]+$/, '');
+    if (HONORIFIC_PREFIXES.has(cleanToken) || HONORIFIC_PREFIXES.has(tokens[idx].toLowerCase())) {
+      idx++;
+    } else {
+      break;
+    }
+  }
+
+  const remaining = tokens.slice(idx);
+  return remaining.length > 0 ? remaining.join(' ') : fullName.trim();
+}
+
 export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   defaultWebhookUrl = envWebhook,
   defaultBookingUrl = envBooking,
@@ -549,8 +600,9 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
   const currentQuestion = PREDIAGNOSTIC_QUESTIONS.find((q) => q.stepNumber === currentStep);
 
   // Nombre del usuario/lead para personalización cálida y empática
-  const activeUserName = (result?.lead.name || lead.name || '').trim();
-  const userFirstName = activeUserName ? activeUserName.split(' ')[0] : 'Emprendedor/a';
+  const rawUserName = (result?.lead.name || lead.name || '').trim();
+  const activeUserName = extractCleanFullName(rawUserName);
+  const userFirstName = extractProperFirstName(rawUserName);
   const userFullName = activeUserName || 'Emprendedor/a';
 
   return (
@@ -1414,11 +1466,11 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                 <span>Solo 2 Cupos Gratuitos Restantes{userFirstName ? <> · Para <strong className="text-amber-300 font-black">{userFirstName}</strong></> : ''}</span>
               </div>
 
-              <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-snug">
-                <span className="inline-block px-3 py-1 rounded-xl bg-gradient-to-r from-[#D7192B] to-[#b91222] text-white border border-red-400/50 shadow-lg mr-2 font-black">
+              <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-snug flex flex-wrap items-center justify-center gap-2">
+                <span className="inline-block px-3.5 py-1 rounded-xl bg-gradient-to-r from-[#D7192B] to-[#b91222] text-white border border-red-400/50 shadow-lg font-black">
                   {userFirstName}
                 </span>
-                <span>, Asegura tu Sesión de Diagnóstico 1 a 1 sin Costo</span>
+                <span>Asegura tu Sesión de Diagnóstico 1 a 1 sin Costo</span>
               </h3>
 
               <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 text-xs text-gray-300 max-w-lg mx-auto">

@@ -25,7 +25,7 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     description:
       'El prospecto marca que quiere Sistematización e IA (Pilar 4) y Contenidos de redes (Pilar 3). Sin embargo, sus respuestas muestran que aún no tiene oferta estandarizada ni clientes recurrentes. El sistema le explica con cercanía por qué primero debe asegurar clientes con el Pilar 1 antes de invertir en automatizaciones.',
     lead: {
-      name: 'Dr. Alejandro Peña',
+      name: 'Alejandro Peña',
       email: 'alejandro.pena@consultoriaejemplo.com',
       whatsapp: '+57 300 765 4321',
       profession: 'Psicólogo y Mentor de Liderazgo',
@@ -62,7 +62,7 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     description:
       'El prospecto cree que su mayor necesidad es "más contenido o viralidad", pero su oferta aún se cotiza a la medida y pierde prospectos por no tener precio firme. El sistema le recomienda consolidar primero una oferta de alto valor.',
     lead: {
-      name: 'Lic. Mariana Gómez',
+      name: 'Mariana Gómez',
       email: 'mariana.gomez@nutricionpro.com',
       whatsapp: '+52 55 9876 5432',
       profession: 'Nutricionista Clínica & Coach de Hábitos',
@@ -99,7 +99,7 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     description:
       'Tiene una oferta sólida y clientes satisfechos, pero nadie lo conoce afuera y en el mundo digital compite como un commodity. Necesita blindar sus activos de marca y entrenar su agencia de IA para posicionarse como referente indiscutible.',
     lead: {
-      name: 'Dra. Sofía Herrera',
+      name: 'Sofía Herrera',
       email: 'sofia.herrera@testlead.com',
       whatsapp: '+57 310 456 7890',
       profession: 'Médica Especialista y Terapeuta de Bienestar',
@@ -136,7 +136,7 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     description:
       'Cuenta con una oferta validada y prestigio profesional, pero sus ventas dependen de recomendaciones esporádicas. Necesita instalar un canal de captación activa con guiones comerciales y videos que generen llamadas predecibles.',
     lead: {
-      name: 'Lic. Fernando Morales',
+      name: 'Fernando Morales',
       email: 'fernando.morales@finanzasclaras.com',
       whatsapp: '+57 315 889 0012',
       profession: 'Consultor de Finanzas Corporativas y Valoración',
@@ -173,7 +173,7 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     description:
       'Profesional consolidado con alta demanda y buena reputación, pero atrapado vendiendo horas de su vida. Cumple con todos los prerrequisitos (oferta probada, 10+ clientes, método estructurado) y requiere el Digital Business Day, activos de IA y su Plan 30·60·90.',
     lead: {
-      name: 'Ing. Roberto Salazar',
+      name: 'Roberto Salazar',
       email: 'roberto.salazar@testlead.com',
       whatsapp: '+34 612 345 678',
       profession: 'Consultor de Estrategia Operativa e Ingeniería',
@@ -210,7 +210,7 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     description:
       'El prospecto cree que su problema es "falta de estatus o marca", pero al presentar cotizaciones los clientes regatean o hacen ghosting. El sistema dictamina que la solución de raíz es el Pilar 1 para construir un encuadre de valor irresistible y protocolo de cierre.',
     lead: {
-      name: 'Psic. Camila Restrepo',
+      name: 'Camila Restrepo',
       email: 'camila.restrepo@psicovida.com',
       whatsapp: '+57 320 123 4567',
       profession: 'Psicoterapeuta y Consultora de Salud Mental',
@@ -247,7 +247,7 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     description:
       'Tiene una solución clara y clientes corporativos, pero en internet nadie lo conoce y compite por precio contra otros despachos. Cree que necesita videos virales, pero la prioridad real es blindar sus 12 activos de Marca Personal de Referente.',
     lead: {
-      name: 'Dr. Javier Villalba',
+      name: 'Javier Villalba',
       email: 'javier.villalba@derechofiscal.com',
       whatsapp: '+57 301 555 7890',
       profession: 'Abogado Especialista en Derecho Tributario y Corporativo',
@@ -284,7 +284,7 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     description:
       'Lleva más de 4 años en el mercado con clientes recurrentes de alta facturación, pero su método aún exige su presencia física para entregar cada fase. Requiere empaquetar activos digitales y desplegar agentes de IA para liberar su tiempo.',
     lead: {
-      name: 'Mtr. Beatriz Fonseca',
+      name: 'Beatriz Fonseca',
       email: 'beatriz.fonseca@talentoestrategico.com',
       whatsapp: '+57 318 999 1122',
       profession: 'Consultora de Cultura Organizacional y Gestión del Cambio',
