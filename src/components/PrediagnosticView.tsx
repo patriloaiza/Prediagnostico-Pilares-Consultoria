@@ -33,7 +33,7 @@ import {
   COMMERCIAL_MODELS_LABELS,
   PAYING_CLIENTS_LABELS
 } from '../utils/prediagnosticLogic';
-import { AutomatedTestsModal, TestCase } from './AutomatedTestsModal';
+import { AutomatedTestsModal, TestCase, AUTOMATED_TEST_CASES } from './AutomatedTestsModal';
 
 interface PrediagnosticViewProps {
   defaultWebhookUrl?: string;
@@ -59,6 +59,7 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   // Estado del flujo: 0 = Contexto y Datos, 1..TOTAL_QUESTIONS = Preguntas, RESULTS_STEP = Resumen y Agendamiento
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [isTestModalOpen, setIsTestModalOpen] = useState<boolean>(false);
+  const [activeTestCase, setActiveTestCase] = useState<TestCase | null>(null);
   const [lead, setLead] = useState<UserLeadInfo>({
     name: '',
     email: '',
@@ -110,7 +111,7 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     }
   }, [currentStep, result, webhookSent, isSendingWebhook, RESULTS_STEP]);
 
-  // Atajo de teclado discreto para la administradora (Alt + T o Ctrl + Shift + T)
+  // Atajo de teclado discreto para la administradora (Alt + T o Ctrl + Shift + T): ejecuta escenario aleatorio
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -118,16 +119,12 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
         (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 't')
       ) {
         e.preventDefault();
-        if (onOpenTestModal) {
-          onOpenTestModal();
-        } else {
-          setIsTestModalOpen((prev) => !prev);
-        }
+        handleRunRandomTestCase();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onOpenTestModal]);
+  }, [activeTestCase]);
 
   // Pre-carga los datos del prospecto en el enlace del calendario de GoHighLevel
   const getBookingUrlWithLead = () => {
@@ -266,8 +263,30 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     }
   };
 
-  // Cargar caso de prueba automatizado
+  // Ejecutar un escenario aleatorio de prueba
+  const handleRunRandomTestCase = () => {
+    if (!AUTOMATED_TEST_CASES || AUTOMATED_TEST_CASES.length === 0) return;
+
+    // Seleccionar uno aleatorio diferente del actual para no repetir inmediatamente
+    const pool = AUTOMATED_TEST_CASES.filter((tc) => tc.id !== activeTestCase?.id);
+    const availablePool = pool.length > 0 ? pool : AUTOMATED_TEST_CASES;
+    const randomIndex = Math.floor(Math.random() * availablePool.length);
+    const selectedCase = availablePool[randomIndex];
+
+    setActiveTestCase(selectedCase);
+    setLead(selectedCase.lead);
+    setAnswers(selectedCase.answers);
+    setErrorMessage(null);
+
+    const calc = calculatePrediagnostic(selectedCase.answers, selectedCase.lead);
+    setResult(calc);
+    setCurrentStep(RESULTS_STEP);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Cargar caso de prueba automatizado específico
   const handleApplyTestCase = (testCase: TestCase, viewResultsDirectly: boolean) => {
+    setActiveTestCase(testCase);
     setLead(testCase.lead);
     setAnswers(testCase.answers);
     setErrorMessage(null);
@@ -279,6 +298,27 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     } else {
       setCurrentStep(1);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Restablecer el formulario al estado inicial limpio
+  const handleResetForm = () => {
+    setActiveTestCase(null);
+    setCurrentStep(0);
+    setLead({
+      name: '',
+      email: '',
+      whatsapp: '',
+      profession: '',
+      currentActivity: '',
+      commercializationModel: 'servicios_1a1',
+      payingClientsStatus: 'sin_clientes',
+      company: '',
+      role: ''
+    });
+    setAnswers({});
+    setResult(null);
+    setErrorMessage(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -520,10 +560,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                 <span>METODOLOGÍA CREA Y MONETIZA</span>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (onOpenTestModal) onOpenTestModal();
-                    else setIsTestModalOpen(true);
-                  }}
+                  onClick={handleRunRandomTestCase}
                   className="hover:text-white transition-colors cursor-default select-none focus:outline-hidden ml-0.5"
                   title="Metodología Registrada"
                 >
@@ -533,14 +570,11 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               <span className="text-xs text-gray-400 font-mono">Patricia Loaiza</span>
             </div>
 
-            {/* Símbolo discreto para la administradora */}
+            {/* Símbolo discreto para la administradora: clic ejecuta un escenario aleatorio */}
             <button
               type="button"
-              onClick={() => {
-                if (onOpenTestModal) onOpenTestModal();
-                else setIsTestModalOpen(true);
-              }}
-              className="text-gray-600 hover:text-gray-400 opacity-20 hover:opacity-80 p-1.5 rounded transition-all"
+              onClick={handleRunRandomTestCase}
+              className="text-gray-600 hover:text-gray-400 opacity-20 hover:opacity-80 p-1.5 rounded transition-all cursor-pointer"
               title="Configuración"
               aria-label="Admin"
             >
@@ -885,6 +919,57 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
       {/* ============================================================ */}
       {currentStep === RESULTS_STEP && result && (
         <div className="space-y-6 animate-in fade-in duration-300">
+          {/* BARRA DE CONTROL DE PRUEBAS DE ADMINISTRADORA */}
+          {activeTestCase && (
+            <div className="bg-neutral-900 border-2 border-amber-400/80 rounded-2xl p-4 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-400/30">
+                      Modo Administradora · Escenario de Prueba
+                    </span>
+                    <span className="text-xs text-gray-400 font-mono">
+                      {activeTestCase.lead.name} · {activeTestCase.lead.profession}
+                    </span>
+                  </div>
+                  <h5 className="text-sm font-bold text-white mt-0.5">
+                    {activeTestCase.name}
+                  </h5>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={handleRunRandomTestCase}
+                  className="px-3 py-1.5 rounded-lg bg-[#D7192B] hover:bg-[#b91222] text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  title="Cargar otro escenario aleatorio"
+                >
+                  <span>🎲 Otro al Azar</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsTestModalOpen(true)}
+                  className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 text-xs font-semibold transition-all border border-white/10 cursor-pointer"
+                  title="Ver y seleccionar de la lista completa de escenarios"
+                >
+                  <span>📋 Ver Todos ({AUTOMATED_TEST_CASES.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetForm}
+                  className="px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium transition-all cursor-pointer"
+                  title="Limpiar formulario y volver al inicio"
+                >
+                  <span>🔄 Limpiar</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* BANNER DE FOMO Y CUPOS LIMITADOS */}
           <div className="bg-gradient-to-r from-[#D7192B] to-[#990d1b] text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-red-400/40 relative overflow-hidden">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

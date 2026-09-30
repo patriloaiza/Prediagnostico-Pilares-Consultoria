@@ -17,13 +17,13 @@ export interface TestCase {
 export const AUTOMATED_TEST_CASES: TestCase[] = [
   {
     id: 'case_forced_pilar4_without_foundation',
-    name: 'Caso Especial (Prueba del Usuario): Forzar Pilar 4 y Redes sin Oferta ni Clientes',
+    name: 'Escenario 1 (Prueba de Estrés): Quería IA y Sistematización sin Oferta ni Clientes',
     badge: 'Orientación Estratégica & Enfoque Rentable',
     badgeColor: 'bg-red-100 text-red-900 border-red-300',
     targetService: 'Estrategia Comercial & Validación de Oferta (BMS)',
     hasContradictionExpected: true,
     description:
-      'Simulación exacta del ejercicio del usuario: El prospecto marca que quiere Sistematización e IA (Pilar 4) y Contenidos de redes (Pilar 3). Sin embargo, sus respuestas muestran que aún no tiene oferta estandarizada ni clientes recurrentes. El sistema le explica con cercanía por qué primero debe asegurar clientes con el Pilar 1 antes de invertir en automatizaciones.',
+      'El prospecto marca que quiere Sistematización e IA (Pilar 4) y Contenidos de redes (Pilar 3). Sin embargo, sus respuestas muestran que aún no tiene oferta estandarizada ni clientes recurrentes. El sistema le explica con cercanía por qué primero debe asegurar clientes con el Pilar 1 antes de invertir en automatizaciones.',
     lead: {
       name: 'Dr. Alejandro Peña',
       email: 'alejandro.pena@consultoriaejemplo.com',
@@ -36,68 +36,68 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
       role: 'Fundador'
     },
     answers: {
-      q1: 'invisible', // Experto invisible: conocimiento pero sin oferta visible
-      q2: '0', // No tiene paquete estándar, cotiza a la medida
-      q3: '0', // Dicen que es caro o ghosting
-      q4: '0', // 0 clientes de pago en los últimos 6 meses
-      q5: '0', // Lo perciben como uno más
-      q6: '0', // No publica o esporádico
-      q7: '0', // Colapsaría con 10 clientes
-      q8: '0', // 0% empaquetado, todo en mi cabeza
-      q9: '0', // Se improvisa en vivo, no hay manuales
-      q10: 'pilar4', // Quería sistematización e IA
-      q11: 'offer', // Prueba de capacidad: cuello de botella es no tener oferta única
-      q12: 'pilar1_bias', // Sinceridad: admite que la oferta aún no está clara ni validada
-      q13: 'content', // Frustración: invirtió en redes sin retorno
-      q14: 'system' // Buscaba sistematizar
+      q1: 'invisible',
+      q2: '0',
+      q3: '0',
+      q4: '0',
+      q5: '0',
+      q6: '0',
+      q7: '0',
+      q8: '0',
+      q9: '0',
+      q10: 'pilar4',
+      q11: 'offer',
+      q12: 'pilar1_bias',
+      q13: 'content',
+      q14: 'system'
     }
   },
   {
     id: 'case_contradiction_p1',
-    name: 'Caso 1: Enfoque en Redes Sociales (Cree necesitar Viralidad → Requiere Validar su Oferta)',
+    name: 'Escenario 2: Ilusión de Redes Sociales (Cree requerir Seguidores pero Cotiza a la Medida)',
     badge: 'Alineación Estratégica',
     badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
     targetService: 'Estrategia Comercial & Validación de Oferta (BMS)',
     hasContradictionExpected: true,
     description:
-      'El prospecto cree que su mayor necesidad es "más contenido o seguidores", pero su oferta aún se cotiza a la medida. El sistema le recomienda consolidar primero una oferta de alto valor para convertir cada futuro seguidor en un cliente real.',
+      'El prospecto cree que su mayor necesidad es "más contenido o viralidad", pero su oferta aún se cotiza a la medida y pierde prospectos por no tener precio firme. El sistema le recomienda consolidar primero una oferta de alto valor.',
     lead: {
-      name: 'Carlos Mendoza',
-      email: 'carlos.mendoza@testlead.com',
+      name: 'Lic. Mariana Gómez',
+      email: 'mariana.gomez@nutricionpro.com',
       whatsapp: '+52 55 9876 5432',
-      profession: 'Consultor de Negocios y Finanzas',
-      currentActivity: 'Asesoro a empresas a ordenar sus números e impuestos',
+      profession: 'Nutricionista Clínica & Coach de Hábitos',
+      currentActivity: 'Consultas individuales de nutrición y planes alimenticios personalizados',
       commercializationModel: 'servicios_1a1',
       payingClientsStatus: 'irregulares',
-      company: 'Mendoza Consultores',
-      role: 'Director y Fundador'
+      company: 'Nutrición Integral Gómez',
+      role: 'Directora'
     },
     answers: {
       q1: 'invisible',
-      q2: '0', // Oferta no clara ni productizada (cotizaciones a medida)
-      q3: '0', // Clientes dicen que es caro o regatean
-      q4: '1', // 1 o 2 clientes esporádicos
-      q5: '0', // Perfil comoditizado
-      q6: '0', // Sin sistema de contenido
-      q7: '0', // Colapsaría con 10 clientes
-      q8: '0', // Cero activos digitales
-      q9: '0', // Nada documentado
-      q10: 'pilar3', // ¡DECLARÓ QUERER CONTENIDOS Y REDES!
-      q11: 'offer', // Prueba de estrés: su obstáculo es no tener oferta única
-      q12: 'pilar1_bias', // Reconoce que la oferta no está clara
-      q13: 'content', // Frustración previa: publicó videos y solo obtuvo likes vacíos
-      q14: 'clarity' // Desea orden y claridad de oferta
+      q2: '0',
+      q3: '0',
+      q4: '1',
+      q5: '0',
+      q6: '0',
+      q7: '0',
+      q8: '0',
+      q9: '0',
+      q10: 'pilar3',
+      q11: 'offer',
+      q12: 'pilar1_bias',
+      q13: 'content',
+      q14: 'clarity'
     }
   },
   {
     id: 'case_pilar2_brand',
-    name: 'Caso 2: Oferta Validada pero Sin Autoridad Pública (Requiere Marca Personal)',
+    name: 'Escenario 3: Oferta Validada pero Invisible (Requiere Marca Personal & Autoridad)',
     badge: 'Autoridad & Posicionamiento',
     badgeColor: 'bg-red-100 text-red-900 border-red-300',
     targetService: 'Posicionamiento de Marca Personal & Autoridad',
     hasContradictionExpected: false,
     description:
-      'Tiene una oferta sólida y clientes satisfechos, pero nadie lo conoce afuera y en el mundo digital compite como un commodity. Necesita blindar sus activos de marca y entrenar su agencia de IA.',
+      'Tiene una oferta sólida y clientes satisfechos, pero nadie lo conoce afuera y en el mundo digital compite como un commodity. Necesita blindar sus activos de marca y entrenar su agencia de IA para posicionarse como referente indiscutible.',
     lead: {
       name: 'Dra. Sofía Herrera',
       email: 'sofia.herrera@testlead.com',
@@ -111,30 +111,67 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     },
     answers: {
       q1: 'invisible',
-      q2: '2', // Oferta central probada y estructurada
-      q3: '2', // Clientes que la conocen pagan bien
-      q4: '2', // Entre 3 y 9 clientes regulares
-      q5: '0', // Pero afuera su perfil no se diferencia
-      q6: '1', // Publica pero atrae curiosos
-      q7: '1', // Capacidad media
-      q8: '1', // Materiales dispersos
-      q9: '2', // Método estructurado manual
-      q10: 'pilar2', // Busca posicionamiento y marca de referente
-      q11: 'brand', // Prueba de estrés: necesita autoridad que justifique precios premium
+      q2: '2',
+      q3: '2',
+      q4: '2',
+      q5: '0',
+      q6: '1',
+      q7: '1',
+      q8: '1',
+      q9: '2',
+      q10: 'pilar2',
+      q11: 'brand',
       q12: 'pilar2_bias',
       q13: 'brand',
       q14: 'authority'
     }
   },
   {
+    id: 'case_pilar3_leads',
+    name: 'Escenario 4: Reputación y Oferta Sólida pero Sin Motor de Captación Continuo',
+    badge: 'Atracción & Viral Sales Content',
+    badgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
+    targetService: 'Motor de Contenidos Viral Sales Content',
+    hasContradictionExpected: false,
+    description:
+      'Cuenta con una oferta validada y prestigio profesional, pero sus ventas dependen de recomendaciones esporádicas. Necesita instalar un canal de captación activa con guiones comerciales y videos que generen llamadas predecibles.',
+    lead: {
+      name: 'Lic. Fernando Morales',
+      email: 'fernando.morales@finanzasclaras.com',
+      whatsapp: '+57 315 889 0012',
+      profession: 'Consultor de Finanzas Corporativas y Valoración',
+      currentActivity: 'Asesorías financieras para directores de empresas medianas',
+      commercializationModel: 'servicios_1a1',
+      payingClientsStatus: 'activos_recurrentes',
+      company: 'Morales Advisory Group',
+      role: 'Socio Director'
+    },
+    answers: {
+      q1: 'invisible',
+      q2: '2',
+      q3: '2',
+      q4: '2',
+      q5: '2',
+      q6: '0',
+      q7: '1',
+      q8: '1',
+      q9: '2',
+      q10: 'pilar3',
+      q11: 'visibility',
+      q12: 'pilar3_bias',
+      q13: 'content',
+      q14: 'leads'
+    }
+  },
+  {
     id: 'case_pilar4_saturado',
-    name: 'Caso 3: Consultor Saturado (Requiere Sistematización & Digital Business Day)',
+    name: 'Escenario 5: Consultor de Alto Nivel Saturado (Listo para Digital Business Day & IA)',
     badge: 'Escalabilidad & Digital Business Day',
     badgeColor: 'bg-zinc-900 text-white border-zinc-700',
     targetService: 'Sistematización de Negocio, Activos Digitales & IA',
     hasContradictionExpected: false,
     description:
-      'Profesional consolidado con alta demanda y buena reputación, pero atrapado vendiendo horas de su vida. Si para 30 días el negocio colapsa. Cumple con todos los prerrequisitos (oferta probada, 10+ clientes, método estructurado) y requiere el Digital Business Day, activos de IA y su Plan 30·60·90.',
+      'Profesional consolidado con alta demanda y buena reputación, pero atrapado vendiendo horas de su vida. Cumple con todos los prerrequisitos (oferta probada, 10+ clientes, método estructurado) y requiere el Digital Business Day, activos de IA y su Plan 30·60·90.',
     lead: {
       name: 'Ing. Roberto Salazar',
       email: 'roberto.salazar@testlead.com',
@@ -148,17 +185,128 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     },
     answers: {
       q1: 'saturado',
-      q2: '2', // Oferta probada y validada
-      q3: '2', // Proceso de venta validado
-      q4: '3', // Más de 10 clientes de pago comprobados
-      q5: '2', // Buena reputación
-      q6: '2', // Presencia activa
-      q7: '0', // Colapsaría con 10 clientes (cuello de botella de tiempo)
-      q8: '1', // Materiales de valor
-      q9: '2', // Método estructurado que sigue en orden
-      q10: 'pilar4', // Busca productos digitales y activos de IA
-      q11: 'scale', // Prueba de estrés: su freno es la entrega operativa
-      q12: 'pilar4_bias', // Dolor es la saturación
+      q2: '2',
+      q3: '2',
+      q4: '3',
+      q5: '2',
+      q6: '2',
+      q7: '0',
+      q8: '1',
+      q9: '2',
+      q10: 'pilar4',
+      q11: 'scale',
+      q12: 'pilar4_bias',
+      q13: 'scale',
+      q14: 'system'
+    }
+  },
+  {
+    id: 'case_pilar1_pricing_objection',
+    name: 'Escenario 6: Desgaste Comercial con Frecuentes Objeciones de Precio',
+    badge: 'Estructuración de Oferta BMS',
+    badgeColor: 'bg-rose-100 text-rose-900 border-rose-300',
+    targetService: 'Estrategia Comercial & Validación de Oferta (BMS)',
+    hasContradictionExpected: true,
+    description:
+      'El prospecto cree que su problema es "falta de estatus o marca", pero al presentar cotizaciones los clientes regatean o hacen ghosting. El sistema dictamina que la solución de raíz es el Pilar 1 para construir un encuadre de valor irresistible y protocolo de cierre.',
+    lead: {
+      name: 'Psic. Camila Restrepo',
+      email: 'camila.restrepo@psicovida.com',
+      whatsapp: '+57 320 123 4567',
+      profession: 'Psicoterapeuta y Consultora de Salud Mental',
+      currentActivity: 'Atención terapéutica individual y talleres esporádicos para empresas',
+      commercializationModel: 'servicios_1a1',
+      payingClientsStatus: 'irregulares',
+      company: 'Centro Psicológico Bienestar',
+      role: 'Directora'
+    },
+    answers: {
+      q1: 'invisible',
+      q2: '1',
+      q3: '0',
+      q4: '1',
+      q5: '1',
+      q6: '0',
+      q7: '0',
+      q8: '0',
+      q9: '1',
+      q10: 'pilar2',
+      q11: 'sales',
+      q12: 'pilar1_bias',
+      q13: 'sales',
+      q14: 'clarity'
+    }
+  },
+  {
+    id: 'case_pilar2_commodity',
+    name: 'Escenario 7: Abogado Corporativo Comoditizado (Cree requerir Redes → Requiere Marca)',
+    badge: 'Marca Personal & Posicionamiento',
+    badgeColor: 'bg-purple-100 text-purple-900 border-purple-300',
+    targetService: 'Posicionamiento de Marca Personal & Autoridad',
+    hasContradictionExpected: true,
+    description:
+      'Tiene una solución clara y clientes corporativos, pero en internet nadie lo conoce y compite por precio contra otros despachos. Cree que necesita videos virales, pero la prioridad real es blindar sus 12 activos de Marca Personal de Referente.',
+    lead: {
+      name: 'Dr. Javier Villalba',
+      email: 'javier.villalba@derechofiscal.com',
+      whatsapp: '+57 301 555 7890',
+      profession: 'Abogado Especialista en Derecho Tributario y Corporativo',
+      currentActivity: 'Asesoría y litigio tributario para medianas empresas',
+      commercializationModel: 'servicios_1a1',
+      payingClientsStatus: 'activos_recurrentes',
+      company: 'Villalba & Asociados Abogados',
+      role: 'Socio Fundador'
+    },
+    answers: {
+      q1: 'invisible',
+      q2: '2',
+      q3: '1',
+      q4: '2',
+      q5: '0',
+      q6: '0',
+      q7: '1',
+      q8: '1',
+      q9: '2',
+      q10: 'pilar3',
+      q11: 'brand',
+      q12: 'pilar2_bias',
+      q13: 'brand',
+      q14: 'authority'
+    }
+  },
+  {
+    id: 'case_pilar4_agency_bottleneck',
+    name: 'Escenario 8: Socia Directora de Agencia con Cuello de Botella en la Entrega',
+    badge: 'Sistematización & Delegación con IA',
+    badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+    targetService: 'Sistematización de Negocio, Activos Digitales & IA',
+    hasContradictionExpected: false,
+    description:
+      'Lleva más de 4 años en el mercado con clientes recurrentes de alta facturación, pero su método aún exige su presencia física para entregar cada fase. Requiere empaquetar activos digitales y desplegar agentes de IA para liberar su tiempo.',
+    lead: {
+      name: 'Mtr. Beatriz Fonseca',
+      email: 'beatriz.fonseca@talentoestrategico.com',
+      whatsapp: '+57 318 999 1122',
+      profession: 'Consultora de Cultura Organizacional y Gestión del Cambio',
+      currentActivity: 'Acompañamiento a juntas directivas en procesos de reestructuración',
+      commercializationModel: 'servicios_1a1',
+      payingClientsStatus: 'activos_recurrentes',
+      company: 'Fonseca Consulting Group',
+      role: 'CEO & Consultora Principal'
+    },
+    answers: {
+      q1: 'saturado',
+      q2: '2',
+      q3: '2',
+      q4: '3',
+      q5: '2',
+      q6: '1',
+      q7: '0',
+      q8: '2',
+      q9: '3',
+      q10: 'pilar4',
+      q11: 'scale',
+      q12: 'pilar4_bias',
       q13: 'scale',
       q14: 'system'
     }
