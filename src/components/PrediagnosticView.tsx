@@ -13,7 +13,11 @@ import {
   Flame,
   Zap,
   Lock,
-  Users
+  Users,
+  Briefcase,
+  HelpCircle,
+  ShieldCheck,
+  Ban
 } from 'lucide-react';
 import {
   PREDIAGNOSTIC_QUESTIONS,
@@ -24,12 +28,16 @@ import {
   UserLeadInfo,
   PrediagnosticAnswers,
   PrediagnosticResult,
-  calculatePrediagnostic
+  calculatePrediagnostic,
+  COMMERCIAL_MODELS_LABELS,
+  PAYING_CLIENTS_LABELS
 } from '../utils/prediagnosticLogic';
+import { AutomatedTestsModal, TestCase } from './AutomatedTestsModal';
 
 interface PrediagnosticViewProps {
   defaultWebhookUrl?: string;
   defaultBookingUrl?: string;
+  onOpenTestModal?: () => void;
 }
 
 const OFFICIAL_WEBHOOK =
@@ -41,14 +49,23 @@ const envBooking = (import.meta as any).env?.VITE_GHL_BOOKING_URL || OFFICIAL_BO
 
 export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   defaultWebhookUrl = envWebhook,
-  defaultBookingUrl = envBooking
+  defaultBookingUrl = envBooking,
+  onOpenTestModal
 }) => {
-  // Estado del flujo: 0 = Captura de Datos, 1..11 = Preguntas de Evidencia, 12 = Resumen y Agendamiento
+  const TOTAL_QUESTIONS = PREDIAGNOSTIC_QUESTIONS.length;
+  const RESULTS_STEP = TOTAL_QUESTIONS + 1;
+
+  // Estado del flujo: 0 = Contexto y Datos, 1..TOTAL_QUESTIONS = Preguntas, RESULTS_STEP = Resumen y Agendamiento
   const [currentStep, setCurrentStep] = useState<number>(0);
+  const [isTestModalOpen, setIsTestModalOpen] = useState<boolean>(false);
   const [lead, setLead] = useState<UserLeadInfo>({
     name: '',
     email: '',
     whatsapp: '',
+    profession: '',
+    currentActivity: '',
+    commercializationModel: 'servicios_1a1',
+    payingClientsStatus: 'irregulares',
     company: '',
     role: ''
   });
@@ -61,17 +78,15 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   // Temporizador de reserva de cupo (FOMO: 14 minutos 59 segundos)
   const [timeLeft, setTimeLeft] = useState<number>(14 * 60 + 59);
 
-  // Parámetros de GoHighLevel (leídos desde URL ?webhook=... o ?booking_url=... o localStorage)
+  // Parámetros de GoHighLevel (leídos desde URL o defaults oficiales)
   const [ghlWebhook, setGhlWebhook] = useState<string>(defaultWebhookUrl || OFFICIAL_WEBHOOK);
   const [ghlBookingUrl, setGhlBookingUrl] = useState<string>(defaultBookingUrl || OFFICIAL_BOOKING);
 
   useEffect(() => {
-    // Si la app está incrustada en un iframe en GoHighLevel, lee los parámetros pasados en el src
     const params = new URLSearchParams(window.location.search);
     const urlHook = params.get('webhook') || params.get('ghl_webhook');
     const urlBooking = params.get('booking_url') || params.get('calendar_url');
 
-    // Limpiar localStorage viejo si tenía URLs inválidas u obsoletas
     localStorage.removeItem('crea_monetiza_ghl_webhook');
     let savedBooking = localStorage.getItem('crea_monetiza_ghl_booking');
 
@@ -87,16 +102,15 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     setGhlBookingUrl(finalBooking);
   }, [defaultWebhookUrl, defaultBookingUrl]);
 
-  // Garantizar envío automático al entrar al paso 12 (resultados)
+  // Garantizar envío automático al entrar al paso de resultados
   useEffect(() => {
-    if (currentStep === 12 && result && !webhookSent && !isSendingWebhook) {
+    if (currentStep === RESULTS_STEP && result && !webhookSent && !isSendingWebhook) {
       executeWebhookDispatch(result, OFFICIAL_WEBHOOK);
     }
-  }, [currentStep, result, webhookSent, isSendingWebhook]);
+  }, [currentStep, result, webhookSent, isSendingWebhook, RESULTS_STEP]);
 
   // Pre-carga los datos del prospecto en el enlace del calendario de GoHighLevel
   const getBookingUrlWithLead = () => {
-    // Garantizar que la base siempre sea el calendario oficial activo
     const baseBooking = OFFICIAL_BOOKING;
     try {
       const url = new URL(baseBooking);
@@ -111,14 +125,14 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     }
   };
 
-  // Contador regresivo para aumentar urgencia una vez que se llega al paso 12
+  // Contador regresivo para aumentar urgencia una vez que se llega a resultados
   useEffect(() => {
-    if (currentStep !== 12) return;
+    if (currentStep !== RESULTS_STEP) return;
     const interval = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
-  }, [currentStep]);
+  }, [currentStep, RESULTS_STEP]);
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -143,8 +157,10 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     return () => clearTimeout(timeout);
   }, [currentStep, result, errorMessage]);
 
-  // Manejar cambio en inputs de datos del prospecto
-  const handleLeadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Manejar cambio en inputs de texto
+  const handleLeadChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setLead((prev) => ({ ...prev, [name]: value }));
   };
@@ -155,6 +171,8 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     const cleanName = lead.name.trim();
     const cleanEmail = lead.email.trim();
     const cleanPhone = lead.whatsapp.trim().replace(/[^0-9+]/g, '');
+    const cleanProfession = lead.profession.trim();
+    const cleanActivity = lead.currentActivity.trim();
 
     if (!cleanName || cleanName.length < 3) {
       setErrorMessage('Por favor ingresa tu Nombre completo para personalizar tu diagnóstico.');
@@ -167,10 +185,19 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
       return;
     }
 
-    // Teléfono debe tener al menos 8 dígitos numéricos
     const digitsOnly = cleanPhone.replace(/[^0-9]/g, '');
     if (!cleanPhone || digitsOnly.length < 7) {
       setErrorMessage('Por favor ingresa un número de WhatsApp válido (con código de país, ej. +57 300 123 4567).');
+      return;
+    }
+
+    if (!cleanProfession || cleanProfession.length < 3) {
+      setErrorMessage('Por favor indica tu Profesión o Área de Especialidad (ej. Abogado, Psicólogo, Mentor de Negocios, Ingeniero, etc.).');
+      return;
+    }
+
+    if (!cleanActivity || cleanActivity.length < 5) {
+      setErrorMessage('Por favor describe brevemente a qué te dedicas hoy y a quién ayudas para contextualizar tu evaluación.');
       return;
     }
 
@@ -179,7 +206,7 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Seleccionar una opción
+  // Seleccionar una opción en preguntas
   const handleSelectOption = (questionId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
     setErrorMessage(null);
@@ -187,7 +214,7 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
 
   // Navegar a siguiente paso
   const handleNextStep = () => {
-    if (currentStep >= 1 && currentStep <= 11) {
+    if (currentStep >= 1 && currentStep <= TOTAL_QUESTIONS) {
       const qKey = `q${currentStep}`;
       if (!answers[qKey]) {
         setErrorMessage('Por favor selecciona una opción para avanzar.');
@@ -196,13 +223,11 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     }
 
     setErrorMessage(null);
-    if (currentStep === 11) {
-      // Calcular resultados
+    if (currentStep === TOTAL_QUESTIONS) {
       const calc = calculatePrediagnostic(answers, lead);
       setResult(calc);
-      setCurrentStep(12);
+      setCurrentStep(RESULTS_STEP);
 
-      // Si hay webhook configurado, enviar automáticamente a GoHighLevel en segundo plano
       if (ghlWebhook) {
         executeWebhookDispatch(calc, ghlWebhook);
       }
@@ -221,7 +246,23 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     }
   };
 
-  // Despacho de Webhook hacia GoHighLevel (completamente invisible para el prospecto)
+  // Cargar caso de prueba automatizado
+  const handleApplyTestCase = (testCase: TestCase, viewResultsDirectly: boolean) => {
+    setLead(testCase.lead);
+    setAnswers(testCase.answers);
+    setErrorMessage(null);
+
+    if (viewResultsDirectly) {
+      const calc = calculatePrediagnostic(testCase.answers, testCase.lead);
+      setResult(calc);
+      setCurrentStep(RESULTS_STEP);
+    } else {
+      setCurrentStep(1);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Despacho de Webhook hacia GoHighLevel
   const executeWebhookDispatch = async (calcResult: PrediagnosticResult, url?: string) => {
     const targetUrl = url || ghlWebhook || OFFICIAL_WEBHOOK;
     setIsSendingWebhook(true);
@@ -231,17 +272,22 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
         'prediagnostico-completado',
         calcResult.hasContradiction ? 'discrepancia-detectada' : 'cimiento-alineado',
         calcResult.hasInternalIncoherence ? 'incoherencia-interna-detectada' : 'coherencia-confirmada',
-        `servicio-prioritario-${calcResult.recommendedPillar.id}`
+        `servicio-prioritario-${calcResult.recommendedPillar.id}`,
+        calcResult.gatingAnalysis.isPilar4Blocked ? 'veto-sistematizacion-prematura' : 'viable-etapas-avanzadas'
       ];
 
-      // Texto pre-formateado completo para la Nota de GoHighLevel
+      const modelLabel = COMMERCIAL_MODELS_LABELS[calcResult.lead.commercializationModel] || calcResult.lead.commercializationModel;
+      const clientsLabel = PAYING_CLIENTS_LABELS[calcResult.lead.payingClientsStatus] || calcResult.lead.payingClientsStatus;
+
       const formattedNoteText = `📋 RESUMEN PREDIAGNÓSTICO ESTRATÉGICO CREA Y MONETIZA®
 👤 Contacto: ${calcResult.lead.name}
+🎓 Profesión: ${calcResult.lead.profession}
+💼 Actividad Actual: ${calcResult.lead.currentActivity}
+📦 Modelo Comercial: ${modelLabel}
+👥 Clientes de Pago: ${clientsLabel}
 🏢 Empresa: ${calcResult.lead.company || 'No especificada'}
-💼 Cargo: ${calcResult.lead.role || 'Consultor / Dueño de Negocio'}
 📱 WhatsApp: ${calcResult.lead.whatsapp}
-🎯 Perfil: ${calcResult.profile.title}
-📌 Subtítulo: ${calcResult.profile.subtitle}
+🎯 Perfil Evolutivo: ${calcResult.profile.title} ("${calcResult.profile.subtitle}")
 --------------------------------------------------
 🔍 SITUACIÓN Y SERVICIO RECOMENDADO:
 • Servicio que busca: ${calcResult.statedPillar.name}
@@ -250,17 +296,20 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
 ⚠️ ¿TIENE DISCREPANCIA?: ${calcResult.hasContradiction ? 'SÍ' : 'NO'}
 • Motivo Discrepancia: ${calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia; objetivo alineado con la madurez actual.'}
 • Riesgo de saltarse el paso: ${calcResult.contradictionAnalysis?.riskOfSkipping || 'N/A'}
-🚨 LO QUE NO DEBE HACER:
+🚨 AUDITORÍA DE PRERREQUISITOS:
+• ¿Veto de Pilar 4 aplicado?: ${calcResult.gatingAnalysis.isPilar4Blocked ? 'SÍ (Bloqueado por falta de oferta validada o clientes recurrentes)' : 'NO'}
+• ¿Veto de Pilar 3 aplicado?: ${calcResult.gatingAnalysis.isPilar3Blocked ? 'SÍ (Bloqueado por falta de oferta estructurada)' : 'NO'}
+⛔ LO QUE NO DEBE HACER:
 ${calcResult.notFirstAdvice.warning}
 
-🔎 EVIDENCIAS CLAVE:
+🔎 EVIDENCIAS CLAVE DETECTADAS:
 ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 
 📊 PUNTUACIONES:
-• Pilar 1 (Estructura y Claridad): ${calcResult.scores.pilar1} pts
-• Pilar 2 (Oferta High-Ticket): ${calcResult.scores.pilar2} pts
-• Pilar 3 (Funnels y Prospección): ${calcResult.scores.pilar3} pts
-• Pilar 4 (Escala y Retención): ${calcResult.scores.pilar4} pts`;
+• Pilar 1 (Estrategia y Oferta BMS): ${calcResult.scores.pilar1} pts
+• Pilar 2 (Marca Personal & Autoridad): ${calcResult.scores.pilar2} pts
+• Pilar 3 (Viral Sales Content): ${calcResult.scores.pilar3} pts
+• Pilar 4 (Digital Business Day & IA): ${calcResult.scores.pilar4} pts`;
 
       const ghlPayload: Record<string, any> = {
         name: calcResult.lead.name.trim(),
@@ -271,7 +320,21 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         phone: calcResult.lead.whatsapp.trim(),
         whatsapp: calcResult.lead.whatsapp.trim(),
         
-        // Texto consolidado listo para Nota de GHL
+        // Datos profesionales contextuales
+        profesion: calcResult.lead.profession,
+        profession: calcResult.lead.profession,
+        'profesion o especialidad': calcResult.lead.profession,
+        actividad_actual: calcResult.lead.currentActivity,
+        'a que se dedica': calcResult.lead.currentActivity,
+        current_activity: calcResult.lead.currentActivity,
+        modelo_comercializacion: modelLabel,
+        'modelo de comercializacion': modelLabel,
+        commercial_model: modelLabel,
+        estado_clientes_pago: clientsLabel,
+        'clientes de pago': clientsLabel,
+        paying_clients_status: clientsLabel,
+
+        // Texto consolidado para Nota de GHL
         resumen_ejecutivo: formattedNoteText,
         'Resumen Ejecutivo': formattedNoteText,
         'resumen ejecutivo': formattedNoteText,
@@ -286,10 +349,10 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         comentarios: formattedNoteText,
         observaciones: formattedNoteText,
         
-        // Empresa y rol (con ambas variantes para mapeo exacto en GHL)
+        // Empresa y rol
         'company name': calcResult.lead.company || 'No especificada',
         company_name: calcResult.lead.company || 'No especificada',
-        role: calcResult.lead.role || 'Consultor / Dueño de Negocio',
+        role: calcResult.lead.role || calcResult.lead.profession,
         
         // Perfil y diagnóstico
         'perfil profesional': calcResult.profile.title,
@@ -307,7 +370,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         'duracion estimada': calcResult.recommendedPillar.duration,
         duracion_estimada: calcResult.recommendedPillar.duration,
         
-        // Análisis de discrepancia
+        // Análisis de discrepancia y gating
         'tiene discrepancia': calcResult.hasContradiction ? 'SÍ' : 'NO',
         tiene_discrepancia: calcResult.hasContradiction ? 'SÍ' : 'NO',
         'motivo discrepancia': calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia; objetivo alineado con la madurez actual.',
@@ -316,6 +379,8 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         riesgo_de_saltarse_paso: calcResult.contradictionAnalysis?.riskOfSkipping || 'N/A',
         'lo que no debe hacer': calcResult.notFirstAdvice.warning,
         lo_que_no_debe_hacer: calcResult.notFirstAdvice.warning,
+        veto_pilar4_aplicado: calcResult.gatingAnalysis.isPilar4Blocked ? 'SÍ' : 'NO',
+        veto_pilar3_aplicado: calcResult.gatingAnalysis.isPilar3Blocked ? 'SÍ' : 'NO',
         
         // Tags
         tags: tagsList.join(','),
@@ -340,7 +405,6 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 
       let dispatched = false;
 
-      // 1. Envío prioritario con fetch JSON (con CORS verificado)
       try {
         const res = await fetch(targetUrl, {
           method: 'POST',
@@ -356,7 +420,6 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         console.warn('Fetch JSON delivery fallback:', jsonErr);
       }
 
-      // 2. Respaldo con sendBeacon JSON (solo si fetch falló)
       if (!dispatched && typeof navigator !== 'undefined' && navigator.sendBeacon) {
         try {
           const blob = new Blob([JSON.stringify(ghlPayload)], { type: 'application/json' });
@@ -368,45 +431,42 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         } catch (_) {}
       }
 
-      // 3. Respaldo extremo: Formulario HTML oculto (solo si los anteriores no funcionaron)
-      if (!dispatched) {
+      if (!dispatched && typeof document !== 'undefined') {
         try {
-          if (typeof document !== 'undefined') {
-            const frameName = 'ghl_delivery_frame_' + Date.now();
-            const hiddenIframe = document.createElement('iframe');
-            hiddenIframe.name = frameName;
-            hiddenIframe.style.display = 'none';
-            hiddenIframe.style.position = 'absolute';
-            hiddenIframe.style.width = '0';
-            hiddenIframe.style.height = '0';
-            hiddenIframe.style.border = '0';
-            document.body.appendChild(hiddenIframe);
+          const frameName = 'ghl_delivery_frame_' + Date.now();
+          const hiddenIframe = document.createElement('iframe');
+          hiddenIframe.name = frameName;
+          hiddenIframe.style.display = 'none';
+          hiddenIframe.style.position = 'absolute';
+          hiddenIframe.style.width = '0';
+          hiddenIframe.style.height = '0';
+          hiddenIframe.style.border = '0';
+          document.body.appendChild(hiddenIframe);
 
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = targetUrl;
-            form.target = frameName;
-            form.style.display = 'none';
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = targetUrl;
+          form.target = frameName;
+          form.style.display = 'none';
 
-            Object.entries(ghlPayload).forEach(([key, val]) => {
-              const input = document.createElement('input');
-              input.type = 'hidden';
-              input.name = key;
-              input.value = typeof val === 'object' ? JSON.stringify(val) : String(val);
-              form.appendChild(input);
-            });
+          Object.entries(ghlPayload).forEach(([key, val]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = typeof val === 'object' ? JSON.stringify(val) : String(val);
+            form.appendChild(input);
+          });
 
-            document.body.appendChild(form);
-            form.submit();
-            setWebhookSent(true);
+          document.body.appendChild(form);
+          form.submit();
+          setWebhookSent(true);
 
-            setTimeout(() => {
-              try {
-                if (document.body.contains(form)) document.body.removeChild(form);
-                if (document.body.contains(hiddenIframe)) document.body.removeChild(hiddenIframe);
-              } catch (_) {}
-            }, 4000);
-          }
+          setTimeout(() => {
+            try {
+              if (document.body.contains(form)) document.body.removeChild(form);
+              if (document.body.contains(hiddenIframe)) document.body.removeChild(hiddenIframe);
+            } catch (_) {}
+          }, 4000);
         } catch (domErr) {
           console.warn('DOM form delivery log:', domErr);
         }
@@ -420,7 +480,11 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 
   // Porcentaje de progreso
   const progressPercent =
-    currentStep === 0 ? 5 : currentStep === 12 ? 100 : Math.round((currentStep / 11) * 95);
+    currentStep === 0
+      ? 5
+      : currentStep === RESULTS_STEP
+      ? 100
+      : Math.round((currentStep / TOTAL_QUESTIONS) * 95);
 
   const currentQuestion = PREDIAGNOSTIC_QUESTIONS.find((q) => q.stepNumber === currentStep);
 
@@ -430,17 +494,31 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
       <div className="bg-[#080808] text-white rounded-2xl p-6 sm:p-8 mb-6 border border-gray-800 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D7192B]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#D7192B] bg-[#D7192B]/10 px-2.5 py-1 rounded">
-              METODOLOGÍA CREA Y MONETIZA®
-            </span>
-            <span className="text-xs text-gray-400 font-mono">Patricia Loaiza</span>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#D7192B] bg-[#D7192B]/10 px-2.5 py-1 rounded">
+                METODOLOGÍA CREA Y MONETIZA®
+              </span>
+              <span className="text-xs text-gray-400 font-mono">Patricia Loaiza</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenTestModal) onOpenTestModal();
+                else setIsTestModalOpen(true);
+              }}
+              className="text-[11px] text-gray-300 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-all font-semibold flex items-center gap-1.5 border border-white/10"
+              title="Abrir panel de pruebas y escenarios de demostración"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>Modo Pruebas / Escenarios</span>
+            </button>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             Prediagnóstico Consultoría Requerida
           </h1>
           <p className="text-sm text-gray-300 mt-1 max-w-2xl leading-relaxed">
-            Llevas años construyendo experiencia... pero algo no cierra. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles? Un diagnóstico de 3 minutos te lo revela — y te ahorra invertir en lo que no toca.
+            Llevas años construyendo experiencia... pero algo no cierra. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles? Nuestro motor de auditoría de evidencias te revela la verdad exacta — y te protege de invertir en lo que no toca.
           </p>
         </div>
 
@@ -449,10 +527,10 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
           <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
             <span>
               {currentStep === 0
-                ? 'Paso Inicial · Información de Contacto'
-                : currentStep === 12
+                ? 'Paso Inicial · Contexto Profesional y Comercial'
+                : currentStep === RESULTS_STEP
                 ? 'Diagnóstico Completado'
-                : `Pregunta ${currentStep} de 11 · ${currentQuestion?.category || ''}`}
+                : `Pregunta ${currentStep} de ${TOTAL_QUESTIONS} · ${currentQuestion?.category || ''}`}
             </span>
             <span className="font-mono font-bold text-white">{progressPercent}%</span>
           </div>
@@ -474,108 +552,223 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
       )}
 
       {/* ============================================================ */}
-      {/* PASO 0: DATOS DEL PROSPECTO (NOMBRE, CORREO, WHATSAPP) */}
+      {/* PASO 0: DATOS DE CONTACTO Y CONTEXTO PROFESIONAL/COMERCIAL */}
       {/* ============================================================ */}
       {currentStep === 0 && (
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
-          <div className="max-w-xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             <div className="text-center mb-6">
               <span className="text-xs font-bold uppercase tracking-wider text-[#D7192B]">
-                Paso 0 · Contexto Profesional
+                Paso 0 · Contexto Profesional & Comercial
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-gray-900 mt-1">
-                Antes de comenzar, cuéntame sobre ti
+                Antes de comenzar, cuéntanos sobre tu actividad
               </h2>
-              <p className="text-sm text-gray-600 mt-2">
-                Ingresa tus datos de contacto para personalizar tu diagnóstico y verificar la
-                disponibilidad de tu Sesión Estratégica Gratuita.
+              <p className="text-xs sm:text-sm text-gray-600 mt-2 max-w-xl mx-auto">
+                Para que la auditoría sea matemáticamente precisa y evite errores de interpretación sobre tu modelo, necesitamos conocer tu perfil, qué comercializas hoy y tu estado real de clientes.
               </p>
             </div>
 
-            <form onSubmit={handleStartQuestions} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                  Nombre completo <span className="text-[#D7192B]">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={lead.name}
-                  onChange={handleLeadChange}
-                  placeholder="Ej. Carlos Mendoza"
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all"
-                />
-              </div>
+            <form onSubmit={handleStartQuestions} className="space-y-5">
+              {/* Bloque 1: Datos Personales */}
+              <div className="bg-gray-50/80 p-4 sm:p-5 rounded-xl border border-gray-200 space-y-4">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+                  <Briefcase className="w-3.5 h-3.5 text-[#D7192B]" />
+                  <span>1. Datos de Contacto Directo</span>
+                </span>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                  Correo electrónico <span className="text-[#D7192B]">*</span>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={lead.email}
-                  onChange={handleLeadChange}
-                  placeholder="carlos@tuempresa.com"
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                  WhatsApp (con código de país) <span className="text-[#D7192B]">*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="whatsapp"
-                  value={lead.whatsapp}
-                  onChange={handleLeadChange}
-                  placeholder="+57 300 123 4567"
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                    Empresa o Negocio (opcional)
+                    Nombre completo <span className="text-[#D7192B]">*</span>
                   </label>
                   <input
                     type="text"
-                    name="company"
-                    value={lead.company}
+                    name="name"
+                    value={lead.name}
                     onChange={handleLeadChange}
-                    placeholder="Ej. Mendoza Consultores"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-xs focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all"
+                    placeholder="Ej. Carlos Mendoza"
+                    required
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all bg-white"
                   />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+                      Correo electrónico <span className="text-[#D7192B]">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={lead.email}
+                      onChange={handleLeadChange}
+                      placeholder="carlos@tuempresa.com"
+                      required
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+                      WhatsApp (con indicativo de país) <span className="text-[#D7192B]">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      name="whatsapp"
+                      value={lead.whatsapp}
+                      onChange={handleLeadChange}
+                      placeholder="+57 300 123 4567"
+                      required
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bloque 2: Profesión y Actividad Exacta */}
+              <div className="bg-gray-50/80 p-4 sm:p-5 rounded-xl border border-gray-200 space-y-4">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#D7192B]" />
+                  <span>2. Tu Profesión y Propósito</span>
+                </span>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+                    ¿Cuál es tu profesión o área de conocimiento? <span className="text-[#D7192B]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="profession"
+                    value={lead.profession}
+                    onChange={handleLeadChange}
+                    placeholder="Ej. Abogado Corporativo, Psicólogo Clínico, Mentor de Negocios, Diseñador, etc."
+                    required
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all bg-white"
+                  />
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    Tu disciplina o especialidad técnica principal.
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-                    Rol o Especialidad (opcional)
+                    ¿A qué te dedicas exactamente hoy y a quién ayudas? <span className="text-[#D7192B]">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="role"
-                    value={lead.role}
+                  <textarea
+                    name="currentActivity"
+                    value={lead.currentActivity}
                     onChange={handleLeadChange}
-                    placeholder="Ej. Consultor / Fundador"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-xs focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all"
+                    rows={2}
+                    placeholder="Ej. Asesoro a pymes a estructurar sus finanzas, o doy terapia individual a ejecutivos con burnout..."
+                    required
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all bg-white resize-none"
                   />
                 </div>
               </div>
 
-              <div className="pt-4">
+              {/* Bloque 3: Modelo Comercial y Situación de Clientes */}
+              <div className="bg-gray-50/80 p-4 sm:p-5 rounded-xl border border-gray-200 space-y-4">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-[#D7192B]" />
+                  <span>3. Modelo de Comercialización & Situación con Clientes</span>
+                </span>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+                    ¿Cuál es tu modelo actual de comercialización? <span className="text-[#D7192B]">*</span>
+                  </label>
+                  <select
+                    name="commercializationModel"
+                    value={lead.commercializationModel}
+                    onChange={handleLeadChange}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-xs sm:text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all bg-white"
+                  >
+                    <option value="servicios_1a1">
+                      Presto servicios profesionales o consultoría personalizada 1 a 1
+                    </option>
+                    <option value="infoproductos_cursos">
+                      Comercializo cursos grabados, talleres o productos digitales (infoproductos)
+                    </option>
+                    <option value="productos_fisicos">
+                      Comercializo productos físicos o dirijo un negocio comercial / agencia con equipo
+                    </option>
+                    <option value="servicios_y_productos">
+                      Ofrezco una combinación de servicios 1 a 1 y cursos/talleres
+                    </option>
+                    <option value="aun_no_comercializo">
+                      Aún no comercializo servicios ni productos (fase de idea, reinvención o lanzamiento)
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+                    ¿Cuál es tu situación real con clientes de pago hoy? <span className="text-[#D7192B]">*</span>
+                  </label>
+                  <select
+                    name="payingClientsStatus"
+                    value={lead.payingClientsStatus}
+                    onChange={handleLeadChange}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-xs sm:text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-[#D7192B] focus:border-transparent transition-all bg-white"
+                  >
+                    <option value="activos_recurrentes">
+                      Tengo clientes de pago recurrentes y agenda activa constante
+                    </option>
+                    <option value="irregulares">
+                      Tengo clientes esporádicos o irregulares (meses buenos y meses en cero)
+                    </option>
+                    <option value="pocos_pasados">
+                      He tenido pocos clientes en el pasado; actualmente me cuesta cerrar nuevos
+                    </option>
+                    <option value="sin_clientes">
+                      Aún no he tenido mi primer cliente de pago en este negocio
+                    </option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                      Empresa o Marca Comercial (opcional)
+                    </label>
+                    <input
+                      type="text"
+                      name="company"
+                      value={lead.company}
+                      onChange={handleLeadChange}
+                      placeholder="Ej. Mendoza Consultores"
+                      className="w-full px-3.5 py-2 rounded-xl border border-gray-300 text-gray-900 text-xs bg-white focus:outline-hidden focus:ring-2 focus:ring-[#D7192B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                      Cargo o Rol (opcional)
+                    </label>
+                    <input
+                      type="text"
+                      name="role"
+                      value={lead.role}
+                      onChange={handleLeadChange}
+                      placeholder="Ej. Fundador / Consultor Principal"
+                      className="w-full px-3.5 py-2 rounded-xl border border-gray-300 text-gray-900 text-xs bg-white focus:outline-hidden focus:ring-2 focus:ring-[#D7192B]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 px-6 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-sm font-extrabold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
+                  className="w-full py-4 px-6 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-sm font-extrabold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 tracking-wide"
                 >
-                  <span>Comenzar Prediagnóstico (11 preguntas)</span>
+                  <span>Iniciar Auditoría de Cimientos ({TOTAL_QUESTIONS} Preguntas)</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
+                <div className="flex items-center justify-center gap-1.5 mt-2.5 text-[11px] text-gray-500">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Tus datos son 100% confidenciales. Sin spam ni venta de información.</span>
+                </div>
               </div>
             </form>
           </div>
@@ -583,20 +776,25 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
       )}
 
       {/* ============================================================ */}
-      {/* PASOS 1 AL 11: PREGUNTAS DE EVIDENCIA */}
+      {/* PASOS 1 AL TOTAL_QUESTIONS: PREGUNTAS DE AUDITORÍA Y VERIFICACIÓN */}
       {/* ============================================================ */}
-      {currentStep >= 1 && currentStep <= 11 && currentQuestion && (
+      {currentStep >= 1 && currentStep <= TOTAL_QUESTIONS && currentQuestion && (
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-6">
           <div>
-            <span className="text-xs font-black uppercase tracking-wider text-[#D7192B]">
-              {currentQuestion.category}
-            </span>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-[#D7192B]">
+                {currentQuestion.category}
+              </span>
+              <span className="text-[11px] font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                Paso {currentStep} / {TOTAL_QUESTIONS}
+              </span>
+            </div>
             <h3 className="text-lg sm:text-xl font-black text-gray-900 mt-1 leading-snug">
               {currentQuestion.question}
             </h3>
             {currentQuestion.hint && (
-              <p className="text-xs text-gray-500 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-200/80">
-                💡 <strong className="text-gray-700">Criterio metodológico:</strong>{' '}
+              <p className="text-xs text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-200/80 leading-relaxed">
+                💡 <strong className="text-gray-800">Criterio metodológico:</strong>{' '}
                 {currentQuestion.hint}
               </p>
             )}
@@ -643,19 +841,19 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               onClick={handleNextStep}
               className="px-6 py-2.5 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-xs font-extrabold flex items-center gap-2 transition-all shadow-md"
             >
-              <span>{currentStep === 11 ? 'Calcular Diagnóstico y Evidencia →' : 'Siguiente →'}</span>
+              <span>{currentStep === TOTAL_QUESTIONS ? 'Calcular Diagnóstico y Evidencia →' : 'Siguiente →'}</span>
             </button>
           </div>
         </div>
       )}
 
       {/* ============================================================ */}
-      {/* PASO 12: RESUMEN CORTO, DISCREPANCIA Y FOMO DE ALTA CONVERSIÓN */}
+      {/* PASO FINAL: RESULTADOS, VERIFICACIÓN DE SESGOS Y AGENDAMIENTO */}
       {/* ============================================================ */}
-      {currentStep === 12 && result && (
+      {currentStep === RESULTS_STEP && result && (
         <div className="space-y-6 animate-in fade-in duration-300">
-          {/* BANNER DE FOMO Y CUPOS LIMITADOS (ALTA URGENCIA) */}
-          <div className="bg-gradient-to-r from-[#D7192B] to-[#990d1b] text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-red-400/40 relative overflow-hidden animate-pulse-subtle">
+          {/* BANNER DE FOMO Y CUPOS LIMITADOS */}
+          <div className="bg-gradient-to-r from-[#D7192B] to-[#990d1b] text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-red-400/40 relative overflow-hidden">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
@@ -687,7 +885,6 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               </div>
             </div>
 
-            {/* Barra visual de escasez (3 de 5 cupos tomados) */}
             <div className="mt-3.5 pt-3 border-t border-white/20">
               <div className="flex items-center justify-between text-xs text-white/90 font-bold mb-1.5">
                 <span>Cupos gratuitos reservados hoy: 3 de 5</span>
@@ -702,18 +899,54 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
             </div>
           </div>
 
-          {/* Bloque Superior: Resumen Ejecutivo y Perfil */}
+          {/* Bloque Superior: Ficha del Prospecto y Perfil de Madurez */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-4 mb-4">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#D7192B]" />
                 <span className="text-xs font-extrabold uppercase tracking-widest text-[#D7192B]">
-                  Diagnóstico Estratégico para {result.lead.name}
+                  Diagnóstico Personalizado para {result.lead.name}
                 </span>
               </div>
               <span className="text-xs text-gray-500 font-mono">
                 {result.lead.company ? `${result.lead.company} · ` : ''}{result.lead.whatsapp}
               </span>
+            </div>
+
+            {/* Ficha de Contexto Comercial Verificado */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+              <div>
+                <span className="text-gray-500 uppercase tracking-wider font-bold block text-[10px]">
+                  Profesión / Área:
+                </span>
+                <strong className="text-gray-900 font-extrabold text-xs block truncate">
+                  {result.lead.profession}
+                </strong>
+              </div>
+              <div>
+                <span className="text-gray-500 uppercase tracking-wider font-bold block text-[10px]">
+                  Actividad Actual:
+                </span>
+                <p className="text-gray-800 text-xs font-medium line-clamp-2">
+                  {result.lead.currentActivity}
+                </p>
+              </div>
+              <div>
+                <span className="text-gray-500 uppercase tracking-wider font-bold block text-[10px]">
+                  Modelo Comercial:
+                </span>
+                <span className="text-gray-800 text-xs font-medium block">
+                  {COMMERCIAL_MODELS_LABELS[result.lead.commercializationModel] || result.lead.commercializationModel}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500 uppercase tracking-wider font-bold block text-[10px]">
+                  Clientes de Pago:
+                </span>
+                <span className="text-gray-800 text-xs font-medium block">
+                  {PAYING_CLIENTS_LABELS[result.lead.payingClientsStatus] || result.lead.payingClientsStatus}
+                </span>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -743,7 +976,34 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
             </div>
           </div>
 
-          {/* Bloque Central: Discrepancia Fáctica (Lo que el cliente cree querer vs lo que evidencia necesitar) */}
+          {/* BANNER ESTRATÉGICO: CONSEJO CLAVE PARA PROTEGER TU NEGOCIO */}
+          {result.gatingAnalysis.isPilar4Blocked && result.statedPillar.id === 'pilar4' && (
+            <div className="bg-neutral-900 border-2 border-[#D7192B] rounded-2xl p-5 text-white shadow-xl">
+              <div className="flex items-start gap-3.5">
+                <div className="w-9 h-9 rounded-xl bg-[#D7192B] text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="bg-[#D7192B] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded">
+                      💡 CONSEJO ESTRATÉGICO CLAVE
+                    </span>
+                    <span className="text-xs text-amber-300 font-bold">
+                      El orden más inteligente para maximizar tus resultados
+                    </span>
+                  </div>
+                  <h4 className="text-base font-black text-white">
+                    Por qué te conviene consolidar una Oferta Irresistible antes de Sistematizar
+                  </h4>
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    Notamos que tu gran meta es la sistematización, activos digitales y agentes de IA. ¡Es un objetivo extraordinario! Sin embargo, la experiencia nos demuestra que automatizar un servicio que aún no se vende con fluidez manual suele generar gastos y desgaste innecesario. Para cuidar tu inversión y asegurar resultados reales, te proponemos construir primero tu cimiento comercial en el <strong>Pilar 1 (Estrategia Comercial & Oferta BMS)</strong>. Una vez que tengas clientes satisfechos comprándote con regularidad, sistematizar será un paso rápido, fluido y verdaderamente rentable.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bloque Central: Alineación Estratégica de Enfoque */}
           <div
             className={`rounded-2xl border-2 p-6 sm:p-8 shadow-sm ${
               result.hasContradiction
@@ -753,35 +1013,35 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
           >
             <div className="flex items-center gap-2 mb-2">
               {result.hasContradiction ? (
-                <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+                <Sparkles className="w-5 h-5 text-amber-600 shrink-0" />
               ) : (
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
               )}
               <span className="text-xs font-black uppercase tracking-wider">
                 {result.hasContradiction
-                  ? 'Verificación Fáctica: Discrepancia entre Deseo y Necesidad Real'
-                  : 'Verificación Fáctica: Cimientos Alineados'}
+                  ? '🎯 ANÁLISIS DE ENFOQUE: TU RUTA MÁS RÁPIDA AL CRECIMIENTO'
+                  : '✅ ENFOQUE ESTRATÉGICO 100% ALINEADO'}
               </span>
             </div>
 
             <h4 className="text-lg sm:text-xl font-black mb-2">
               {result.contradictionAnalysis
                 ? result.contradictionAnalysis.title
-                : 'Tu objetivo coincide con la necesidad estructural de tu negocio'}
+                : 'Tu objetivo coincide perfectamente con lo que tu negocio necesita para crecer'}
             </h4>
 
             {/* Comparativa visual de dos cajas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">
               <div className="p-3.5 bg-white rounded-xl border border-gray-200">
                 <span className="text-[10px] uppercase tracking-wider font-extrabold text-gray-500 block">
-                  Lo que manifestaste buscar:
+                  Tu idea o interés inicial:
                 </span>
                 <span className="text-sm font-bold text-gray-800">{result.statedPillar.name}</span>
               </div>
 
               <div className="p-3.5 bg-white rounded-xl border-2 border-[#D7192B] shadow-xs">
                 <span className="text-[10px] uppercase tracking-wider font-extrabold text-[#D7192B] block">
-                  Lo que la evidencia dictamina como prioridad:
+                  El paso que hoy te dará mayor rentabilidad y tranquilidad:
                 </span>
                 <span className="text-sm font-extrabold text-gray-900">
                   {result.recommendedPillar.name}
@@ -796,7 +1056,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                 </p>
                 <div className="p-3.5 bg-white/90 rounded-xl border border-amber-200">
                   <strong className="text-amber-900 block font-bold mb-0.5">
-                    ¿Por qué es indispensable este orden?
+                    ¿Por qué este es el camino más inteligente y seguro?
                   </strong>
                   <p className="text-gray-700">{result.contradictionAnalysis.riskOfSkipping}</p>
                 </div>
@@ -804,85 +1064,83 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
             )}
           </div>
 
-          {/* Bloque: Control de Veracidad y Auditoría de Incoherencias Fácticas */}
+          {/* Bloque: Hallazgos Clave para Acelerar tus Resultados */}
           {result.hasInternalIncoherence && (
-            <div className="rounded-2xl border-2 border-red-500 bg-red-50/80 p-6 sm:p-8 shadow-sm text-red-950">
+            <div className="rounded-2xl border-2 border-amber-400 bg-amber-50/60 p-6 sm:p-8 shadow-sm text-gray-900">
               <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
-                <span className="text-xs font-black uppercase tracking-wider text-red-700">
-                  Control de Veracidad: {result.detectedIncoherences.length} Incoherencia(s) Fáctica(s) Detectada(s)
+                <Sparkles className="w-5 h-5 text-[#D7192B] shrink-0" />
+                <span className="text-xs font-black uppercase tracking-wider text-[#D7192B]">
+                  Claves de Crecimiento: {result.detectedIncoherences.length} Oportunidad(es) Identificada(s)
                 </span>
               </div>
 
-              <h4 className="text-lg sm:text-xl font-black text-red-950 mb-1">
-                Auditoría de Respuestas Cruzadas: Verificación de la Verdad Fáctica
+              <h4 className="text-lg sm:text-xl font-black text-gray-900 mb-1">
+                Hallazgos Clave para Acelerar tus Resultados y Cuidar tu Inversión
               </h4>
-              <p className="text-xs sm:text-sm text-red-900/90 leading-relaxed mb-4">
-                Para proteger tu inversión y evitar que destines tiempo o dinero a etapas avanzadas sobre un cimiento frágil, nuestro algoritmo sometió tus respuestas a pruebas de estrés cruzadas. Se detectaron contradicciones entre lo que crees tener y lo que tus respuestas operativas revelan:
+              <p className="text-xs sm:text-sm text-gray-700 leading-relaxed mb-4">
+                Al analizar tus respuestas en conjunto, identificamos puntos ciegos comunes que suelen frenar a profesionales talentosos. Conocerlos a tiempo te ahorra meses de esfuerzo y te permite enfocar tu energía donde realmente verás ingresos:
               </p>
 
               <div className="space-y-4">
                 {result.detectedIncoherences.map((inc, index) => (
                   <div
                     key={inc.id || index}
-                    className="bg-white rounded-xl border border-red-200 shadow-xs overflow-hidden"
+                    className="bg-white rounded-xl border border-amber-200 shadow-xs overflow-hidden"
                   >
-                    <div className="bg-red-100/90 px-4 py-2.5 border-b border-red-200 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-xs font-extrabold text-red-950">
+                    <div className="bg-amber-100/70 px-4 py-2.5 border-b border-amber-200 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-extrabold text-gray-900">
                         {index + 1}. {inc.title}
                       </span>
                       <span
                         className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded ${
                           inc.severity === 'critica'
-                            ? 'bg-red-700 text-white'
+                            ? 'bg-[#D7192B] text-white'
                             : 'bg-amber-600 text-white'
                         }`}
                       >
-                        {inc.severity === 'critica' ? 'Severidad Crítica' : 'Incoherencia Alta'}
+                        {inc.severity === 'critica' ? 'Oportunidad Clave' : 'Ajuste Recomendado'}
                       </span>
                     </div>
 
                     <div className="p-4 sm:p-5 space-y-3.5">
-                      {/* Comparación visual de afirmaciones enfrentadas */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">
-                            En Pregunta {inc.statementA.questionNumber} ({inc.statementA.questionCategory}):
+                            Tu perspectiva inicial ({inc.statementA.questionCategory}):
                           </div>
                           <div className="text-xs sm:text-sm font-semibold text-gray-800 italic">
                             "{inc.statementA.answerText}"
                           </div>
                         </div>
 
-                        <div className="bg-red-50/70 rounded-lg p-3 border border-red-200">
-                          <div className="text-[10px] font-bold text-red-700 uppercase tracking-wide mb-1">
-                            Sin embargo, en Pregunta {inc.statementB.questionNumber} ({inc.statementB.questionCategory}):
+                        <div className="bg-amber-50/70 rounded-lg p-3 border border-amber-200">
+                          <div className="text-[10px] font-bold text-amber-800 uppercase tracking-wide mb-1">
+                            La realidad actual de tu negocio ({inc.statementB.questionCategory}):
                           </div>
-                          <div className="text-xs sm:text-sm font-semibold text-red-950 italic">
+                          <div className="text-xs sm:text-sm font-semibold text-gray-900 italic">
                             "{inc.statementB.answerText}"
                           </div>
                         </div>
                       </div>
 
-                      {/* Veredicto y verdad revelada */}
                       <div className="bg-neutral-900 text-white rounded-xl p-4 space-y-2.5 text-xs sm:text-sm">
                         <div>
                           <span className="text-amber-400 block text-[11px] uppercase tracking-wider font-black mb-0.5">
-                            ⚖️ Veredicto del Algoritmo:
+                            💡 Lectura Estratégica:
                           </span>
                           <p className="text-gray-200 leading-relaxed">{inc.verdict}</p>
                         </div>
 
                         <div className="pt-2 border-t border-neutral-800">
-                          <span className="text-red-400 block text-[11px] uppercase tracking-wider font-black mb-0.5">
-                            🔍 La Verdad Comercial que Prevalece:
+                          <span className="text-emerald-400 block text-[11px] uppercase tracking-wider font-black mb-0.5">
+                            🌱 El Secreto para Crecer con Seguridad:
                           </span>
                           <p className="text-gray-300 leading-relaxed font-medium">{inc.revealedTruth}</p>
                         </div>
 
-                        <div className="pt-2 border-t border-neutral-800 text-xs text-emerald-400 font-semibold flex items-start gap-1.5">
-                          <span className="shrink-0">🛡️</span>
-                          <span><strong>Ajuste Fáctico Aplicado:</strong> {inc.actionRequired}</span>
+                        <div className="pt-2 border-t border-neutral-800 text-xs text-amber-300 font-semibold flex items-start gap-1.5">
+                          <span className="shrink-0">🚀</span>
+                          <span><strong>Tu Próximo Paso Recomendado:</strong> {inc.actionRequired}</span>
                         </div>
                       </div>
                     </div>
@@ -944,7 +1202,6 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               {result.recommendedPillar.description}
             </p>
 
-            {/* Transformación */}
             <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-200 flex items-start gap-2.5">
               <Sparkles className="w-4 h-4 text-[#D7192B] shrink-0 mt-0.5" />
               <div>
@@ -954,14 +1211,14 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
             </div>
           </div>
 
-          {/* Bloque de Evidencias Detectadas */}
+          {/* Bloque de Claves y Factores Estratégicos Detectados */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
             <h4 className="text-base font-black text-gray-900 mb-2 flex items-center gap-2">
-              <FileSpreadsheet className="w-4 h-4 text-[#D7192B]" />
-              <span>Evidencias Fácticas Detectadas en tus Respuestas</span>
+              <Sparkles className="w-4 h-4 text-[#D7192B]" />
+              <span>Claves Identificadas en tus Respuestas</span>
             </h4>
             <p className="text-xs text-gray-600 mb-4">
-              Razones objetivas por las cuales no es conveniente avanzar a servicios posteriores sin resolver esto primero:
+              Factores que confirman por qué este es el momento idóneo para concentrar tu energía en este pilar:
             </p>
             <ul className="space-y-2">
               {result.evidences.map((item, idx) => (
@@ -1003,8 +1260,8 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               </div>
 
               <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-xl mx-auto">
-                Durante esta sesión 1 a 1 de 30 minutos con Patricia Loaiza, analizaremos tus respuestas,
-                desmontaremos el sesgo detectado y trazaremos el plan de acción para implementar{' '}
+                Durante esta sesión 1 a 1 de 30 minutos con Patricia Loaiza, profundizaremos en estos hallazgos,
+                resolveremos tus dudas puntuales y trazaremos tu hoja de ruta personalizada para implementar{' '}
                 <strong className="text-white">{result.recommendedPillar.name}</strong>.
               </p>
 
@@ -1045,6 +1302,13 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
           </div>
         </div>
       )}
+
+      {/* Modal de Pruebas Automatizadas y Verificación de Sesgos */}
+      <AutomatedTestsModal
+        isOpen={isTestModalOpen}
+        onClose={() => setIsTestModalOpen(false)}
+        onApplyCase={handleApplyTestCase}
+      />
     </div>
   );
 };

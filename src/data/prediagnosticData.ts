@@ -214,7 +214,7 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
       {
         value: 'invisible',
         label: 'Cuento con años de experiencia y dominio técnico, pero todavía no tengo una oferta comercial definida, clara y visible en el mercado.',
-        scoreWeight: { pilar1: 4, pilar2: 2 },
+        scoreWeight: { pilar1: 5, pilar2: 2 },
         evidenceComment: 'Te ubicas en la etapa de Experto Invisible: amplio conocimiento acumulado pero ausencia de empaquetado comercial estructurado.'
       },
       {
@@ -242,13 +242,13 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
       {
         value: '0',
         label: 'No tengo un paquete estándar; suelo escuchar lo que el cliente quiere y redacto propuestas o cotizaciones a medida según la ocasión.',
-        scoreWeight: { pilar1: 5 },
+        scoreWeight: { pilar1: 6 },
         evidenceComment: 'Evidencia crítica: No cuentas con una oferta productizada; operas improvisando servicios a la medida con alto desgaste.'
       },
       {
         value: '1',
         label: 'Tengo varias ideas y servicios en mente, pero me cuesta resumirlos en una propuesta de alto valor con alcance y precio indiscutibles.',
-        scoreWeight: { pilar1: 3, pilar2: 1 },
+        scoreWeight: { pilar1: 4, pilar2: 1 },
         evidenceComment: 'Evidencia de dispersión: Tienes tracción pero falta ordenar el catálogo en una propuesta central clara y sólida.'
       },
       {
@@ -270,7 +270,7 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
       {
         value: '0',
         label: 'Con frecuencia me dicen que es caro, me piden rebajas o terminan desapareciendo sin responder ("ghosting").',
-        scoreWeight: { pilar1: 4, pilar2: 2 },
+        scoreWeight: { pilar1: 5, pilar2: 2 },
         evidenceComment: 'Evidencia de fuga comercial: Tu propuesta no transmite valor percibido suficiente o el proceso de cierre no está estructurado.'
       },
       {
@@ -290,7 +290,41 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
   {
     id: 'q4',
     stepNumber: 4,
-    category: '04 · EVIDENCIA: AUTORIDAD Y PERCEPCIÓN DE MARCA',
+    category: '04 · TRAYECTORIA RECIENTE: CLIENTES DE PAGO EN LOS ÚLTIMOS 6 MESES',
+    question: 'En los últimos 6 meses, ¿cuántos clientes reales han pagado por tu servicio o producto principal?',
+    hint: 'La tracción comercial se mide en clientes reales atendidos, lo que nos permite saber si tu oferta ya está probada o si necesita consolidarse.',
+    foundationTarget: 'pilar1',
+    options: [
+      {
+        value: '0',
+        label: '0 clientes de pago: Aún no tengo facturación ni he cobrado por esta oferta en el mercado.',
+        scoreWeight: { pilar1: 6 },
+        evidenceComment: 'Punto de partida inicial: Aún no registras clientes de pago recientes; consolidar tu oferta primero evitará que malgastes recursos en etapas avanzadas.'
+      },
+      {
+        value: '1',
+        label: '1 o 2 clientes esporádicos: Amigos, conocidos o referidos aislados que han pagado de forma excepcional.',
+        scoreWeight: { pilar1: 4, pilar2: 1 },
+        evidenceComment: 'Tracción inicial: Clientes esporádicos o conocidos; el siguiente paso es estandarizar tu propuesta para atraer clientes que no te conocen.'
+      },
+      {
+        value: '2',
+        label: 'Entre 3 y 9 clientes de pago: He tenido ventas pero los ingresos aún son irregulares e impredecibles.',
+        scoreWeight: { pilar1: 2, pilar2: 2, pilar3: 2 },
+        evidenceComment: 'Tracción en marcha: Cuentas con validación pero tus ventas son irregulares; necesitas consolidar tu proceso comercial y flujo de prospectos.'
+      },
+      {
+        value: '3',
+        label: 'Más de 10 clientes de pago: Cuento con flujo comercial activo, demanda comprobada y clientes habituales.',
+        scoreWeight: { pilar4: 3, pilar3: 2 },
+        evidenceComment: 'Tracción confirmada: Tienes un flujo continuo de clientes que respalda tu experiencia y te permite dar el salto a sistematizar.'
+      }
+    ]
+  },
+  {
+    id: 'q5',
+    stepNumber: 5,
+    category: '05 · EVIDENCIA: AUTORIDAD Y PERCEPCIÓN DE MARCA',
     question: 'Si un prospecto compara tu perfil o propuesta con otros profesionales de tu área, ¿por qué razón te elegiría?',
     hint: 'La autoridad de marca hace que el cliente te busque por quién eres y no por ser la opción más económica de la lista.',
     foundationTarget: 'pilar2',
@@ -304,7 +338,7 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
       {
         value: '1',
         label: 'Tengo gran reputación en mi círculo cercano, pero afuera en el mercado digital soy prácticamente desconocido.',
-        scoreWeight: { pilar2: 3, pilar3: 1 },
+        scoreWeight: { pilar2: 4, pilar3: 1 },
         evidenceComment: 'Evidencia de marca no proyectada: Tienes la experiencia pero te faltan los activos públicos de posicionamiento.'
       },
       {
@@ -316,9 +350,9 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
     ]
   },
   {
-    id: 'q5',
-    stepNumber: 5,
-    category: '05 · EVIDENCIA: CONTENIDO Y GENERACIÓN DE DEMANDA',
+    id: 'q6',
+    stepNumber: 6,
+    category: '06 · EVIDENCIA: CONTENIDO Y GENERACIÓN DE DEMANDA',
     question: '¿Qué tipo de atención genera tu presencia digital o tus publicaciones en redes sociales hoy?',
     hint: 'El contenido estratégico no busca aplausos vacíos ni likes de amigos; busca atraer tomadores de decisión con presupuesto para comprarte.',
     foundationTarget: 'pilar3',
@@ -344,9 +378,9 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
     ]
   },
   {
-    id: 'q6',
-    stepNumber: 6,
-    category: '06 · EVIDENCIA: CAPACIDAD OPERATIVA Y CUELLO DE BOTELLA',
+    id: 'q7',
+    stepNumber: 7,
+    category: '07 · EVIDENCIA: CAPACIDAD OPERATIVA Y CUELLO DE BOTELLA',
     question: 'Si el próximo mes te llegaran 10 nuevos clientes que aceptan tu servicio al instante, ¿qué sucedería con tu vida?',
     hint: 'Revela si tu negocio está preparado para crecer o si tu modelo actual colapsaría bajo mayor demanda.',
     foundationTarget: 'pilar4',
@@ -372,9 +406,9 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
     ]
   },
   {
-    id: 'q7',
-    stepNumber: 7,
-    category: '07 · EVIDENCIA: ACTIVOS DIGITALES Y METODOLOGÍA PROPIA',
+    id: 'q8',
+    stepNumber: 8,
+    category: '08 · EVIDENCIA: ACTIVOS DIGITALES Y METODOLOGÍA PROPIA',
     question: '¿Qué porcentaje de tu conocimiento profesional está empaquetado en herramientas, manuales o activos que operen sin ti?',
     hint: 'Los activos incluyen productos digitales, entrenamientos en video, guías metodológicas, herramientas de software o agentes de IA propios.',
     foundationTarget: 'pilar4',
@@ -382,29 +416,63 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
       {
         value: '0',
         label: '0%: Todo mi conocimiento está en mi cabeza y lo entrego exclusivamente en vivo mediante mi tiempo presente.',
-        scoreWeight: { pilar1: 2, pilar4: 4 },
+        scoreWeight: { pilar1: 3 },
         evidenceComment: 'Evidencia de dependencia absoluta del tiempo: Tu conocimiento no ha sido transformado en activos reutilizables.'
       },
       {
         value: '1',
         label: 'Tengo materiales dispersos (documentos, plantillas o grabaciones), pero no constituyen un producto empaquetado ni vendible.',
-        scoreWeight: { pilar4: 3, pilar1: 1 },
+        scoreWeight: { pilar1: 2, pilar4: 2 },
         evidenceComment: 'Evidencia de activos desarticulados: Tienes material de gran valor que requiere ser empaquetado en una solución digital.'
       },
       {
         value: '2',
         label: 'Tengo activos productizados y sistemas con IA que entregan valor y generan ingresos sin necesidad de mi intervención directa.',
-        scoreWeight: { pilar4: 1 },
+        scoreWeight: { pilar4: 3 },
         evidenceComment: 'Evidencia de productización madura: Cuentas con activos digitales operando en tu modelo de negocio.'
       }
     ]
   },
   {
-    id: 'q8',
-    stepNumber: 8,
-    category: '08 · PRIORIDAD DECLARADA (LO QUE TÚ CREES QUE NECESITAS)',
+    id: 'q9',
+    stepNumber: 9,
+    category: '09 · ESTRUCTURA OPERATIVA: MANUALES Y DOCUMENTACIÓN DE TU MÉTODO',
+    question: 'Si mañana contrataras a un asistente o quisieras desplegar un Agente de IA para entregar tu servicio, ¿qué documentación encontraría?',
+    hint: 'Para que un negocio pueda delegar o sistematizarse con herramientas de IA, sus procesos deben estar ordenados en guías claras.',
+    foundationTarget: 'pilar4',
+    options: [
+      {
+        value: '0',
+        label: 'Nada documentado: Todo se improvisa en vivo según lo que el cliente pida en cada sesión; está 100% en mi cabeza.',
+        scoreWeight: { pilar1: 5 },
+        evidenceComment: 'Oportunidad de estandarización: Tu entrega es muy personalizada y vive en tu mente; antes de automatizar te conviene estructurar tu paso a paso en el Pilar 1.'
+      },
+      {
+        value: '1',
+        label: 'Apuntes, presentaciones o plantillas sueltas, pero ningún manual estandarizado paso a paso que otra persona o IA pueda replicar.',
+        scoreWeight: { pilar1: 3, pilar4: 1 },
+        evidenceComment: 'Materiales valiosos en desarrollo: Tienes piezas útiles que necesitan convertirse en un método empaquetado para ahorrarte tiempo.'
+      },
+      {
+        value: '2',
+        label: 'Tengo un método claro estructurado que sigo en orden, pero todavía requiere mi acompañamiento manual en cada etapa.',
+        scoreWeight: { pilar4: 3, pilar2: 1 },
+        evidenceComment: 'Método probado en vivo: Tienes una secuencia clara lista para transformarse en productos digitales o activos con IA.'
+      },
+      {
+        value: '3',
+        label: 'Metodología productizada con manuales operativos, guías y entregables estandarizados lista para delegar o automatizar con IA.',
+        scoreWeight: { pilar4: 5 },
+        evidenceComment: 'Estructura madura y lista: Cuentas con la base procedimental para multiplicar tu impacto con tecnología y agentes de IA.'
+      }
+    ]
+  },
+  {
+    id: 'q10',
+    stepNumber: 10,
+    category: '10 · PRIORIDAD DECLARADA (LO QUE TÚ CREES QUE NECESITAS)',
     question: 'Si tuvieras que contratar hoy mismo una consultoría estratégica, ¿cuál de los siguientes servicios solicitarías en primer lugar?',
-    hint: 'Esta es tu intuición inicial. El algoritmo la confrontará con la evidencia de tus respuestas para verificar si es el paso correcto o si hay un cimiento previo que debes resolver primero.',
+    hint: 'Esta es tu intuición inicial. El diagnóstico la analizará frente a tu situación actual para confirmar si es el paso más rentable hoy o si hay algo previo que resolver.',
     foundationTarget: 'stated',
     options: [
       {
@@ -430,49 +498,83 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
     ]
   },
   {
-    id: 'q9',
-    stepNumber: 9,
-    category: '09 · PRUEBA DE ESTRÉS: VALIDACIÓN DE CAPACIDAD REAL',
+    id: 'q11',
+    stepNumber: 11,
+    category: '11 · PRUEBA DE CAPACIDAD: ¿QUÉ PASARÍA ANTE 40 PROSPECTOS EN UN DÍA?',
     question: 'Imagina que una campaña o video tuyo se hace viral y mañana te contactan 40 personas interesadas en tus servicios. ¿Cuál sería el mayor obstáculo para convertir esa atención en facturación limpia?',
-    hint: 'Esta prueba revela si tu negocio tiene un cuello de botella en la oferta, en el cierre de ventas, en la autoridad o en la entrega operativa.',
+    hint: 'Este ejercicio mental revela cuál es el eslabón de tu negocio que requiere atención prioritaria para crecer con tranquilidad.',
     foundationTarget: 'pilar1',
     options: [
       {
         value: 'offer',
         label: 'No tener una oferta única empaquetada con precio firme; tendría que improvisar presupuestos y perdería a la mayoría.',
-        scoreWeight: { pilar1: 5 },
-        evidenceComment: 'Prueba de estrés categórica: El cuello de botella no es el tráfico, sino la ausencia de una oferta productizada.'
+        scoreWeight: { pilar1: 6 },
+        evidenceComment: 'Punto ciego en la oferta: El verdadero desafío no es la falta de personas interesadas, sino contar con una oferta clara y lista para cerrar.'
       },
       {
         value: 'sales',
         label: 'No tener un embudo o protocolo comercial para filtrar, agendar y cerrar ventas sin pasarme el día en llamadas improductivas.',
-        scoreWeight: { pilar1: 4 },
-        evidenceComment: 'Prueba de estrés categórica: El problema crítico radica en la conversión comercial y protocolo de cierre.'
+        scoreWeight: { pilar1: 5 },
+        evidenceComment: 'Oportunidad en el cierre: Requiere un protocolo comercial que califique al prospecto y cierre llamadas con fluidez.'
       },
       {
         value: 'brand',
         label: 'Que al buscarme en internet o ver mis perfiles duden de mi autoridad y no estén dispuestos a pagar tarifas altas.',
         scoreWeight: { pilar2: 5 },
-        evidenceComment: 'Prueba de estrés categórica: Falta de autoridad percibida de marca personal para sostener precios premium.'
+        evidenceComment: 'Oportunidad de autoridad: Hace falta consolidar tu presencia y activos de marca para sostener precios premium.'
       },
       {
         value: 'scale',
         label: 'Que si cierro a la mitad no tendría tiempo ni vida para atenderlos a todos; mi cuello de botella es la entrega operativa.',
         scoreWeight: { pilar4: 5 },
-        evidenceComment: 'Prueba de estrés categórica: Tu limitante no es vender, sino la falta de sistematización y activos que no consuman tus horas.'
+        evidenceComment: 'Oportunidad de escala: Vendes tus horas personales; tu camino más rápido a la tranquilidad es sistematizar la entrega.'
       },
       {
         value: 'visibility',
         label: 'En realidad mi oferta y mi entrega están impecables; lo único que me falta de verdad es justamente que más gente me conozca.',
         scoreWeight: { pilar3: 4 },
-        evidenceComment: 'Prueba de estrés categórica: La base está sólida; tu verdadero acelerador es la distribución y el contenido estratégico.'
+        evidenceComment: 'Cimiento sólido: Tu oferta funciona; tu acelerador natural es la difusión estratégica y los contenidos orientados a venta.'
       }
     ]
   },
   {
-    id: 'q10',
-    stepNumber: 10,
-    category: '10 · HISTORIAL: EXPERIENCIAS Y RECURSOS INVERTIDOS',
+    id: 'q12',
+    stepNumber: 12,
+    category: '12 · MOMENTO DE SINCERIDAD: EL VERDADERO FRENO DE TU NEGOCIO HOY',
+    question: 'Siendo 100% honesto contigo mismo, ¿cuál es la razón de fondo por la que hoy tu negocio no factura lo que deseas?',
+    hint: 'La honestidad contigo mismo es el atajo más rápido hacia los resultados: enfocar la energía donde realmente mueve la aguja.',
+    foundationTarget: 'pilar1',
+    options: [
+      {
+        value: 'pilar1_bias',
+        label: 'Sinceramente me he enfocado en pensar en cursos, diseño, automatizaciones o redes cuando en el fondo sé que mi oferta central no está clara ni validada.',
+        scoreWeight: { pilar1: 7 },
+        evidenceComment: 'Sinceridad estratégica: Reconoces que antes de invertir en cursos, diseño o redes, la prioridad más rentable es definir y validar tu oferta central.'
+      },
+      {
+        value: 'pilar2_bias',
+        label: 'Sé exactamente qué solución entrego y funciona con clientes, pero soy un desconocido en el mercado digital y nadie me percibe como autoridad.',
+        scoreWeight: { pilar2: 7 },
+        evidenceComment: 'Claridad en tu posicionamiento: Tu trabajo es excelente pero necesitas proyectar tu estatus de referente para cobrar lo que mereces.'
+      },
+      {
+        value: 'pilar3_bias',
+        label: 'Tengo buena oferta y reputación, pero no tengo un canal activo y constante de contenidos que genere llamadas comerciales regulares.',
+        scoreWeight: { pilar3: 7 },
+        evidenceComment: 'Claridad en la captación: Tu modelo funciona; lo que necesitas es instalar un motor continuo de atracción de clientes cualificados.'
+      },
+      {
+        value: 'pilar4_bias',
+        label: 'Tengo clientes y facturación de sobra, pero mi negocio depende tanto de mis horas presenciales que estoy al borde del colapso operativo.',
+        scoreWeight: { pilar4: 7 },
+        evidenceComment: 'Claridad en la escalabilidad: Has validado tu valor; tu paso prioritario es liberarte operativamente con activos digitales e IA.'
+      }
+    ]
+  },
+  {
+    id: 'q13',
+    stepNumber: 13,
+    category: '13 · HISTORIAL: EXPERIENCIAS Y RECURSOS INVERTIDOS',
     question: 'En los últimos meses, ¿en qué área has invertido tiempo, dinero o energía sin conseguir el retorno esperado?',
     hint: 'Identificar dónde has tenido frustraciones pasadas ayuda a evitar repetir el error de construir sobre cimientos débiles.',
     foundationTarget: 'pilar1',
@@ -492,7 +594,7 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
       {
         value: 'sales',
         label: 'Intenté prospectar o insistir en ventas, pero sentí mucho desgaste y tuve que rebajar mis precios para que aceptaran.',
-        scoreWeight: { pilar1: 3, pilar2: 2 },
+        scoreWeight: { pilar1: 4, pilar2: 2 },
         evidenceComment: 'Evidencia histórica: Vender a la fuerza sin posicionamiento de autoridad deteriora los márgenes y desgasta al consultor.'
       },
       {
@@ -510,9 +612,9 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
     ]
   },
   {
-    id: 'q11',
-    stepNumber: 11,
-    category: '11 · RESULTADO CONCRETO Y TRANSFORMACIÓN ESPERADA',
+    id: 'q14',
+    stepNumber: 14,
+    category: '14 · RESULTADO CONCRETO Y TRANSFORMACIÓN ESPERADA',
     question: 'Si realizáramos un acompañamiento estratégico personalizado, ¿cuál es la primera victoria concreta que necesitas celebrar?',
     hint: 'Alinear tus expectativas con el resultado medible de mayor impacto directo en tu negocio.',
     foundationTarget: 'pilar1',
@@ -538,7 +640,7 @@ export const PREDIAGNOSTIC_QUESTIONS: PrediagnosticQuestion[] = [
       {
         value: 'system',
         label: 'Sistematizar mi método en productos digitales y agentes de IA para desacoplar mis ingresos de mis horas de trabajo físico.',
-        scoreWeight: { pilar4: 5 },
+        scoreWeight: { pilar4: 4 },
         evidenceComment: 'Objetivo prioritario: Modelo de negocio digital escalable, activos monetizables y automatización con IA.'
       }
     ]

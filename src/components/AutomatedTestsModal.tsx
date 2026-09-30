@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, X, User, ArrowRight } from 'lucide-react';
+import { Sparkles, X, User, ArrowRight, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { PrediagnosticAnswers, UserLeadInfo } from '../utils/prediagnosticLogic';
 
 export interface TestCase {
@@ -16,18 +16,59 @@ export interface TestCase {
 
 export const AUTOMATED_TEST_CASES: TestCase[] = [
   {
+    id: 'case_forced_pilar4_without_foundation',
+    name: 'Caso Especial (Prueba del Usuario): Forzar Pilar 4 y Redes sin Oferta ni Clientes',
+    badge: 'Orientación Estratégica & Enfoque Rentable',
+    badgeColor: 'bg-red-100 text-red-900 border-red-300',
+    targetService: 'Estrategia Comercial & Validación de Oferta (BMS)',
+    hasContradictionExpected: true,
+    description:
+      'Simulación exacta del ejercicio del usuario: El prospecto marca que quiere Sistematización e IA (Pilar 4) y Contenidos de redes (Pilar 3). Sin embargo, sus respuestas muestran que aún no tiene oferta estandarizada ni clientes recurrentes. El sistema le explica con cercanía por qué primero debe asegurar clientes con el Pilar 1 antes de invertir en automatizaciones.',
+    lead: {
+      name: 'Dr. Alejandro Peña',
+      email: 'alejandro.pena@consultoriaejemplo.com',
+      whatsapp: '+57 300 765 4321',
+      profession: 'Psicólogo y Mentor de Liderazgo',
+      currentActivity: 'Atiendo sesiones individuales presenciales de coaching y apoyo emocional',
+      commercializationModel: 'servicios_1a1',
+      payingClientsStatus: 'sin_clientes',
+      company: 'Peña Liderazgo',
+      role: 'Fundador'
+    },
+    answers: {
+      q1: 'invisible', // Experto invisible: conocimiento pero sin oferta visible
+      q2: '0', // No tiene paquete estándar, cotiza a la medida
+      q3: '0', // Dicen que es caro o ghosting
+      q4: '0', // 0 clientes de pago en los últimos 6 meses
+      q5: '0', // Lo perciben como uno más
+      q6: '0', // No publica o esporádico
+      q7: '0', // Colapsaría con 10 clientes
+      q8: '0', // 0% empaquetado, todo en mi cabeza
+      q9: '0', // Se improvisa en vivo, no hay manuales
+      q10: 'pilar4', // Quería sistematización e IA
+      q11: 'offer', // Prueba de capacidad: cuello de botella es no tener oferta única
+      q12: 'pilar1_bias', // Sinceridad: admite que la oferta aún no está clara ni validada
+      q13: 'content', // Frustración: invirtió en redes sin retorno
+      q14: 'system' // Buscaba sistematizar
+    }
+  },
+  {
     id: 'case_contradiction_p1',
-    name: 'Caso 1: Sesgo Típico (Cree necesitar Redes y Contenido → Requiere Validar su Oferta)',
-    badge: 'Discrepancia Crítica Detectada',
+    name: 'Caso 1: Enfoque en Redes Sociales (Cree necesitar Viralidad → Requiere Validar su Oferta)',
+    badge: 'Alineación Estratégica',
     badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
     targetService: 'Estrategia Comercial & Validación de Oferta (BMS)',
     hasContradictionExpected: true,
     description:
-      'El prospecto cree que su problema es "falta de contenido o seguidores", pero su oferta es ambigua y no tiene un proceso comercial estandarizado. El algoritmo bloquea la inversión en contenidos y le asigna consolidar su oferta para no malgastar recursos.',
+      'El prospecto cree que su mayor necesidad es "más contenido o seguidores", pero su oferta aún se cotiza a la medida. El sistema le recomienda consolidar primero una oferta de alto valor para convertir cada futuro seguidor en un cliente real.',
     lead: {
       name: 'Carlos Mendoza',
       email: 'carlos.mendoza@testlead.com',
       whatsapp: '+52 55 9876 5432',
+      profession: 'Consultor de Negocios y Finanzas',
+      currentActivity: 'Asesoro a empresas a ordenar sus números e impuestos',
+      commercializationModel: 'servicios_1a1',
+      payingClientsStatus: 'irregulares',
       company: 'Mendoza Consultores',
       role: 'Director y Fundador'
     },
@@ -35,14 +76,17 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
       q1: 'invisible',
       q2: '0', // Oferta no clara ni productizada (cotizaciones a medida)
       q3: '0', // Clientes dicen que es caro o regatean
-      q4: '0', // Perfil comoditizado
-      q5: '0', // Sin sistema de contenido
-      q6: '0', // Colapsaría con 10 clientes
-      q7: '0', // Cero activos digitales
-      q8: 'pilar3', // ¡DECLARÓ QUERER CONTENIDOS Y REDES!
-      q9: 'offer', // Prueba de estrés: su obstáculo es no tener oferta única
-      q10: 'content', // Frustración previa: publicó videos y solo obtuvo likes vacíos
-      q11: 'clarity' // Desea orden y claridad de oferta
+      q4: '1', // 1 o 2 clientes esporádicos
+      q5: '0', // Perfil comoditizado
+      q6: '0', // Sin sistema de contenido
+      q7: '0', // Colapsaría con 10 clientes
+      q8: '0', // Cero activos digitales
+      q9: '0', // Nada documentado
+      q10: 'pilar3', // ¡DECLARÓ QUERER CONTENIDOS Y REDES!
+      q11: 'offer', // Prueba de estrés: su obstáculo es no tener oferta única
+      q12: 'pilar1_bias', // Reconoce que la oferta no está clara
+      q13: 'content', // Frustración previa: publicó videos y solo obtuvo likes vacíos
+      q14: 'clarity' // Desea orden y claridad de oferta
     }
   },
   {
@@ -58,6 +102,10 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
       name: 'Dra. Sofía Herrera',
       email: 'sofia.herrera@testlead.com',
       whatsapp: '+57 310 456 7890',
+      profession: 'Médica Especialista y Terapeuta de Bienestar',
+      currentActivity: 'Atiendo pacientes en consulta privada y dirijo programas de salud preventiva',
+      commercializationModel: 'servicios_1a1',
+      payingClientsStatus: 'activos_recurrentes',
       company: 'Clínica & Consultoría Bienestar',
       role: 'Especialista y Conferencista'
     },
@@ -65,14 +113,17 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
       q1: 'invisible',
       q2: '2', // Oferta central probada y estructurada
       q3: '2', // Clientes que la conocen pagan bien
-      q4: '0', // Pero afuera su perfil no se diferencia
-      q5: '1', // Publica pero atrae curiosos
-      q6: '1', // Capacidad media
-      q7: '1', // Materiales dispersos
-      q8: 'pilar2', // Busca posicionamiento y marca de referente
-      q9: 'brand', // Prueba de estrés: necesita autoridad que justifique precios premium
-      q10: 'brand',
-      q11: 'authority'
+      q4: '2', // Entre 3 y 9 clientes regulares
+      q5: '0', // Pero afuera su perfil no se diferencia
+      q6: '1', // Publica pero atrae curiosos
+      q7: '1', // Capacidad media
+      q8: '1', // Materiales dispersos
+      q9: '2', // Método estructurado manual
+      q10: 'pilar2', // Busca posicionamiento y marca de referente
+      q11: 'brand', // Prueba de estrés: necesita autoridad que justifique precios premium
+      q12: 'pilar2_bias',
+      q13: 'brand',
+      q14: 'authority'
     }
   },
   {
@@ -83,11 +134,15 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
     targetService: 'Sistematización de Negocio, Activos Digitales & IA',
     hasContradictionExpected: false,
     description:
-      'Profesional consolidado con alta demanda y buena reputación, pero atrapado vendiendo horas de su vida. Si para 30 días el negocio colapsa. Requiere el Digital Business Day, activos de IA y su Plan 30·60·90.',
+      'Profesional consolidado con alta demanda y buena reputación, pero atrapado vendiendo horas de su vida. Si para 30 días el negocio colapsa. Cumple con todos los prerrequisitos (oferta probada, 10+ clientes, método estructurado) y requiere el Digital Business Day, activos de IA y su Plan 30·60·90.',
     lead: {
       name: 'Ing. Roberto Salazar',
       email: 'roberto.salazar@testlead.com',
       whatsapp: '+34 612 345 678',
+      profession: 'Consultor de Estrategia Operativa e Ingeniería',
+      currentActivity: 'Asesoro a directivos de empresas industriales en optimización de plantas',
+      commercializationModel: 'servicios_1a1',
+      payingClientsStatus: 'activos_recurrentes',
       company: 'Salazar Business Advisory',
       role: 'Consultor Senior y Socio Director'
     },
@@ -95,14 +150,17 @@ export const AUTOMATED_TEST_CASES: TestCase[] = [
       q1: 'saturado',
       q2: '2', // Oferta probada y validada
       q3: '2', // Proceso de venta validado
-      q4: '2', // Buena reputación
-      q5: '2', // Presencia activa
-      q6: '0', // Colapsaría con 10 clientes (cuello de botella de tiempo)
-      q7: '0', // Todo su conocimiento está en su cabeza
-      q8: 'pilar4', // Busca productos digitales y activos de IA
-      q9: 'scale', // Prueba de estrés: su freno es la entrega operativa
-      q10: 'scale',
-      q11: 'system'
+      q4: '3', // Más de 10 clientes de pago comprobados
+      q5: '2', // Buena reputación
+      q6: '2', // Presencia activa
+      q7: '0', // Colapsaría con 10 clientes (cuello de botella de tiempo)
+      q8: '1', // Materiales de valor
+      q9: '2', // Método estructurado que sigue en orden
+      q10: 'pilar4', // Busca productos digitales y activos de IA
+      q11: 'scale', // Prueba de estrés: su freno es la entrega operativa
+      q12: 'pilar4_bias', // Dolor es la saturación
+      q13: 'scale',
+      q14: 'system'
     }
   }
 ];
@@ -131,10 +189,10 @@ export const AutomatedTestsModal: React.FC<AutomatedTestsModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-extrabold text-white">
-                Pruebas Automáticas del Diagnóstico
+                Pruebas Automáticas y Escenarios Estratégicos
               </h3>
               <p className="text-xs text-gray-400">
-                Verifica al instante la detección de sesgos y la recomendación estratégica
+                Comprueba cómo el sistema guía al prospecto hacia su paso más rentable y seguro
               </p>
             </div>
           </div>
@@ -149,10 +207,7 @@ export const AutomatedTestsModal: React.FC<AutomatedTestsModalProps> = ({
         {/* Lista de Escenarios */}
         <div className="p-6 space-y-4 overflow-y-auto flex-1">
           <p className="text-xs text-gray-600 leading-relaxed">
-            Selecciona uno de los 3 casos prediseñados para verificar cómo el algoritmo analiza las
-            respuestas, identifica si el prospecto tiene una discrepancia entre lo que cree que
-            necesita y lo que la evidencia fáctica exige, y le asigna el servicio de consultoría
-            correcto:
+            Selecciona uno de los escenarios para comprobar en tiempo real cómo el sistema analiza la situación del negocio, <strong>protege al cliente de dar pasos en falso</strong> y le recomienda con total claridad el programa que le generará los mejores resultados hoy:
           </p>
 
           <div className="space-y-3.5">
@@ -178,7 +233,7 @@ export const AutomatedTestsModal: React.FC<AutomatedTestsModalProps> = ({
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-gray-200/80">
                   <span className="text-[11px] text-gray-600 font-medium">
-                    Servicio recomendado:{' '}
+                    Servicio asignado por evidencia:{' '}
                     <strong className="text-gray-900 font-bold">{tc.targetService}</strong>
                   </span>
 

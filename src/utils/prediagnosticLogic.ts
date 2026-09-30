@@ -13,6 +13,10 @@ export interface UserLeadInfo {
   name: string;
   email: string;
   whatsapp: string;
+  profession: string;              // Profesión o Área de Especialidad
+  currentActivity: string;         // A qué se dedica hoy y a quién ayuda
+  commercializationModel: string;  // Modelo de comercialización actual (servicios 1 a 1, infoproductos, etc.)
+  payingClientsStatus: string;     // Situación real con clientes de pago
   company?: string;
   role?: string;
 }
@@ -53,15 +57,23 @@ export interface PrediagnosticResult {
   } | null;
   hasInternalIncoherence: boolean;
   detectedIncoherences: IncoherenceDetail[];
+  gatingAnalysis: {
+    isPilar4Blocked: boolean;
+    isPilar3Blocked: boolean;
+    blockReasonPilar4?: string;
+    blockReasonPilar3?: string;
+  };
   foundationStatus: {
     pilar1Score: number;
     pilar2Score: number;
     pilar3Score: number;
     pilar4Score: number;
     offerClarityOk: boolean;
+    payingClientsOk: boolean;
     salesProcessOk: boolean;
     positioningOk: boolean;
     contentEngineOk: boolean;
+    deliveryDocsOk: boolean;
     freedomScaleOk: boolean;
     incoherenceDetected: boolean;
   };
@@ -76,8 +88,24 @@ export interface PrediagnosticResult {
   scores: Record<string, number>;
 }
 
+export const COMMERCIAL_MODELS_LABELS: Record<string, string> = {
+  servicios_1a1: 'Servicios profesionales / Consultoría 1 a 1 personalizada',
+  infoproductos_cursos: 'Cursos grabados, talleres o productos digitales (infoproductos)',
+  productos_fisicos: 'Productos físicos / Comercio / Agencia con equipo',
+  servicios_y_productos: 'Combinación de servicios 1 a 1 y cursos/talleres',
+  aun_no_comercializo: 'Aún no comercializo servicios ni productos (fase de idea o transición)'
+};
+
+export const PAYING_CLIENTS_LABELS: Record<string, string> = {
+  activos_recurrentes: 'Clientes de pago recurrentes y agenda activa constante',
+  irregulares: 'Clientes esporádicos o irregulares (meses buenos y meses en cero)',
+  pocos_pasados: 'Pocos clientes en el pasado; actualmente con dificultad para cerrar',
+  sin_clientes: 'Aún no he tenido mi primer cliente de pago en este negocio'
+};
+
 /**
  * Algoritmo de cálculo multicriterio con verificación de cimientos fácticos
+ * e inmunidad contra sesgos declarados del prospecto.
  */
 export function calculatePrediagnostic(
   answers: PrediagnosticAnswers,
@@ -115,151 +143,233 @@ export function calculatePrediagnostic(
   const profileKey = answers.q1 || 'invisible';
   const profile = EVOLUTIONARY_PROFILES[profileKey] || EVOLUTIONARY_PROFILES.invisible;
 
-  // =========================================================================
-  // MOTOR DE CONTROL DE VERACIDAD: AUDITORÍA DE INCOHERENCIAS CRUZADAS
-  // =========================================================================
-  const detectedIncoherences: IncoherenceDetail[] = [];
-
-  // Helper para extraer el texto de la opción seleccionada
+  // Helper para extraer el texto legible de la opción seleccionada
   const getOptText = (qId: string, val: string) => {
     const q = PREDIAGNOSTIC_QUESTIONS.find((item) => item.id === qId);
     return q?.options.find((o) => o.value === val)?.label || val;
   };
 
-  // 1. INCOHERENCIA DE OFERTA: Afirma Oferta Estructurada (Q2=2) pero en Estrés no tiene oferta con precio firme (Q9='offer')
-  if (answers.q2 === '2' && answers.q9 === 'offer') {
+  // =========================================================================
+  // GATES DE VIABILIDAD Y AUDITORÍA DE PRERREQUISITOS (METODOLOGÍA CREA Y MONETIZA®)
+  // =========================================================================
+  const lacksOfferValidation = answers.q2 === '0' || answers.q2 === '1';
+  const lacksPayingClients =
+    answers.q4 === '0' ||
+    answers.q4 === '1' ||
+    lead.payingClientsStatus === 'sin_clientes' ||
+    lead.payingClientsStatus === 'pocos_pasados';
+  const lacksDeliverablesDocs = answers.q9 === '0';
+  const hasOfferStressBottleneck = answers.q11 === 'offer';
+  const doesNotCommercialize = lead.commercializationModel === 'aun_no_comercializo';
+  const confessedOfferBias = answers.q12 === 'pilar1_bias';
+
+  // PILAR 4 (Sistematización & IA): Requiere OBLIGATORIAMENTE oferta probada, clientes reales y método
+  const isPilar4Blocked =
+    lacksOfferValidation ||
+    lacksPayingClients ||
+    lacksDeliverablesDocs ||
+    hasOfferStressBottleneck ||
+    doesNotCommercialize ||
+    confessedOfferBias;
+
+  // PILAR 3 (Viral Sales Content): Requiere oferta estructurada que no se improvise a medida
+  const isPilar3Blocked =
+    answers.q2 === '0' ||
+    answers.q4 === '0' ||
+    answers.q11 === 'offer' ||
+    doesNotCommercialize;
+
+  // =========================================================================
+  // MOTOR DE CONTROL DE VERACIDAD: AUDITORÍA DE INCOHERENCIAS CRUZADAS
+  // =========================================================================
+  const detectedIncoherences: IncoherenceDetail[] = [];
+
+  // 1. INCOHERENCIA DE SISTEMATIZACIÓN PREMATURA (Pide P4 o sistema en Q10/Q14 sin cimientos)
+  if ((answers.q10 === 'pilar4' || answers.q14 === 'system') && isPilar4Blocked) {
+    let reasonText = '';
+    let triggeringQNum = 2;
+    let triggeringCategory = 'Claridad y Productización de Oferta';
+    let triggeringText = getOptText('q2', answers.q2);
+
+    if (doesNotCommercialize) {
+      reasonText = 'aún no comercializas ningún producto ni servicio en el mercado';
+      triggeringCategory = 'Modelo de Comercialización Inicial';
+      triggeringText = COMMERCIAL_MODELS_LABELS[lead.commercializationModel] || 'Fase de idea';
+    } else if (lacksPayingClients) {
+      triggeringQNum = 4;
+      triggeringCategory = 'Historial de Clientes de Pago';
+      triggeringText = getOptText('q4', answers.q4);
+      reasonText = 'no tienes un flujo comprobado de clientes de pago recientes';
+    } else if (lacksOfferValidation) {
+      triggeringQNum = 2;
+      triggeringCategory = 'Claridad y Productización de Oferta';
+      triggeringText = getOptText('q2', answers.q2);
+      reasonText = 'tu oferta no está estandarizada ni tiene precio firme (cotizas a la medida)';
+    } else if (lacksDeliverablesDocs) {
+      triggeringQNum = 9;
+      triggeringCategory = 'Procedimientos y Documentación de Entrega';
+      triggeringText = getOptText('q9', answers.q9);
+      reasonText = 'tu servicio se improvisa en vivo y no existe ningún manual ni entregable estandarizado';
+    } else if (hasOfferStressBottleneck) {
+      triggeringQNum = 11;
+      triggeringCategory = 'Prueba de Estrés (40 Prospectos)';
+      triggeringText = getOptText('q11', answers.q11);
+      reasonText = 'tu mayor cuello de botella confesado es no tener una oferta única con precio firme';
+    }
+
+    detectedIncoherences.push({
+      id: 'incoherence_premature_systematization',
+      severity: 'critica',
+      title: 'El Peligro de Automatizar antes de Validar: Primero la Venta, Luego el Sistema',
+      statementA: {
+        questionNumber: answers.q10 === 'pilar4' ? 10 : 14,
+        questionCategory: 'Servicio que Buscabas / Meta Deseada',
+        answerText: answers.q10 === 'pilar4' ? getOptText('q10', answers.q10) : getOptText('q14', answers.q14)
+      },
+      statementB: {
+        questionNumber: triggeringQNum,
+        questionCategory: triggeringCategory,
+        answerText: triggeringText
+      },
+      verdict: `Diagnóstico Estratégico: Tu intuición fue buscar sistematización con activos digitales y agentes de IA (Pilar 4), pero la realidad de tu negocio demuestra que ${reasonText}.`,
+      revealedTruth:
+        'En la Metodología CREA Y MONETIZA® de Patricia Loaiza cuidamos tu tiempo y dinero: automatizar un servicio que aún no se vende con fluidez en vivo genera gastos innecesarios y frustración. Primero creamos una oferta que convierta con facilidad en el mercado real.',
+      actionRequired:
+        'Tu camino más rentable y seguro es empezar por el Pilar 1 (Estrategia Comercial BMS): definir tu oferta irresistible, tus entregables y tu precio antes de sistematizar.'
+    });
+  }
+
+  // 2. INCOHERENCIA DE TRÁFICO EN BALDE AGUJEREADO (Pide P3 o contenidos en Q10/Q14 sin oferta)
+  if ((answers.q10 === 'pilar3' || answers.q14 === 'leads') && isPilar3Blocked) {
+    detectedIncoherences.push({
+      id: 'incoherence_traffic_without_offer',
+      severity: 'critica',
+      title: 'El Espejismo de las Redes: Más Seguidores no te darán Clientes sin una Oferta Irresistible',
+      statementA: {
+        questionNumber: answers.q10 === 'pilar3' ? 10 : 14,
+        questionCategory: 'Servicio Deseado / Meta',
+        answerText: answers.q10 === 'pilar3' ? getOptText('q10', answers.q10) : getOptText('q14', answers.q14)
+      },
+      statementB: {
+        questionNumber: answers.q2 === '0' ? 2 : (answers.q4 === '0' ? 4 : 11),
+        questionCategory: answers.q2 === '0' ? 'Productización de Oferta' : (answers.q4 === '0' ? 'Clientes de Pago' : 'Capacidad de Cierre'),
+        answerText: answers.q2 === '0' ? getOptText('q2', answers.q2) : (answers.q4 === '0' ? getOptText('q4', answers.q4) : getOptText('q11', answers.q11))
+      },
+      verdict:
+        'Diagnóstico Estratégico: Deseas acelerar la captación con contenidos y redes (Pilar 3), pero tu oferta comercial todavía se improvisa o no cuenta con entregables y precios firmes.',
+      revealedTruth:
+        'Atraer tráfico masivo sin tener una oferta empaquetada lista para cerrar es como bombear agua en un balde con agujeros: desgasta tu tiempo atendiendo curiosos que piden rebajas o no compran.',
+      actionRequired:
+        'Primero estructuramos tu oferta de alto valor en el Pilar 1; una vez blindada, cada publicación en redes atraerá compradores listos para pagar.'
+    });
+  }
+
+  // 3. INCOHERENCIA DE OFERTA VS PRUEBA DE ESTRÉS (Dice tener oferta probada en Q2 pero en estrés no tiene oferta en Q11)
+  if (answers.q2 === '2' && answers.q11 === 'offer') {
     detectedIncoherences.push({
       id: 'incoherence_offer_vs_stress',
       severity: 'critica',
-      title: 'El Espejismo de la Oferta: Afirmación Teórica vs Realidad Operativa',
+      title: 'Tu Oferta ante el Mercado Real: De la Idea en la Mente al Paquete Vendible',
       statementA: {
         questionNumber: 2,
         questionCategory: 'Claridad y Productización de Oferta',
         answerText: getOptText('q2', answers.q2)
       },
       statementB: {
-        questionNumber: 9,
-        questionCategory: 'Prueba de Estrés (40 Prospectos Inmediatos)',
-        answerText: getOptText('q9', answers.q9)
+        questionNumber: 11,
+        questionCategory: 'Prueba de Capacidad (40 Prospectos Inmediatos)',
+        answerText: getOptText('q11', answers.q11)
       },
       verdict:
-        'Incoherencia Fáctica: En la Pregunta 2 aseguraste tener una oferta central definida con precio probado y entregables claros, pero al someterte a la prueba de estrés de 40 clientes en la Pregunta 9 confesaste que tu mayor cuello de botella sería "no tener una oferta única empaquetada con precio firme" y que tendrías que improvisar presupuestos perdiendo a la mayoría.',
+        'Diagnóstico Estratégico: Considerabas que tu oferta estaba estructurada, pero al imaginar la llegada de 40 clientes nuevos confesaste que tu mayor obstáculo sería no tener una oferta empaquetada con precio firme y tener que improvisar presupuestos.',
       revealedTruth:
-        'Tu oferta existe en tu cabeza como concepto o deseo, pero ante el mercado real NO está productizada ni tiene precio inquebrantable. Intentar hacer marketing o automatizar en este estado quemaría a tus prospectos.',
+        'Tener una gran trayectoria no es lo mismo que tener una oferta productizada. El mercado premia la claridad inmediata y castiga la improvisación.',
       actionRequired:
-        'El algoritmo ajusta la ponderación: necesitas estructurar tu oferta central en el Pilar 1 antes de acelerar difusión.'
+        'Estandarizar tus entregables y fijar precios inquebrantables en el Pilar 1 para presentar propuestas con total confianza y rapidez.'
     });
   }
 
-  // 2. INCOHERENCIA DE TRÁFICO VS COLAPSO OPERATIVO (Pide más clientes/redes pero ya colapsaría de tiempo)
-  if ((answers.q8 === 'pilar3' || answers.q11 === 'leads') && (answers.q6 === '0' || answers.q1 === 'saturado')) {
+  // 4. INCOHERENCIA DE TRÁFICO VS COLAPSO OPERATIVO (Pide contenidos pero ya colapsaría de tiempo)
+  if ((answers.q10 === 'pilar3' || answers.q14 === 'leads') && (answers.q7 === '0' || answers.q1 === 'saturado')) {
     detectedIncoherences.push({
       id: 'incoherence_traffic_vs_saturation',
-      severity: 'critica',
-      title: 'Trampa del Crecimiento: Pedir Más Prospectos Estando Colapsado de Tiempo',
+      severity: 'alta',
+      title: 'El Riesgo de Saturación: Ordenar tu Entrega antes de Buscar Más Clientes',
       statementA: {
-        questionNumber: answers.q8 === 'pilar3' ? 8 : 11,
+        questionNumber: answers.q10 === 'pilar3' ? 10 : 14,
         questionCategory: 'Servicio Deseado / Meta Inmediata',
-        answerText: answers.q8 === 'pilar3' ? getOptText('q8', answers.q8) : getOptText('q11', answers.q11)
+        answerText: answers.q10 === 'pilar3' ? getOptText('q10', answers.q10) : getOptText('q14', answers.q14)
       },
       statementB: {
-        questionNumber: answers.q6 === '0' ? 6 : 1,
+        questionNumber: answers.q7 === '0' ? 7 : 1,
         questionCategory: 'Capacidad Operativa y Horas de Entrega',
-        answerText: answers.q6 === '0' ? getOptText('q6', answers.q6) : getOptText('q1', answers.q1)
+        answerText: answers.q7 === '0' ? getOptText('q7', answers.q7) : getOptText('q1', answers.q1)
       },
       verdict:
-        'Incoherencia de Capacidad: Quieres atraer más prospectos masivos mediante contenidos y redes, pero al mismo tiempo admites que estás saturado vendiendo horas o que con 10 clientes nuevos colapsarías por completo.',
+        'Diagnóstico Estratégico: Deseas más prospectos, pero al mismo tiempo admites que ya estás al límite de tu tiempo o que con clientes nuevos colapsarías de estrés.',
       revealedTruth:
-        'Abrir el grifo de prospectos cuando tu entrega es 100% manual destruirá tu calidad de vida y el servicio al cliente. Tu verdadero cuello de botella NO es la falta de leads, sino la falta de infraestructura escalable.',
+        'Atraer más clientes cuando entregas todo 100% manual afectará tu calidad de vida y la satisfacción de tus clientes. Tu negocio te pide liberar tu tiempo primero.',
       actionRequired:
-        'El algoritmo dictamina que tu necesidad prioritaria es el Pilar 4 (Sistematización de Negocio, Activos Digitales & Agentes IA) para liberar tu tiempo antes de meter más volumen.'
+        'Estructurar tu método en activos escalables o agilizar tu entrega antes de abrir el grifo de prospectos.'
     });
   }
 
-  // 3. INCOHERENCIA DE VIRALIDAD SIN MARCA PERSONAL (Pide contenidos masivos pero es percibido como commodity)
-  if ((answers.q8 === 'pilar3' || answers.q11 === 'leads') && (answers.q4 === '0' || answers.q9 === 'brand')) {
+  // 5. INCOHERENCIA DE VIRALIDAD SIN MARCA PERSONAL (Pide contenidos masivos pero es percibido como commodity)
+  if ((answers.q10 === 'pilar3' || answers.q14 === 'leads') && (answers.q5 === '0' || answers.q11 === 'brand')) {
     detectedIncoherences.push({
       id: 'incoherence_traffic_without_brand',
       severity: 'alta',
-      title: 'Contradicción de Difusión: Buscar Viralidad sin Posicionamiento de Autoridad',
+      title: 'La Diferenciación que Falta: Autoridad de Marca antes de Contenidos Masivos',
       statementA: {
-        questionNumber: answers.q8 === 'pilar3' ? 8 : 11,
+        questionNumber: answers.q10 === 'pilar3' ? 10 : 14,
         questionCategory: 'Servicio Deseado / Meta',
-        answerText: answers.q8 === 'pilar3' ? getOptText('q8', answers.q8) : getOptText('q11', answers.q11)
+        answerText: answers.q10 === 'pilar3' ? getOptText('q10', answers.q10) : getOptText('q14', answers.q14)
       },
       statementB: {
-        questionNumber: answers.q4 === '0' ? 4 : 9,
+        questionNumber: answers.q5 === '0' ? 5 : 11,
         questionCategory: 'Percepción de Marca y Autoridad',
-        answerText: answers.q4 === '0' ? getOptText('q4', answers.q4) : getOptText('q9', answers.q9)
+        answerText: answers.q5 === '0' ? getOptText('q5', answers.q5) : getOptText('q11', answers.q11)
       },
       verdict:
-        'Incoherencia de Posicionamiento: Buscas contratar el motor de contenidos y viralidad en redes, pero reconoces que en el mercado te perciben como "uno más del montón" o que prospectos fríos dudarían de tu autoridad.',
+        'Diagnóstico Estratégico: Buscas publicar más en redes, pero en el mercado te perciben como una opción más del montón o prospectos fríos dudarían de tu autoridad.',
       revealedTruth:
-        'El tráfico frío sin una marca personal con autoridad construida atrae únicamente a personas que comparan precios o piden rebajas. Publicar sin posicionamiento te convierte en un creador de contenido genérico.',
+        'El contenido masivo sin una marca personal de autoridad atrae clientes que regatean. Para cobrar tarifas altas necesitas ser percibido como el referente indiscutible.',
       actionRequired:
-        'El algoritmo eleva la urgencia del Pilar 2 (Posicionamiento de Marca Personal & Autoridad) para blindar tu estatus antes de invertir en contenidos masivos.'
+        'Construir tus activos de Marca Personal en el Pilar 2 para que los clientes te elijan por tu reputación y no por ser la opción más económica.'
     });
   }
 
-  // 4. INCOHERENCIA DE SISTEMATIZACIÓN PREMATURA: Quiere Sistematizar / IA (Q8='pilar4' o Q11='system') sin oferta validada
-  if (
-    (answers.q8 === 'pilar4' || answers.q11 === 'system') &&
-    (answers.q2 === '0' || answers.q9 === 'offer')
-  ) {
-    detectedIncoherences.push({
-      id: 'incoherence_premature_systematization',
-      severity: 'critica',
-      title: 'Intento de Sistematización Prematura: Automatizar el Caos',
-      statementA: {
-        questionNumber: answers.q8 === 'pilar4' ? 8 : 11,
-        questionCategory: 'Servicio Solicitado / Meta de Transformación',
-        answerText: answers.q8 === 'pilar4' ? getOptText('q8', answers.q8) : getOptText('q11', answers.q11)
-      },
-      statementB: {
-        questionNumber: answers.q9 === 'offer' ? 9 : 2,
-        questionCategory: 'Evidencia de Oferta y Cierre',
-        answerText: answers.q9 === 'offer' ? getOptText('q9', answers.q9) : getOptText('q2', answers.q2)
-      },
-      verdict:
-        'Violación Jerárquica de Negocio: Quieres contratar sistematización con agentes de IA o productos digitales, pero la evidencia fáctica muestra que tu oferta central todavía no está productizada ni tiene precio firme.',
-      revealedTruth:
-        'Automatizar o digitalizar un servicio que no convierte 1 a 1 de forma manual es un error crítico: multiplica los costos técnicos y produce frustración acelerada.',
-      actionRequired:
-        'El algoritmo bloquea el avance hacia el Pilar 4 y establece como paso no negociable la validación comercial en el Pilar 1.'
-    });
-  }
-
-  // 5. INCOHERENCIA DE AUTORIDAD: Referente Indiscutible (Q4=2) vs Duda de Autoridad ante Prospectos Fríos (Q9='brand')
-  if (answers.q4 === '2' && answers.q9 === 'brand') {
+  // 6. INCOHERENCIA DE AUTORIDAD: Referente Indiscutible (Q5=2) vs Duda de Autoridad ante Prospectos Fríos (Q11='brand')
+  if (answers.q5 === '2' && answers.q11 === 'brand') {
     detectedIncoherences.push({
       id: 'incoherence_authority_vs_stress',
       severity: 'alta',
-      title: 'Espejismo de Marca: Reputación Cercana vs Autoridad Pública Digital',
+      title: 'El Salto de Autoridad: De ser Conocido en tu Círculo a Referente Digital',
       statementA: {
-        questionNumber: 4,
+        questionNumber: 5,
         questionCategory: 'Autoridad y Percepción de Marca',
-        answerText: getOptText('q4', answers.q4)
+        answerText: getOptText('q5', answers.q5)
       },
       statementB: {
-        questionNumber: 9,
-        questionCategory: 'Prueba de Estrés ante Prospectos Fríos',
-        answerText: getOptText('q9', answers.q9)
+        questionNumber: 11,
+        questionCategory: 'Prueba de Capacidad ante Prospectos Fríos',
+        answerText: getOptText('q11', answers.q11)
       },
       verdict:
-        'Incoherencia de Reconocimiento: Dijiste ser un referente reconocido en tu especialidad, pero en la prueba de estrés reconoces que ante prospectos fríos temes que duden de tu autoridad o busquen alternativas más baratas.',
+        'Diagnóstico Estratégico: Tienes una excelente reputación con clientes conocidos, pero ante prospectos fríos en internet cuesta transmitir confianza inmediata.',
       revealedTruth:
-        'Tu autoridad actual se sostiene en recomendaciones de boca en boca o clientes antiguos. En el mercado digital frío careces de los activos de marca que proyectan liderazgo indiscutible.',
+        'El boca a boca es excelente pero tiene un techo. En el entorno digital necesitas activos de autoridad que proyecten liderazgo las 24 horas del día.',
       actionRequired:
-        'Construir los 12 activos de autoridad y mensaje de posicionamiento de Marca Personal en el Pilar 2.'
+        'Desarrollar tu arquitectura de mensaje y tus 12 activos de autoridad en el Pilar 2.'
     });
   }
 
-  // 6. INCOHERENCIA COMERCIAL: Oferta Supuestamente Probada (Q2=2) vs Rechazo de Precios y Ghosting Sistemático (Q3='0')
+  // 7. INCOHERENCIA COMERCIAL: Oferta Supuestamente Probada (Q2=2) vs Rechazo de Precios y Ghosting Sistemático (Q3='0')
   if (answers.q2 === '2' && answers.q3 === '0') {
     detectedIncoherences.push({
       id: 'incoherence_offer_vs_pricing',
       severity: 'alta',
-      title: 'Discrepancia Comercial: Oferta Supuestamente Probada vs Objeción Sistemática de Precio',
+      title: 'Objeciones de Precio: Cómo Evitar que te Digan "Es Caro" o Desaparezcan',
       statementA: {
         questionNumber: 2,
         questionCategory: 'Claridad y Productización de Oferta',
@@ -271,110 +381,109 @@ export function calculatePrediagnostic(
         answerText: getOptText('q3', answers.q3)
       },
       verdict:
-        'Incoherencia de Validación: Indicaste tener una oferta probada con precio premium, pero admites que en la práctica los prospectos dicen que es caro, piden rebajas o desaparecen (ghosting).',
+        'Diagnóstico Estratégico: Tu servicio entrega gran valor, pero en la práctica los prospectos piden descuentos o desaparecen tras escuchar la tarifa.',
       revealedTruth:
-        'Una oferta no está validada si genera fricción sistemática en el cierre. Falta un encuadre de valor irresistible y un protocolo comercial de cualificación.',
+        'Cuando los prospectos regatean o hacen "ghosting", el obstáculo rara vez es el dinero; casi siempre es la falta de un encuadre de valor irresistible en la propuesta.',
       actionRequired:
-        'Reestructurar la propuesta de valor y el protocolo comercial en el Pilar 1, o elevar la percepción de estatus en el Pilar 2.'
+        'Reestructurar la propuesta de valor y el protocolo de cierre en el Pilar 1 para que tu tarifa sea indiscutible.'
     });
   }
 
-  // 7. INCOHERENCIA DE FALSA NECESIDAD DE REHACER OFERTA: Pide Pilar 1 pero su oferta ya funciona y sufre por tiempo o prospección
-  if (answers.q8 === 'pilar1' && answers.q2 === '2' && answers.q3 === '2' && (answers.q6 === '0' || answers.q5 === '0')) {
-    const isSaturation = answers.q6 === '0';
+  // 8. DESACTIVACIÓN DE SESGO POR CONFESIÓN EN EL FILTRO ANTI-SESGO (Q12)
+  if (confessedOfferBias && (answers.q10 === 'pilar4' || answers.q10 === 'pilar3')) {
     detectedIncoherences.push({
-      id: 'incoherence_false_offer_need',
-      severity: 'alta',
-      title: 'Falso Diagnóstico: Querer Rehacer Oferta Cuando el Cuello de Botella es Operativo o de Difusión',
+      id: 'incoherence_anti_bias_confession',
+      severity: 'critica',
+      title: 'Tu Mayor Acierto: Claridad sobre lo que Tu Negocio Necesita Primero',
       statementA: {
-        questionNumber: 8,
-        questionCategory: 'Servicio que Creías Necesitar',
-        answerText: getOptText('q8', answers.q8)
+        questionNumber: 10,
+        questionCategory: 'Servicio que Considerabas Inicialmente',
+        answerText: getOptText('q10', answers.q10)
       },
       statementB: {
-        questionNumber: isSaturation ? 6 : 5,
-        questionCategory: isSaturation ? 'Capacidad Operativa' : 'Presencia Digital',
-        answerText: isSaturation ? getOptText('q6', answers.q6) : getOptText('q5', answers.q5)
+        questionNumber: 12,
+        questionCategory: 'Momento de Claridad y Sinceridad',
+        answerText: getOptText('q12', answers.q12)
       },
       verdict:
-        'Incoherencia de Enfoque: Solicitaste consultoría de oferta comercial, pero tus respuestas confirman que tus clientes ya entienden tu valor y pagan tus tarifas sin regatear. Tu dolor real es que no tienes tiempo (saturación) o no tienes canales activos de captación.',
+        'Diagnóstico Estratégico: Aunque tu intuición inicial miraba hacia cursos o redes, reconociste con total sinceridad que el verdadero freno es que tu oferta central aún no está clara ni validada.',
       revealedTruth:
-        'Modificar una oferta que ya funciona es una fuga de energía. Tu negocio necesita amplificar su alcance o sistematizar su entrega.',
+        'Tener la valentía de reconocer el cimiento que falta es el paso más inteligente de un profesional: te ahorra meses de dar vueltas en círculos sin monetizar.',
       actionRequired:
-        `El algoritmo redirige la recomendación hacia tu verdadero dolor estructural: ${isSaturation ? 'Pilar 4 (Sistematización & IA)' : 'Pilar 3 (Contenidos de Venta)'}.`
+        'Enfocarnos al 100% en el Pilar 1 (Estrategia Comercial BMS) para construir una oferta que cierre clientes de forma predecible.'
     });
   }
 
   const hasInternalIncoherence = detectedIncoherences.length > 0;
 
-  // Incoherencias que invalidan específicamente la premisa de tener oferta validada
-  const offerInvalidatedByIncoherence = detectedIncoherences.some(
-    (inc) =>
-      inc.id === 'incoherence_offer_vs_stress' ||
-      inc.id === 'incoherence_premature_systematization'
-  );
-
-  // Estados de cimientos fácticos
-  const effectiveOfferClarityOk = answers.q2 === '2' && !offerInvalidatedByIncoherence;
-  const salesProcessOk = answers.q3 === '2';
-  const positioningOk = answers.q4 === '2' && !detectedIncoherences.some((i) => i.id === 'incoherence_authority_vs_stress');
-  const contentEngineOk = answers.q5 === '2';
-  const freedomScaleOk = answers.q6 === '2' && answers.q7 === '2';
-
   // Analizar servicio declarado por el prospecto
-  const statedPillarKey = answers.q8 || 'pilar1';
+  const statedPillarKey = answers.q10 || 'pilar1';
   const statedPillar = PILLARS_DATA[statedPillarKey] || PILLARS_DATA.pilar1;
 
   // =========================================================================
-  // MOTOR DE DECISIÓN MULTICRITERIO DE LOS 4 PILARES (TRUE BOTTLENECK ENGINE)
+  // MOTOR DE DECISIÓN MULTICRITERIO DE LOS 4 PILARES (CON HARD GATING)
   // =========================================================================
-  // Evaluamos de manera equilibrada y objetiva qué pilar representa la mayor
-  // necesidad real del negocio, sin sesgos unilaterales hacia ninguno de ellos.
-
   let needScoreP1 = scores.pilar1;
   let needScoreP2 = scores.pilar2;
   let needScoreP3 = scores.pilar3;
   let needScoreP4 = scores.pilar4;
 
   // Impulsos específicos para Pilar 1 (Estrategia Comercial & Oferta BMS):
-  if (answers.q2 === '0') needScoreP1 += 10;
-  if (answers.q1 === 'invisible' && answers.q2 !== '2') needScoreP1 += 8;
-  if (answers.q9 === 'offer') needScoreP1 += 10;
-  if (answers.q9 === 'sales') needScoreP1 += 7;
-  if (answers.q11 === 'clarity') needScoreP1 += 10;
-  if (answers.q10 === 'sales') needScoreP1 += 5;
-  if (answers.q10 === 'none') needScoreP1 += 5;
-  if (offerInvalidatedByIncoherence) needScoreP1 += 9;
+  if (answers.q2 === '0') needScoreP1 += 12;
+  if (answers.q2 === '1') needScoreP1 += 7;
+  if (answers.q1 === 'invisible') needScoreP1 += 8;
+  if (answers.q4 === '0') needScoreP1 += 12;
+  if (answers.q4 === '1') needScoreP1 += 7;
+  if (answers.q9 === '0') needScoreP1 += 8;
+  if (answers.q11 === 'offer') needScoreP1 += 12;
+  if (answers.q11 === 'sales') needScoreP1 += 8;
+  if (answers.q12 === 'pilar1_bias') needScoreP1 += 15;
+  if (answers.q14 === 'clarity') needScoreP1 += 10;
+  if (lead.payingClientsStatus === 'sin_clientes') needScoreP1 += 12;
+  if (lead.commercializationModel === 'aun_no_comercializo') needScoreP1 += 15;
 
   // Impulsos específicos para Pilar 2 (Marca Personal & Autoridad):
-  if (answers.q4 === '0') needScoreP2 += 10;
-  if (answers.q4 === '1') needScoreP2 += 7;
-  if (answers.q9 === 'brand') needScoreP2 += 10;
-  if (answers.q10 === 'brand') needScoreP2 += 9;
-  if (answers.q11 === 'authority') needScoreP2 += 10;
-  if (answers.q3 === '0' && answers.q2 === '2') needScoreP2 += 6; // Ghosting con oferta existente suele ser falta de autoridad
+  if (answers.q5 === '0') needScoreP2 += 10;
+  if (answers.q5 === '1') needScoreP2 += 7;
+  if (answers.q11 === 'brand') needScoreP2 += 10;
+  if (answers.q12 === 'pilar2_bias') needScoreP2 += 12;
+  if (answers.q13 === 'brand') needScoreP2 += 8;
+  if (answers.q14 === 'authority') needScoreP2 += 10;
+  if (answers.q3 === '0' && answers.q2 === '2') needScoreP2 += 6;
 
-  // Impulsos específicos para Pilar 3 (Motor de Contenidos & Captación - Viral Sales Content):
-  if (answers.q5 === '0') needScoreP3 += 10;
-  if (answers.q5 === '1') needScoreP3 += 8;
-  if (answers.q9 === 'visibility') needScoreP3 += 10;
-  if (answers.q10 === 'content') needScoreP3 += 9;
-  if (answers.q11 === 'leads') needScoreP3 += 10;
+  // Impulsos específicos para Pilar 3 (Motor de Contenidos & Captación):
+  if (answers.q6 === '0') needScoreP3 += 9;
+  if (answers.q6 === '1') needScoreP3 += 7;
+  if (answers.q11 === 'visibility') needScoreP3 += 10;
+  if (answers.q12 === 'pilar3_bias') needScoreP3 += 12;
+  if (answers.q13 === 'content') needScoreP3 += 8;
+  if (answers.q14 === 'leads') needScoreP3 += 10;
 
-  // Impulsos específicos para Pilar 4 (Sistematización, Escala, Activos Digitales & IA):
-  if (answers.q1 === 'saturado') needScoreP4 += 9;
+  // Impulsos específicos para Pilar 4 (Sistematización & IA):
+  if (answers.q1 === 'saturado') needScoreP4 += 8;
   if (answers.q1 === 'legado') needScoreP4 += 8;
-  if (answers.q6 === '0') needScoreP4 += 11;
-  if (answers.q6 === '1') needScoreP4 += 6;
-  if (answers.q7 === '0') needScoreP4 += 7;
+  if (answers.q7 === '0') needScoreP4 += 10;
   if (answers.q7 === '1') needScoreP4 += 5;
-  if (answers.q9 === 'scale') needScoreP4 += 11;
-  if (answers.q10 === 'scale') needScoreP4 += 9;
-  if (answers.q11 === 'system') needScoreP4 += 10;
+  if (answers.q8 === '2') needScoreP4 += 5;
+  if (answers.q9 === '2' || answers.q9 === '3') needScoreP4 += 8;
+  if (answers.q11 === 'scale') needScoreP4 += 10;
+  if (answers.q12 === 'pilar4_bias') needScoreP4 += 12;
+  if (answers.q13 === 'scale') needScoreP4 += 8;
+  if (answers.q14 === 'system') needScoreP4 += 8;
 
-  // Regla de viabilidad técnica: no se puede sistematizar (P4) ni hacer viralidad (P3)
-  // si el prospecto no tiene NINGUNA oferta comercial ni idea de a quién ayuda (Q2=0 y Q9=offer).
-  if (answers.q2 === '0' && answers.q9 === 'offer') {
+  // =========================================================================
+  // APLICACIÓN ESTRICTA DE GATING JERÁRQUICO (INMUNIDAD ANTE SESGOS)
+  // =========================================================================
+  // Si el prospecto carece de oferta probada, clientes de pago o método estructurado:
+  // PILAR 4 QUEDA INMEDIATA Y CATEGÓRICAMENTE VETADO COMO RECOMENDACIÓN PRIMARIA.
+  if (isPilar4Blocked) {
+    needScoreP4 = -999;
+    needScoreP1 += 25; // Reorientar prioridad al cimiento comercial obligatorio
+  }
+
+  // Si no tiene oferta estandarizada, PILAR 3 TAMBIÉN QUEDA BLOQUEADO.
+  if (isPilar3Blocked) {
+    needScoreP3 = Math.min(needScoreP3, needScoreP1 - 15);
     needScoreP1 += 15;
   }
 
@@ -393,7 +502,6 @@ export function calculatePrediagnostic(
   // ==========================================
   // DETECCIÓN DE DISCREPANCIAS (SERVICIO DESEADO VS SERVICIO NECESARIO)
   // ==========================================
-  // Cubre las 12 combinaciones posibles entre los 4 pilares con explicaciones estratégicas de alto nivel.
   const hasContradiction = statedPillar.id !== recommendedPillar.id;
   let contradictionAnalysis: PrediagnosticResult['contradictionAnalysis'] = null;
 
@@ -401,7 +509,24 @@ export function calculatePrediagnostic(
     const pair = `${statedPillar.id}->${recommendedPillar.id}`;
 
     switch (pair) {
-      // 1. Quería Pilar 1 pero necesita Pilar 2 (Tiene oferta pero compite como commodity)
+      case 'pilar4->pilar1':
+        contradictionAnalysis = {
+          title: 'El Orden Correcto: Consolidar tu Oferta antes de Automatizar',
+          explanation: `Notamos que tu interés inicial era "${statedPillar.name}" (activos digitales y herramientas de IA). Sin embargo, tus respuestas demuestran que tu mayor oportunidad hoy está en empaquetar una oferta irresistible con precio firme y ventas constantes.`,
+          riskOfSkipping:
+            'En la Metodología CREA Y MONETIZA® cuidamos tu inversión: automatizar un servicio que aún no se vende con fluidez en vivo genera gastos innecesarios y frustración. Primero creamos una oferta que convierta con facilidad en el Pilar 1; luego sistematizamos.'
+        };
+        break;
+
+      case 'pilar3->pilar1':
+        contradictionAnalysis = {
+          title: 'El Espejismo de las Redes: Más Seguidores no te darán Clientes sin una Oferta Irresistible',
+          explanation: `Manifestaste interés en "${statedPillar.name}" (redes y contenidos), pero la realidad de tu negocio demuestra que tu oferta aún no está estandarizada con precio firme ni protocolo de cierre predecible.`,
+          riskOfSkipping:
+            'Producir contenido viral o buscar más visibilidad sin una oferta clara de alto valor es como bombear agua en un balde agujereado: atraerás curiosos o personas que piden rebajas, desgastando tu energía sin lograr ingresos reales. Primero consolidamos tu oferta en el Pilar 1; luego aceleramos el contenido.'
+        };
+        break;
+
       case 'pilar1->pilar2':
         contradictionAnalysis = {
           title: 'Discrepancia de Diagnóstico: Rehacer Oferta vs Autoridad de Marca',
@@ -411,7 +536,6 @@ export function calculatePrediagnostic(
         };
         break;
 
-      // 2. Quería Pilar 1 pero necesita Pilar 3 (Tiene oferta pero nadie lo conoce)
       case 'pilar1->pilar3':
         contradictionAnalysis = {
           title: 'Discrepancia de Tracción: Perfeccionar Oferta vs Generar Demanda Real',
@@ -421,7 +545,6 @@ export function calculatePrediagnostic(
         };
         break;
 
-      // 3. Quería Pilar 1 pero necesita Pilar 4 (Tiene oferta pero colapsa de tiempo)
       case 'pilar1->pilar4':
         contradictionAnalysis = {
           title: 'Discrepancia Operativa: Nuevas Ofertas vs Colapso de Horas Físicas',
@@ -431,7 +554,6 @@ export function calculatePrediagnostic(
         };
         break;
 
-      // 4. Quería Pilar 2 pero necesita Pilar 1 (Quiere marca pero no tiene oferta vendible)
       case 'pilar2->pilar1':
         contradictionAnalysis = {
           title: 'Discrepancia de Base: Marca Personal vs Oferta Comercial Vendible',
@@ -441,17 +563,15 @@ export function calculatePrediagnostic(
         };
         break;
 
-      // 5. Quería Pilar 2 pero necesita Pilar 3 (Tiene marca pero le faltan contenidos de venta)
       case 'pilar2->pilar3':
         contradictionAnalysis = {
           title: 'Discrepancia de Distribución: Activos de Marca vs Flujo de Demanda',
           explanation: `Tu intuición pedía posicionamiento de marca ("${statedPillar.name}"), pero tu reputación y mensaje ya tienen respaldo; tu verdadera carencia es un canal de atracción continua que transforme atención en llamadas comerciales con regularidad.`,
           riskOfSkipping:
-            'Seguir puliendo la imagen o la bio sin instalar guiones de venta (VSL y reels) ni un calendario de generación de demanda te dejará con una marca impecable pero sin prospectos calificados en la agenda.'
+            'Seguir puliendo la imagen o la bio sin instalar guiones de venta ni un calendario de generación de demanda te dejará con una marca impecable pero sin prospectos calificados en la agenda.'
         };
         break;
 
-      // 6. Quería Pilar 2 pero necesita Pilar 4 (Tiene marca pero está desbordado de trabajo)
       case 'pilar2->pilar4':
         contradictionAnalysis = {
           title: 'Discrepancia de Capacidad: Posicionamiento vs Liberación de Tiempo con IA',
@@ -461,27 +581,15 @@ export function calculatePrediagnostic(
         };
         break;
 
-      // 7. Quería Pilar 3 pero necesita Pilar 1 (Pide redes pero la oferta no está validada)
-      case 'pilar3->pilar1':
-        contradictionAnalysis = {
-          title: 'Discrepancia Estratégica: Visibilidad vs Cimiento de Oferta',
-          explanation: `Tú manifestaste interés en contratar "${statedPillar.name}" (difusión y redes), pero la evidencia objetiva demuestra que tu oferta aún no está estandarizada con precio firme ni cuentas con protocolo de cierre predecible.`,
-          riskOfSkipping:
-            'Producir contenido viral o buscar más visibilidad sin una oferta central productizada ni un proceso de cierre predecible es como bombear agua en un balde agujereado: atraerás curiosos o personas sin presupuesto, desgastando tu tiempo sin lograr ingresos reales. Primero consolidamos tu oferta y protocolo comercial; luego aceleramos el contenido.'
-        };
-        break;
-
-      // 8. Quería Pilar 3 pero necesita Pilar 2 (Pide redes pero lo ven como commodity)
       case 'pilar3->pilar2':
         contradictionAnalysis = {
           title: 'Discrepancia de Autoridad: Contenido Masivo vs Marca Personal de Referente',
           explanation: `Creíste necesitar "${statedPillar.name}", pero la evidencia demuestra que en el mercado aún te perciben como una opción genérica o dudan de tu estatus ante prospectos fríos.`,
           riskOfSkipping:
-            'Publicar contenido masivo sin un posicionamiento de marca claro te convierte en un creador de contenido genérico que atrae regateos de precio. Para cobrar tarifas de consultoría premium, primero debemos blindar los activos de tu Marca Personal y tu mensaje de autoridad.'
+            'Publicar contenido masivo sin un posicionamiento de marca claro te convierte en un creador de contenido genérico que atrae regateos de precio. Primero debemos blindar los activos de tu Marca Personal y tu mensaje de autoridad.'
         };
         break;
 
-      // 9. Quería Pilar 3 pero necesita Pilar 4 (Pide redes pero ya colapsaría con más clientes)
       case 'pilar3->pilar4':
         contradictionAnalysis = {
           title: 'Discrepancia de Capacidad Operativa: Atraer Tráfico vs Colapso de Entrega',
@@ -491,27 +599,15 @@ export function calculatePrediagnostic(
         };
         break;
 
-      // 10. Quería Pilar 4 pero necesita Pilar 1 (Quiere IA pero no tiene oferta validada)
-      case 'pilar4->pilar1':
-        contradictionAnalysis = {
-          title: 'Discrepancia de Escalabilidad: Automatizar antes de Validar',
-          explanation: `Señalaste que buscabas "${statedPillar.name}" (productos digitales o automatización con IA), pero tus respuestas evidencian que tu modelo de negocio y oferta comercial principal todavía presentan dispersión y no están validados manualmente.`,
-          riskOfSkipping:
-            'No es posible sistematizar ni digitalizar un servicio que todavía no funciona de manera predecible en su versión central. Automatizar el desorden solo produce desorden a mayor velocidad y con mayor costo. La prioridad es consolidar primero tu oferta central.'
-        };
-        break;
-
-      // 11. Quería Pilar 4 pero necesita Pilar 2 (Quiere productos digitales pero no tiene autoridad para vender en frío)
       case 'pilar4->pilar2':
         contradictionAnalysis = {
           title: 'Discrepancia de Tracción: Productos Digitales vs Autoridad de Marca',
           explanation: `Buscabas implementar "${statedPillar.name}", pero el mercado todavía no identifica con suficiente claridad tu liderazgo ni tu propuesta diferencial para convertir tráfico frío.`,
           riskOfSkipping:
-            'Un modelo de negocio digital o infoproducto requiere una marca personal que transmita confianza inmediata para convertir prospectos fríos. La marca personal es el activo estratégico que disminuye el costo de adquisición de clientes.'
+            'Un modelo de negocio digital requiere una marca personal que transmita confianza inmediata para convertir prospectos fríos. La marca personal es el activo estratégico que disminuye el costo de adquisición de clientes.'
         };
         break;
 
-      // 12. Quería Pilar 4 pero necesita Pilar 3 (Quiere productos digitales pero no tiene audiencia ni tráfico)
       case 'pilar4->pilar3':
         contradictionAnalysis = {
           title: 'Discrepancia de Audiencia: Sistematizar sin Motor de Demanda',
@@ -544,9 +640,9 @@ export function calculatePrediagnostic(
   switch (recommendedPillar.id) {
     case 'pilar1':
       notFirstAdvice = {
-        title: 'NO empieces creando más contenido ni lanzando cursos digitales',
+        title: 'NO empieces creando cursos grabados, automatizaciones con IA ni más contenidos en redes',
         warning:
-          'Cualquier esfuerzo en redes sociales, diseño de páginas web o pauta publicitaria se diluirá si antes no defines con precisión qué problema resuelves, a quién ayudas y a qué precio con una oferta estructurada de alto valor.',
+          'Cualquier esfuerzo en redes sociales, herramientas de IA o infoproductos se diluirá si antes no defines con precisión qué problema resuelves, a quién ayudas y a qué precio con una oferta estructurada de alto valor probada en vivo.',
         recommendation:
           'Tu primer paso no negociable es sentarte a trabajar la Arquitectura del Negocio y la Oferta BMS para tener un sistema de conversión claro, predecible y vendible.'
       };
@@ -582,10 +678,14 @@ export function calculatePrediagnostic(
 
   // Resumen estratégico ejecutivo corto y contundente
   const incoherenceNote = hasInternalIncoherence
-    ? ` Se detectaron ${detectedIncoherences.length} contradicción(es) o incoherencia(s) fáctica(s) en las respuestas que desmontan falsos positivos de validación comercial.`
+    ? ` Se identificaron ${detectedIncoherences.length} puntos ciegos clave a resolver para proteger la inversión y acelerar resultados.`
     : '';
 
-  const strategicSummary = `Diagnóstico de Precalificación para ${lead.name || 'el prospecto'}: Identificado en la etapa de "${profile.title}". Tras cruzar la evidencia fáctica frente al servicio deseado ("${statedPillar.name}"), el algoritmo dictamina como prioridad obligatoria el programa de "${recommendedPillar.name}" para resolver el verdadero cuello de botella antes de avanzar a etapas posteriores.${incoherenceNote}`;
+  const gatingNote = isPilar4Blocked && (statedPillar.id === 'pilar4')
+    ? ' [RECOMENDACIÓN ESTRATÉGICA: Se priorizó consolidar la oferta en el Pilar 1 antes de avanzar a automatización].'
+    : '';
+
+  const strategicSummary = `Diagnóstico de Orientación para ${lead.name || 'el prospecto'} (${lead.profession || 'Profesional'}). Modelo: ${COMMERCIAL_MODELS_LABELS[lead.commercializationModel] || 'Servicios'}. Clientes: ${PAYING_CLIENTS_LABELS[lead.payingClientsStatus] || 'En validación'}. Perfil: "${profile.title}". Tras analizar tu situación actual frente a tu preferencia inicial ("${statedPillar.name}"), el plan más rentable y seguro es el programa de "${recommendedPillar.name}".${incoherenceNote}${gatingNote}`;
 
   return {
     lead,
@@ -596,16 +696,28 @@ export function calculatePrediagnostic(
     contradictionAnalysis,
     hasInternalIncoherence,
     detectedIncoherences,
+    gatingAnalysis: {
+      isPilar4Blocked,
+      isPilar3Blocked,
+      blockReasonPilar4: isPilar4Blocked
+        ? 'Recomendado comenzar por validar la oferta y clientes recurrentes antes de automatizar.'
+        : undefined,
+      blockReasonPilar3: isPilar3Blocked
+        ? 'Recomendado estructurar la oferta comercial con precio firme antes de acelerar difusión.'
+        : undefined
+    },
     foundationStatus: {
       pilar1Score: scores.pilar1,
       pilar2Score: scores.pilar2,
       pilar3Score: scores.pilar3,
       pilar4Score: scores.pilar4,
-      offerClarityOk: effectiveOfferClarityOk,
-      salesProcessOk,
-      positioningOk,
-      contentEngineOk,
-      freedomScaleOk,
+      offerClarityOk: answers.q2 === '2',
+      payingClientsOk: answers.q4 === '2' || answers.q4 === '3',
+      salesProcessOk: answers.q3 === '2',
+      positioningOk: answers.q5 === '2',
+      contentEngineOk: answers.q6 === '2',
+      deliveryDocsOk: answers.q9 === '2' || answers.q9 === '3',
+      freedomScaleOk: answers.q7 === '2' && answers.q8 === '2',
       incoherenceDetected: hasInternalIncoherence
     },
     evidences: evidences.slice(0, 5),
@@ -622,11 +734,11 @@ export function calculatePrediagnostic(
 export function formatPrediagnosticClipboard(res: PrediagnosticResult): string {
   const c = res.contradictionAnalysis;
   const incoherenceSection = res.hasInternalIncoherence
-    ? `\n🚨 INCOHERENCIAS FÁCTICAS DETECTADAS EN TUS RESPUESTAS:
+    ? `\n💡 CLAVES DE ENFOQUE Y OPORTUNIDADES IDENTIFICADAS:
 ${res.detectedIncoherences
   .map(
     (inc, idx) =>
-      `${idx + 1}. ${inc.title} [Severidad: ${inc.severity.toUpperCase()}]\n   • En ${inc.statementA.questionCategory}: "${inc.statementA.answerText}"\n   • Sin embargo en ${inc.statementB.questionCategory}: "${inc.statementB.answerText}"\n   • Verdad Fáctica: ${inc.revealedTruth}`
+      `${idx + 1}. ${inc.title} [${inc.severity === 'critica' ? 'Oportunidad Clave' : 'Ajuste Recomendado'}]\n   • Perspectiva inicial (${inc.statementA.questionCategory}): "${inc.statementA.answerText}"\n   • Realidad del negocio (${inc.statementB.questionCategory}): "${inc.statementB.answerText}"\n   • Clave de Crecimiento: ${inc.revealedTruth}`
   )
   .join('\n\n')}\n`
     : '';
@@ -634,14 +746,18 @@ ${res.detectedIncoherences
   return `📊 PREDIAGNÓSTICO ESTRATÉGICO · CREA Y MONETIZA®
 Consultora: Patricia Loaiza
 
-👤 PROSPECTO:
+👤 CONTEXTO PROFESIONAL Y COMERCIAL:
 • Nombre: ${res.lead.name}
 • Email: ${res.lead.email}
 • WhatsApp: ${res.lead.whatsapp}
+• Profesión / Especialidad: ${res.lead.profession || 'No especificada'}
+• Actividad Actual: ${res.lead.currentActivity || 'No especificada'}
+• Modelo de Comercialización: ${COMMERCIAL_MODELS_LABELS[res.lead.commercializationModel] || res.lead.commercializationModel || 'N/A'}
+• Estado Clientes de Pago: ${PAYING_CLIENTS_LABELS[res.lead.payingClientsStatus] || res.lead.payingClientsStatus || 'N/A'}
 • Empresa: ${res.lead.company || 'N/A'}
 • Rol: ${res.lead.role || 'N/A'}
 
-🎯 PERFIL PROFESIONAL DETECTADO:
+🎯 PERFIL EVOLUTIVO DETECTADO:
 ${res.profile.title}
 "${res.profile.subtitle}"
 
@@ -652,19 +768,19 @@ Duración: ${res.recommendedPillar.duration}
 
 ${
   res.hasContradiction && c
-    ? `⚠️ DISCREPANCIA DETECTADA:
-El prospecto creía necesitar: ${res.statedPillar.name}
-Pero la evidencia demuestra: ${res.recommendedPillar.name}
-Motivo: ${c.explanation}
+    ? `🎯 ENFOQUE ESTRATÉGICO RECOMENDADO:
+• Interés inicial del prospecto: ${res.statedPillar.name}
+• Ruta de mayor rentabilidad hoy: ${res.recommendedPillar.name}
+• Motivo estratégico: ${c.explanation}
 `
     : `✅ ALINEACIÓN CONFIRMADA:
-El objetivo del prospecto coincide con la necesidad estructural de su negocio.`
+El objetivo del prospecto coincide con la prioridad de crecimiento de su negocio.`
 }
 ${incoherenceSection}
-📋 EVIDENCIAS DE SUS RESPUESTAS:
+📋 CLAVES IDENTIFICADAS EN SUS RESPUESTAS:
 ${res.evidences.map((e, idx) => `${idx + 1}. ${e}`).join('\n')}
 
-⛔ LO QUE NO DEBE HACER PRIMERO:
+💡 CONSEJO PARA EVITAR FUGAS DE TIEMPO Y DINERO:
 ${res.notFirstAdvice.warning}
 
 🚀 TRANSFORMACIÓN ESPERADA:
