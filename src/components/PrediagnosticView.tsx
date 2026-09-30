@@ -65,7 +65,7 @@ function extractProperFirstName(fullName: string): string {
   if (tokens.length === 0) return 'Emprendedor/a';
 
   let idx = 0;
-  while (idx < tokens.length - 1) {
+  while (idx < tokens.length) {
     const cleanToken = tokens[idx].toLowerCase().replace(/[,.:;]+$/, '');
     if (HONORIFIC_PREFIXES.has(cleanToken) || HONORIFIC_PREFIXES.has(tokens[idx].toLowerCase())) {
       idx++;
@@ -74,7 +74,9 @@ function extractProperFirstName(fullName: string): string {
     }
   }
 
-  const candidate = tokens[idx] || tokens[0];
+  if (idx >= tokens.length) return 'Emprendedor/a';
+
+  const candidate = tokens[idx];
   const cleaned = candidate.replace(/[,.:;]+$/, '');
   return cleaned || 'Emprendedor/a';
 }
@@ -86,7 +88,7 @@ function extractCleanFullName(fullName: string): string {
   if (tokens.length === 0) return 'Emprendedor/a';
 
   let idx = 0;
-  while (idx < tokens.length - 1) {
+  while (idx < tokens.length) {
     const cleanToken = tokens[idx].toLowerCase().replace(/[,.:;]+$/, '');
     if (HONORIFIC_PREFIXES.has(cleanToken) || HONORIFIC_PREFIXES.has(tokens[idx].toLowerCase())) {
       idx++;
@@ -94,6 +96,8 @@ function extractCleanFullName(fullName: string): string {
       break;
     }
   }
+
+  if (idx >= tokens.length) return 'Emprendedor/a';
 
   const remaining = tokens.slice(idx);
   return remaining.length > 0 ? remaining.join(' ') : fullName.trim();
