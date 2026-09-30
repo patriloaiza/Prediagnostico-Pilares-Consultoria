@@ -586,11 +586,30 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               <SlidersHorizontal className="w-3.5 h-3.5" />
             </button>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Prediagnóstico Consultoría Requerida
-          </h1>
-          <p className="text-sm text-gray-300 mt-1 max-w-2xl leading-relaxed">
-            Llevas años construyendo experiencia... pero algo no cierra. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles? Nuestro motor de auditoría de evidencias te revela la verdad exacta — y te protege de invertir en lo que no toca.
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Prediagnóstico Consultoría Requerida
+            </h1>
+            {activeUserName && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-[#D7192B] to-[#990d1b] text-white font-black text-base sm:text-lg shadow-lg border border-red-400/40">
+                <span className="w-2 h-2 rounded-full bg-amber-300 animate-pulse shrink-0" />
+                <span>{activeUserName}</span>
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-300 mt-2 max-w-2xl leading-relaxed">
+            {activeUserName ? (
+              <>
+                <span className="inline-block px-2.5 py-0.5 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/40 font-black mr-1.5 shadow-xs">
+                  {userFirstName}
+                </span>
+                <span>
+                  , llevas años construyendo experiencia... pero algo no cierra. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles? Nuestro motor de auditoría de evidencias te revela la verdad exacta — y te protege de invertir en lo que no toca.
+                </span>
+              </>
+            ) : (
+              'Llevas años construyendo experiencia... pero algo no cierra. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles? Nuestro motor de auditoría de evidencias te revela la verdad exacta — y te protege de invertir en lo que no toca.'
+            )}
           </p>
         </div>
 
@@ -601,7 +620,14 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               {currentStep === 0
                 ? 'Paso Inicial · Contexto Profesional y Comercial'
                 : currentStep === RESULTS_STEP
-                ? 'Diagnóstico Completado'
+                ? (
+                  <span>
+                    Diagnóstico Completado para{' '}
+                    <strong className="text-amber-300 font-extrabold underline decoration-amber-400/50">
+                      {activeUserName}
+                    </strong>
+                  </span>
+                )
                 : `Pregunta ${currentStep} de ${TOTAL_QUESTIONS} · ${currentQuestion?.category || ''}`}
             </span>
             <span className="font-mono font-bold text-white">{progressPercent}%</span>
@@ -1385,17 +1411,24 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               
               <div className="inline-flex items-center gap-1.5 bg-[#D7192B]/20 text-[#D7192B] border border-[#D7192B]/50 px-3.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider">
                 <Zap className="w-3.5 h-3.5 fill-current" />
-                <span>Solo 2 Cupos Gratuitos Restantes</span>
+                <span>Solo 2 Cupos Gratuitos Restantes{userFirstName ? <> · Para <strong className="text-amber-300 font-black">{userFirstName}</strong></> : ''}</span>
               </div>
 
               <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-snug">
-                {userFirstName}, Asegura tu Sesión de Diagnóstico 1 a 1 sin Costo
+                <span className="inline-block px-3 py-1 rounded-xl bg-gradient-to-r from-[#D7192B] to-[#b91222] text-white border border-red-400/50 shadow-lg mr-2 font-black">
+                  {userFirstName}
+                </span>
+                <span>, Asegura tu Sesión de Diagnóstico 1 a 1 sin Costo</span>
               </h3>
 
               <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 text-xs text-gray-300 max-w-lg mx-auto">
                 <span className="text-gray-400 line-through mr-2">Precio regular: $250 USD</span>
                 <span className="text-amber-300 font-extrabold text-sm uppercase tracking-wide">
-                  GRATIS para {userFirstName} y las primeras 5 personas
+                  GRATIS PARA{' '}
+                  <span className="bg-amber-400/25 text-amber-300 px-2 py-0.5 rounded border border-amber-400/50 font-black underline decoration-amber-300">
+                    {userFirstName.toUpperCase()}
+                  </span>{' '}
+                  Y LAS PRIMERAS 5 PERSONAS
                 </span>
                 <p className="mt-1 text-gray-300 text-[11px]">
                   Al completarse los 2 cupos de esta semana, el calendario se cerrará y la sesión volverá a su costo habitual.
@@ -1403,8 +1436,11 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               </div>
 
               <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-xl mx-auto">
-                Durante esta sesión 1 a 1 de 30 minutos con Patricia Loaiza, analizaremos contigo, <strong className="text-white">{userFirstName}</strong>, estos hallazgos a fondo,
-                resolveremos tus dudas sobre tu modelo ({COMMERCIAL_MODELS_LABELS[result.lead.commercializationModel] || 'servicios'}) y trazaremos tu hoja de ruta personalizada para implementar{' '}
+                Durante esta sesión 1 a 1 de 30 minutos con Patricia Loaiza, analizaremos contigo,{' '}
+                <span className="inline-block px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 font-black">
+                  {userFirstName}
+                </span>
+                , estos hallazgos a fondo, resolveremos tus dudas sobre tu modelo ({COMMERCIAL_MODELS_LABELS[result.lead.commercializationModel] || 'servicios'}) y trazaremos tu hoja de ruta personalizada para implementar{' '}
                 <strong className="text-white">{result.recommendedPillar.name}</strong>.
               </p>
 
@@ -1421,7 +1457,13 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                   className="w-full sm:w-auto px-9 py-4.5 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-base font-black flex items-center justify-center gap-2.5 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 tracking-wide"
                 >
                   <Calendar className="w-5 h-5" />
-                  <span>RESERVAR EL CUPO GRATIS DE {userFirstName.toUpperCase()} AHORA</span>
+                  <span>
+                    RESERVAR EL CUPO GRATIS DE{' '}
+                    <span className="bg-black/40 px-2.5 py-0.5 rounded-md text-amber-300 border border-amber-300/40 font-black shadow-inner">
+                      {userFirstName.toUpperCase()}
+                    </span>{' '}
+                    AHORA
+                  </span>
                   <ArrowRight className="w-5 h-5" />
                 </a>
               </div>
@@ -1432,12 +1474,12 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                   <span>Acceso directo al calendario oficial de Patricia Loaiza · Sin compromiso</span>
                 </div>
                 {webhookSent ? (
-                  <div className="inline-flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-500/10 px-3 py-0.5 rounded-full border border-emerald-500/20">
-                    <span>✓ Diagnóstico de {userFirstName} registrado en el sistema</span>
+                  <div className="inline-flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-500/10 px-3 py-0.5 rounded-full border border-emerald-500/20 font-bold">
+                    <span>✓ Diagnóstico de <span className="underline text-white font-black">{userFirstName}</span> registrado en el sistema</span>
                   </div>
                 ) : isSendingWebhook ? (
                   <div className="inline-flex items-center gap-1 text-[11px] text-gray-400 bg-white/5 px-3 py-0.5 rounded-full">
-                    <span>Registrando diagnóstico de {userFirstName} con tu asesor...</span>
+                    <span>Registrando diagnóstico de <strong className="text-white">{userFirstName}</strong> con tu asesor...</span>
                   </div>
                 ) : null}
               </div>
