@@ -493,10 +493,17 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         'clientes de pago': clientsLabel,
         paying_clients_status: clientsLabel,
 
-        // Texto consolidado para Nota de GHL
+        // Texto consolidado para Nota y Campo Personalizado de GHL
         resumen_ejecutivo: formattedNoteText,
         'Resumen Ejecutivo': formattedNoteText,
         'resumen ejecutivo': formattedNoteText,
+        resumen_diagnostico: formattedNoteText,
+        'resumen diagnostico': formattedNoteText,
+        'Resumen Diagnostico': formattedNoteText,
+        'Resumen Diagnóstico': formattedNoteText,
+        resultado_diagnostico_texto: formattedNoteText,
+        'Resultado Diagnostico': formattedNoteText,
+        'Resultado Diagnóstico': formattedNoteText,
         resumen_completo: formattedNoteText,
         nota_completa: formattedNoteText,
         resumen: formattedNoteText,
@@ -639,8 +646,14 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 
   // Envío de Lead de prueba hacia GoHighLevel
   const handleSendTestLeadToGhl = async (): Promise<boolean> => {
-    const testCase = activeTestCase || AUTOMATED_TEST_CASES[0];
-    const calc = calculatePrediagnostic(testCase.answers, testCase.lead);
+    const testCase = activeTestCase || AUTOMATED_TEST_CASES[1] || AUTOMATED_TEST_CASES[0];
+    const testLead: UserLeadInfo = {
+      ...testCase.lead,
+      name: 'Patricia Loaiza (Prueba Automatización)',
+      email: OFFICIAL_ADMIN_EMAIL,
+      whatsapp: '+57 300 123 4567'
+    };
+    const calc = calculatePrediagnostic(testCase.answers, testLead);
     try {
       await executeWebhookDispatch(calc, ghlWebhook);
       return true;

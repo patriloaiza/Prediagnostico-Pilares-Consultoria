@@ -83,17 +83,17 @@ Aquí tienes el resultado de tu evaluación:
 
 --------------------------------------------------
 🎯 PERFIL DETECTADO:
-{{inboundWebhook.perfil_profesional}}
+{{inboundWebhookRequest.perfil_profesional}}
 
 🏆 SERVICIO PRIORITARIO RECOMENDADO:
-{{inboundWebhook.servicio_recomendado}}
-Programa Oficial: {{inboundWebhook.programa_oficial}}
+{{inboundWebhookRequest.servicio_recomendado}}
+Programa Oficial: {{inboundWebhookRequest.programa_oficial}}
 
 ⚠️ MOTIVO Y CUELLO DE BOTELLA:
-{{inboundWebhook.motivo_discrepancia}}
+{{inboundWebhookRequest.motivo_discrepancia}}
 
 ⛔ LO QUE NO DEBES HACER AHORA:
-{{inboundWebhook.lo_que_no_debe_hacer}}
+{{inboundWebhookRequest.lo_que_no_debe_hacer}}
 --------------------------------------------------
 
 Noté que aún no has reservado tu Sesión 1 a 1 Gratuita (valorada en $250 USD) para repasar estos resultados y diseñar tu plan de acción a la medida.
@@ -101,7 +101,7 @@ Noté que aún no has reservado tu Sesión 1 a 1 Gratuita (valorada en $250 USD)
 He reservado temporalmente 1 cupo para ti. Puedes agendar el día y la hora que mejor te acomode en el siguiente enlace:
 
 👉 Agendar mi Sesión Gratuita:
-${bookingUrl || '{{inboundWebhook.enlace_calendario}}'}
+${bookingUrl || '{{inboundWebhookRequest.enlace_calendario}}'}
 
 ¡Nos vemos en la sesión!
 
@@ -120,16 +120,16 @@ Para aprovechar al máximo nuestros 30 minutos juntos, he preparado una copia de
 
 --------------------------------------------------
 🎯 PERFIL DETECTADO:
-{{inboundWebhook.perfil_profesional}}
+{{inboundWebhookRequest.perfil_profesional}}
 
 🏆 SERVICIO PRIORITARIO RECOMENDADO:
-{{inboundWebhook.servicio_recomendado}} ({{inboundWebhook.programa_oficial}})
+{{inboundWebhookRequest.servicio_recomendado}} ({{inboundWebhookRequest.programa_oficial}})
 
 ⚠️ ANÁLISIS ESTRATÉGICO:
-{{inboundWebhook.motivo_discrepancia}}
+{{inboundWebhookRequest.motivo_discrepancia}}
 
 ⛔ LO QUE NO DEBES HACER:
-{{inboundWebhook.lo_que_no_debe_hacer}}
+{{inboundWebhookRequest.lo_que_no_debe_hacer}}
 --------------------------------------------------
 
 Ten a mano este correo el día de nuestra sesión. Revisaremos exactamente cómo destrabar tu facturación y escalar tus servicios de alto valor.
@@ -139,6 +139,19 @@ Ten a mano este correo el día de nuestra sesión. Revisaremos exactamente cómo
 Patricia Loaiza
 Crea y Monetiza®
 Copia enviada a: ${OFFICIAL_ADMIN_EMAIL}`;
+
+  const emailTemplateAllInOne = `Hola {{contact.first_name}},
+
+Aquí tienes el informe completo y consolidado de tu Prediagnóstico Estratégico en Crea y Monetiza®:
+
+{{inboundWebhookRequest.resumen_ejecutivo}}
+
+--------------------------------------------------
+👉 Reserva aquí tu Sesión Estratégica 1 a 1 de 30 minutos (Sin Costo):
+${bookingUrl || '{{inboundWebhookRequest.enlace_calendario}}'}
+--------------------------------------------------
+
+Patricia Loaiza · Crea y Monetiza®`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
@@ -238,16 +251,19 @@ Copia enviada a: ${OFFICIAL_ADMIN_EMAIL}`;
                   </div>
                 </div>
 
-                <div className="border border-gray-200 rounded-xl p-3.5 bg-gray-50 flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-[#111111] text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                <div className="border-2 border-indigo-300 rounded-xl p-3.5 bg-indigo-50/70 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-indigo-700 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
                     2
                   </span>
                   <div>
-                    <h5 className="font-extrabold text-gray-900 text-xs">
-                      Acción: Create / Update Contact & Add Tag
+                    <h5 className="font-extrabold text-indigo-950 text-xs">
+                      Paso Clave: Guardar el Diagnóstico en el Contacto (Update Contact Field)
                     </h5>
-                    <p className="text-gray-600 text-[11px] mt-0.5 leading-relaxed">
-                      GHL actualiza el contacto con su Nombre, Email y WhatsApp, y añade el tag <code>prediagnostico-completado</code>. Puedes guardar <code>{'{{inboundWebhook.resumen_ejecutivo}}'}</code> en un Custom Field llamado <em>Resultado Diagnóstico</em>.
+                    <p className="text-indigo-900 text-[11px] mt-0.5 leading-relaxed">
+                      Crea un Custom Field de tipo <strong>Texto Largo (Multi-line)</strong> llamado <code>Resumen Diagnóstico</code>. 
+                      Agrega la acción <strong>Update Contact Field</strong> asignando <code>{'{{inboundWebhookRequest.resumen_ejecutivo}}'}</code> a ese campo.
+                      <br />
+                      <strong>¿Por qué es indispensable?</strong> Porque cuando la persona agenda después en el calendario, GoHighLevel solo puede leer datos guardados en el contacto con <code>{'{{contact.resumen_diagnostico}}'}</code>.
                     </p>
                   </div>
                 </div>
@@ -421,35 +437,83 @@ Copia enviada a: ${OFFICIAL_ADMIN_EMAIL}`;
                 </div>
               </div>
 
+              {/* Plantilla 3: Reporte Consolidado Todo en Uno */}
+              <div className="border border-indigo-200 bg-indigo-50/30 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                    <h4 className="font-extrabold text-gray-900 text-xs">
+                      Plantilla 3 (La más fácil y a prueba de fallos): Todo el Reporte en 1 Sola Variable
+                    </h4>
+                  </div>
+                  <button
+                    onClick={() => handleCopy(emailTemplateAllInOne, 'temp_all_in_one')}
+                    className="px-3 py-1 bg-[#111111] hover:bg-black text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    {copiedKey === 'temp_all_in_one' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>¡Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiar Texto</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="text-[11px] text-gray-600 mb-2 font-medium">
+                  <strong>Asunto:</strong> Tu Informe de Prediagnóstico Estratégico · Crea y Monetiza®
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed">
+                  {emailTemplateAllInOne}
+                </div>
+              </div>
+
+              {/* Nota Clave sobre la Sintaxis de GoHighLevel */}
+              <div className="border border-amber-300 bg-amber-50 rounded-xl p-3 text-[11px] text-amber-900">
+                <p className="font-bold flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  ¿Por qué las variables salían vacías en tu correo de prueba?
+                </p>
+                <p className="mt-1 leading-relaxed text-amber-800">
+                  En GoHighLevel la etiqueta oficial para datos de Webhook lleva la palabra <strong>Request</strong> (ej: <code>{'{{inboundWebhookRequest.perfil_profesional}}'}</code>). 
+                  Además, en el editor de correos de GHL puedes hacer clic en el botón de etiquetas <strong>«Custom Values» → «Inbound Webhook»</strong> para insertar cualquier variable directamente sin escribir nada a mano.
+                </p>
+              </div>
+
               {/* Tabla de Variables que envía la app a GHL */}
               <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
                 <h5 className="font-extrabold text-gray-900 text-xs mb-2">
-                  Variables que la aplicación le envía a tu Webhook de GHL:
+                  Variables que la aplicación le envía a tu Webhook de GHL (Sintaxis Oficial GHL):
                 </h5>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
                   <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhook.resumen_ejecutivo}}'}</code>
+                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.resumen_ejecutivo}}'}</code>
                     <p className="text-gray-500 mt-0.5">El reporte completo y estructurado listo para leer.</p>
                   </div>
                   <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhook.servicio_recomendado}}'}</code>
+                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.servicio_recomendado}}'}</code>
                     <p className="text-gray-500 mt-0.5">Ej: Pilar 1: Estrategia y Oferta BMS</p>
                   </div>
                   <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhook.programa_oficial}}'}</code>
+                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.programa_oficial}}'}</code>
                     <p className="text-gray-500 mt-0.5">Ej: Programa Intensivo BMS 1 a 1 (4 a 6 semanas)</p>
                   </div>
                   <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhook.motivo_discrepancia}}'}</code>
+                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.motivo_discrepancia}}'}</code>
                     <p className="text-gray-500 mt-0.5">Análisis del por qué no debe saltarse etapas.</p>
                   </div>
                   <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhook.lo_que_no_debe_hacer}}'}</code>
+                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.lo_que_no_debe_hacer}}'}</code>
                     <p className="text-gray-500 mt-0.5">Advertencia estratégica personalizada.</p>
                   </div>
                   <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhook.diagnostico_email_html}}'}</code>
-                    <p className="text-gray-500 mt-0.5">Bloque visual HTML con diseño de marca Crea y Monetiza®.</p>
+                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.enlace_calendario}}'}</code>
+                    <p className="text-gray-500 mt-0.5">Enlace a la agenda del calendario.</p>
                   </div>
                 </div>
               </div>
