@@ -66,15 +66,32 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 • Pilar 3 (Viral Sales Content): ${calcResult.scores.pilar3} pts
 • Pilar 4 (Digital Business Day & IA): ${calcResult.scores.pilar4} pts`;
 
+  const executiveEmailSummary = `🎯 PERFIL DE MADUREZ:
+${calcResult.profile.title} ("${calcResult.profile.subtitle}")
+
+🏆 PRIORIDAD #1 A RESOLVER:
+${calcResult.recommendedPillar.name}
+Programa Oficial: ${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration})
+
+⚠️ ANÁLISIS ESTRATÉGICO:
+${calcResult.contradictionAnalysis?.explanation || 'Tu objetivo actual está alineado con la madurez de tu negocio.'}
+
+⛔ LO QUE NO DEBES HACER EN ESTA ETAPA:
+${calcResult.notFirstAdvice.warning}
+
+📊 PUNTUACIONES:
+• Estrategia & Oferta: ${calcResult.scores.pilar1} pts | • Marca Personal: ${calcResult.scores.pilar2} pts
+• Contenidos de Venta: ${calcResult.scores.pilar3} pts | • Digitalización & IA: ${calcResult.scores.pilar4} pts`;
+
   const bookingLink = OFFICIAL_BOOKING;
   const htmlEmailReport = generateDiagnosticHtmlReport(calcResult, bookingLink);
   const textEmailReport = generateDiagnosticTextReport(calcResult, bookingLink);
 
   const ghlPayload: Record<string, any> = {
-    name: calcResult.lead.name.trim(),
-    full_name: calcResult.lead.name.trim(),
+    name: 'Patricia Loaiza',
+    full_name: 'Patricia Loaiza',
     first_name: 'Patricia',
-    last_name: 'Loaiza (Prueba)',
+    last_name: 'Loaiza',
     email: 'patriloaiza.perez@gmail.com',
     phone: calcResult.lead.whatsapp.trim(),
     whatsapp: calcResult.lead.whatsapp.trim(),
@@ -102,29 +119,15 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
     diagnostico_lo_que_no_debe_hacer: calcResult.notFirstAdvice.warning,
     diagnostico_advertencia: calcResult.notFirstAdvice.warning,
     
-    // Datos profesionales contextuales
-    profesion: calcResult.lead.profession,
-    profession: calcResult.lead.profession,
-    'profesion o especialidad': calcResult.lead.profession,
-    actividad_actual: calcResult.lead.currentActivity,
-    'a que se dedica': calcResult.lead.currentActivity,
-    current_activity: calcResult.lead.currentActivity,
-    modelo_comercializacion: modelLabel,
-    'modelo de comercializacion': modelLabel,
-    commercial_model: modelLabel,
-    estado_clientes_pago: clientsLabel,
-    'clientes de pago': clientsLabel,
-    paying_clients_status: clientsLabel,
-
-    // Texto consolidado para Nota y Campo Personalizado de GHL
-    resumen_ejecutivo: formattedNoteText,
-    'Resumen Ejecutivo': formattedNoteText,
-    'resumen ejecutivo': formattedNoteText,
-    resumen_diagnostico: formattedNoteText,
-    'resumen diagnostico': formattedNoteText,
-    'Resumen Diagnostico': formattedNoteText,
-    'Resumen Diagnóstico': formattedNoteText,
-    resultado_diagnostico_texto: formattedNoteText,
+    // Resumen ejecutivo humanizado y limpio
+    resumen_ejecutivo: executiveEmailSummary,
+    'Resumen Ejecutivo': executiveEmailSummary,
+    'resumen ejecutivo': executiveEmailSummary,
+    resumen_diagnostico: executiveEmailSummary,
+    'resumen diagnostico': executiveEmailSummary,
+    'Resumen Diagnostico': executiveEmailSummary,
+    'Resumen Diagnóstico': executiveEmailSummary,
+    resultado_diagnostico_texto: executiveEmailSummary,
     'Resultado Diagnostico': formattedNoteText,
     'Resultado Diagnóstico': formattedNoteText,
     resumen_completo: formattedNoteText,

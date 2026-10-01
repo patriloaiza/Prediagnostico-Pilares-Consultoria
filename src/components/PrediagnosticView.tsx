@@ -443,15 +443,46 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 • Pilar 3 (Viral Sales Content): ${calcResult.scores.pilar3} pts
 • Pilar 4 (Digital Business Day & IA): ${calcResult.scores.pilar4} pts`;
 
+      const properFirstName = extractProperFirstName(calcResult.lead.name);
+      const cleanFullName = extractCleanFullName(calcResult.lead.name);
+      const properLastName = cleanFullName.split(/\s+/).slice(1).join(' ') || '';
+
+      // Resumen ejecutivo humanizado y limpio para correos de prospectos (fácil de leer)
+      const executiveEmailSummary = `🎯 PERFIL DE MADUREZ:
+${calcResult.profile.title} ("${calcResult.profile.subtitle}")
+
+🏆 PRIORIDAD #1 A RESOLVER:
+${calcResult.recommendedPillar.name}
+Programa Oficial: ${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration})
+
+⚠️ ANÁLISIS ESTRATÉGICO:
+${calcResult.contradictionAnalysis?.explanation || 'Tu objetivo actual está alineado con la madurez de tu negocio.'}
+
+⛔ LO QUE NO DEBES HACER EN ESTA ETAPA:
+${calcResult.notFirstAdvice.warning}
+
+📊 PUNTUACIONES:
+• Estrategia & Oferta: ${calcResult.scores.pilar1} pts | • Marca Personal: ${calcResult.scores.pilar2} pts
+• Contenidos de Venta: ${calcResult.scores.pilar3} pts | • Digitalización & IA: ${calcResult.scores.pilar4} pts`;
+
+      const executiveEmailSummaryHtml = `
+<div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-left: 4px solid #D7192B; border-radius: 8px; padding: 16px; margin: 16px 0; font-family: sans-serif; line-height: 1.5; color: #111827;">
+  <p style="margin: 0 0 12px 0; font-size: 14px;"><strong>🎯 PERFIL DE MADUREZ:</strong><br>${calcResult.profile.title} (<em>"${calcResult.profile.subtitle}"</em>)</p>
+  <p style="margin: 0 0 12px 0; font-size: 14px;"><strong>🏆 PRIORIDAD #1 A RESOLVER:</strong><br><span style="color: #D7192B; font-weight: bold; font-size: 15px;">${calcResult.recommendedPillar.name}</span><br><span style="font-size: 12px; color: #4b5563;">Programa: ${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration})</span></p>
+  <p style="margin: 0 0 12px 0; font-size: 13px;"><strong>⚠️ ANÁLISIS ESTRATÉGICO:</strong><br>${calcResult.contradictionAnalysis?.explanation || 'Tu objetivo actual está alineado con la madurez de tu negocio.'}</p>
+  <p style="margin: 0 0 12px 0; font-size: 13px; color: #991b1b; background-color: #fee2e2; padding: 8px 12px; border-radius: 6px;"><strong>⛔ LO QUE NO DEBES HACER:</strong><br>${calcResult.notFirstAdvice.warning}</p>
+  <p style="margin: 0; font-size: 12px; color: #4b5563;"><strong>📊 PUNTUACIONES:</strong><br>Pilar 1: ${calcResult.scores.pilar1} pts · Pilar 2: ${calcResult.scores.pilar2} pts · Pilar 3: ${calcResult.scores.pilar3} pts · Pilar 4: ${calcResult.scores.pilar4} pts</p>
+</div>`.trim();
+
       const bookingLink = ghlBookingUrl || OFFICIAL_BOOKING;
       const htmlEmailReport = generateDiagnosticHtmlReport(calcResult, bookingLink);
       const textEmailReport = generateDiagnosticTextReport(calcResult, bookingLink);
 
       const ghlPayload: Record<string, any> = {
-        name: calcResult.lead.name.trim(),
-        full_name: calcResult.lead.name.trim(),
-        first_name: calcResult.lead.name.trim().split(' ')[0] || '',
-        last_name: calcResult.lead.name.trim().split(' ').slice(1).join(' ') || '',
+        name: cleanFullName,
+        full_name: cleanFullName,
+        first_name: properFirstName,
+        last_name: properLastName,
         email: calcResult.lead.email.trim(),
         phone: calcResult.lead.whatsapp.trim(),
         whatsapp: calcResult.lead.whatsapp.trim(),
@@ -493,25 +524,28 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         'clientes de pago': clientsLabel,
         paying_clients_status: clientsLabel,
 
-        // Texto consolidado para Nota y Campo Personalizado de GHL
-        resumen_ejecutivo: formattedNoteText,
-        'Resumen Ejecutivo': formattedNoteText,
-        'resumen ejecutivo': formattedNoteText,
-        resumen_diagnostico: formattedNoteText,
-        'resumen diagnostico': formattedNoteText,
-        'Resumen Diagnostico': formattedNoteText,
-        'Resumen Diagnóstico': formattedNoteText,
-        resultado_diagnostico_texto: formattedNoteText,
-        'Resultado Diagnostico': formattedNoteText,
-        'Resultado Diagnóstico': formattedNoteText,
-        resumen_completo: formattedNoteText,
+        // Resumen ejecutivo humanizado y legible para correos
+        resumen_ejecutivo: executiveEmailSummary,
+        'Resumen Ejecutivo': executiveEmailSummary,
+        'resumen ejecutivo': executiveEmailSummary,
+        resumen_diagnostico: executiveEmailSummary,
+        'resumen diagnostico': executiveEmailSummary,
+        'Resumen Diagnostico': executiveEmailSummary,
+        'Resumen Diagnóstico': executiveEmailSummary,
+        resumen_ejecutivo_html: executiveEmailSummaryHtml,
+        diagnostico_resumen_html: executiveEmailSummaryHtml,
+        resultado_diagnostico_texto: executiveEmailSummary,
+        'Resultado Diagnostico': executiveEmailSummary,
+        'Resultado Diagnóstico': executiveEmailSummary,
+        resumen_completo: executiveEmailSummary,
         nota_completa: formattedNoteText,
-        resumen: formattedNoteText,
+        nota_crm_interna: formattedNoteText,
+        resumen: executiveEmailSummary,
         note: formattedNoteText,
         notes: formattedNoteText,
         nota: formattedNoteText,
-        body: formattedNoteText,
-        body_text: formattedNoteText,
+        body: executiveEmailSummary,
+        body_text: executiveEmailSummary,
         comentarios: formattedNoteText,
         observaciones: formattedNoteText,
         
