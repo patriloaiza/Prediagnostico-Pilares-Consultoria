@@ -174,7 +174,9 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     }
   }, [currentStep, result, webhookSent, isSendingWebhook, RESULTS_STEP]);
 
-  // Atajo de teclado discreto para la administradora (Alt + T o Ctrl + Shift + T): ejecuta escenario aleatorio
+  // Atajos de teclado discretos para la administradora:
+  // Alt + T o Ctrl + Shift + T: ejecuta escenario aleatorio
+  // Alt + G o Ctrl + Shift + G: abre modal de Guía de Correos GHL de forma oculta
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -183,6 +185,13 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
       ) {
         e.preventDefault();
         handleRunRandomTestCase();
+      }
+      if (
+        (e.altKey && e.key.toLowerCase() === 'g') ||
+        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'g')
+      ) {
+        e.preventDefault();
+        setIsGhlModalOpen(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -678,23 +687,13 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               <span className="text-xs text-gray-400 font-mono">Patricia Loaiza</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Acceso discreto solo para la administradora (oculto a la vista del usuario) */}
+            <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setIsGhlModalOpen(true)}
-                className="text-gray-300 hover:text-white bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg text-xs font-bold border border-white/15 flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
-                title="Configuración de Correos y Workflows en GoHighLevel"
-              >
-                <Mail className="w-3.5 h-3.5 text-[#D7192B]" />
-                <span className="hidden sm:inline">Guía Correos GHL</span>
-              </button>
-
-              {/* Símbolo discreto para la administradora: clic ejecuta un escenario aleatorio */}
-              <button
-                type="button"
-                onClick={handleRunRandomTestCase}
-                className="text-gray-500 hover:text-gray-300 opacity-40 hover:opacity-100 p-1.5 rounded transition-all cursor-pointer"
-                title="Cargar escenario aleatorio"
+                className="text-gray-600 hover:text-gray-400 opacity-20 hover:opacity-80 p-1.5 rounded transition-all cursor-pointer"
+                title="Configuración"
                 aria-label="Admin"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -1088,15 +1087,6 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               </div>
 
               <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsGhlModalOpen(true)}
-                  className="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-[#D7192B] text-white text-xs font-bold transition-all border border-red-700/60 flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  title="Configurar y probar correos con copia en GoHighLevel"
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>⚙️ Guía Correos GHL</span>
-                </button>
                 <button
                   type="button"
                   onClick={handleRunRandomTestCase}
@@ -1617,6 +1607,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         isOpen={isTestModalOpen}
         onClose={() => setIsTestModalOpen(false)}
         onApplyCase={handleApplyTestCase}
+        onOpenGhlConfig={() => setIsGhlModalOpen(true)}
       />
 
       {/* Modal de Configuración y Guía de Correos en GoHighLevel */}

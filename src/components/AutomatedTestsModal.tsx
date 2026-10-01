@@ -317,12 +317,14 @@ interface AutomatedTestsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onApplyCase: (testCase: TestCase, viewResultsDirectly: boolean) => void;
+  onOpenGhlConfig?: () => void;
 }
 
 export const AutomatedTestsModal: React.FC<AutomatedTestsModalProps> = ({
   isOpen,
   onClose,
-  onApplyCase
+  onApplyCase,
+  onOpenGhlConfig
 }) => {
   if (!isOpen) return null;
 
@@ -419,7 +421,22 @@ export const AutomatedTestsModal: React.FC<AutomatedTestsModalProps> = ({
 
         {/* Pie del modal */}
         <div className="bg-gray-50 p-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
-          <span>Metodología CREA Y MONETIZA® · Patricia Loaiza</span>
+          <div className="flex items-center gap-3">
+            <span>Metodología CREA Y MONETIZA® · Patricia Loaiza</span>
+            {onOpenGhlConfig && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenGhlConfig();
+                }}
+                className="px-2.5 py-1 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+                title="Configuración de Automatización de Correos GHL"
+              >
+                <span>⚙️ Guía Correos GHL</span>
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold transition-all"
