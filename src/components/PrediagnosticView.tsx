@@ -18,7 +18,8 @@ import {
   HelpCircle,
   ShieldCheck,
   Ban,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Mail
 } from 'lucide-react';
 import {
   PREDIAGNOSTIC_QUESTIONS,
@@ -34,6 +35,12 @@ import {
   PAYING_CLIENTS_LABELS
 } from '../utils/prediagnosticLogic';
 import { AutomatedTestsModal, TestCase, AUTOMATED_TEST_CASES } from './AutomatedTestsModal';
+import { GHLConfigModal } from './GHLConfigModal';
+import {
+  generateDiagnosticHtmlReport,
+  generateDiagnosticTextReport,
+  OFFICIAL_ADMIN_EMAIL
+} from '../utils/ghlEmailTemplate';
 
 interface PrediagnosticViewProps {
   defaultWebhookUrl?: string;
@@ -114,6 +121,7 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   // Estado del flujo: 0 = Contexto y Datos, 1..TOTAL_QUESTIONS = Preguntas, RESULTS_STEP = Resumen y Agendamiento
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [isTestModalOpen, setIsTestModalOpen] = useState<boolean>(false);
+  const [isGhlModalOpen, setIsGhlModalOpen] = useState<boolean>(false);
   const [activeTestCase, setActiveTestCase] = useState<TestCase | null>(null);
   const [lead, setLead] = useState<UserLeadInfo>({
     name: '',
@@ -426,6 +434,10 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 • Pilar 3 (Viral Sales Content): ${calcResult.scores.pilar3} pts
 • Pilar 4 (Digital Business Day & IA): ${calcResult.scores.pilar4} pts`;
 
+      const bookingLink = ghlBookingUrl || OFFICIAL_BOOKING;
+      const htmlEmailReport = generateDiagnosticHtmlReport(calcResult, bookingLink);
+      const textEmailReport = generateDiagnosticTextReport(calcResult, bookingLink);
+
       const ghlPayload: Record<string, any> = {
         name: calcResult.lead.name.trim(),
         full_name: calcResult.lead.name.trim(),
@@ -434,6 +446,29 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         email: calcResult.lead.email.trim(),
         phone: calcResult.lead.whatsapp.trim(),
         whatsapp: calcResult.lead.whatsapp.trim(),
+
+        // Notificación de copia para Patricia Loaiza (Admin)
+        admin_email: OFFICIAL_ADMIN_EMAIL,
+        admin_copy_email: OFFICIAL_ADMIN_EMAIL,
+        copia_para: OFFICIAL_ADMIN_EMAIL,
+        notificacion_administrador: OFFICIAL_ADMIN_EMAIL,
+        email_copia: OFFICIAL_ADMIN_EMAIL,
+
+        // Plantillas de Correo para GoHighLevel
+        diagnostico_email_html: htmlEmailReport,
+        diagnostico_resumen_texto: textEmailReport,
+        resultado_diagnostico_html: htmlEmailReport,
+        resultado_diagnostico: textEmailReport,
+        enlace_calendario: bookingLink,
+        booking_url: bookingLink,
+
+        // Variables directas para workflows
+        diagnostico_perfil: `${calcResult.profile.title} ("${calcResult.profile.subtitle}")`,
+        diagnostico_servicio_recomendado: calcResult.recommendedPillar.name,
+        diagnostico_programa_oficial: `${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration})`,
+        diagnostico_motivo_discrepancia: calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia; objetivo alineado con la madurez actual.',
+        diagnostico_lo_que_no_debe_hacer: calcResult.notFirstAdvice.warning,
+        diagnostico_advertencia: calcResult.notFirstAdvice.warning,
         
         // Datos profesionales contextuales
         profesion: calcResult.lead.profession,
@@ -593,6 +628,18 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
     }
   };
 
+  // Envío de Lead de prueba hacia GoHighLevel
+  const handleSendTestLeadToGhl = async (): Promise<boolean> => {
+    const testCase = activeTestCase || AUTOMATED_TEST_CASES[0];
+    const calc = calculatePrediagnostic(testCase.answers, testCase.lead);
+    try {
+      await executeWebhookDispatch(calc, ghlWebhook);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   // Porcentaje de progreso
   const progressPercent =
     currentStep === 0
@@ -631,16 +678,28 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               <span className="text-xs text-gray-400 font-mono">Patricia Loaiza</span>
             </div>
 
-            {/* Símbolo discreto para la administradora: clic ejecuta un escenario aleatorio */}
-            <button
-              type="button"
-              onClick={handleRunRandomTestCase}
-              className="text-gray-600 hover:text-gray-400 opacity-20 hover:opacity-80 p-1.5 rounded transition-all cursor-pointer"
-              title="Configuración"
-              aria-label="Admin"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsGhlModalOpen(true)}
+                className="text-gray-300 hover:text-white bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg text-xs font-bold border border-white/15 flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                title="Configuración de Correos y Workflows en GoHighLevel"
+              >
+                <Mail className="w-3.5 h-3.5 text-[#D7192B]" />
+                <span className="hidden sm:inline">Guía Correos GHL</span>
+              </button>
+
+              {/* Símbolo discreto para la administradora: clic ejecuta un escenario aleatorio */}
+              <button
+                type="button"
+                onClick={handleRunRandomTestCase}
+                className="text-gray-500 hover:text-gray-300 opacity-40 hover:opacity-100 p-1.5 rounded transition-all cursor-pointer"
+                title="Cargar escenario aleatorio"
+                aria-label="Admin"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -1029,6 +1088,15 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
               </div>
 
               <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsGhlModalOpen(true)}
+                  className="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-[#D7192B] text-white text-xs font-bold transition-all border border-red-700/60 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Configurar y probar correos con copia en GoHighLevel"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>⚙️ Guía Correos GHL</span>
+                </button>
                 <button
                   type="button"
                   onClick={handleRunRandomTestCase}
@@ -1549,6 +1617,17 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         isOpen={isTestModalOpen}
         onClose={() => setIsTestModalOpen(false)}
         onApplyCase={handleApplyTestCase}
+      />
+
+      {/* Modal de Configuración y Guía de Correos en GoHighLevel */}
+      <GHLConfigModal
+        isOpen={isGhlModalOpen}
+        onClose={() => setIsGhlModalOpen(false)}
+        webhookUrl={ghlWebhook}
+        onSaveWebhookUrl={(url) => setGhlWebhook(url)}
+        bookingUrl={ghlBookingUrl}
+        onSaveBookingUrl={(url) => setGhlBookingUrl(url)}
+        onSendTestLead={handleSendTestLeadToGhl}
       />
     </div>
   );
