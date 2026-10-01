@@ -675,29 +675,9 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#D7192B] bg-[#D7192B]/10 px-2.5 py-1 rounded inline-flex items-center">
                 <span>METODOLOGÍA CREA Y MONETIZA</span>
-                <button
-                  type="button"
-                  onClick={handleRunRandomTestCase}
-                  className="hover:text-white transition-colors cursor-default select-none focus:outline-hidden ml-0.5"
-                  title="Metodología Registrada"
-                >
-                  ®
-                </button>
+                <span className="ml-0.5 select-none">®</span>
               </span>
               <span className="text-xs text-gray-400 font-mono">Patricia Loaiza</span>
-            </div>
-
-            {/* Acceso discreto solo para la administradora (oculto a la vista del usuario) */}
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setIsGhlModalOpen(true)}
-                className="text-gray-600 hover:text-gray-400 opacity-20 hover:opacity-80 p-1.5 rounded transition-all cursor-pointer"
-                title="Configuración"
-                aria-label="Admin"
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-              </button>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
