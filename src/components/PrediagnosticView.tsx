@@ -335,6 +335,48 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     }
   };
 
+  // Autocompletar el formulario de inicio con los datos de prueba de Patricia Loaiza
+  const handleQuickFillForm = () => {
+    setLead({
+      name: 'Patricia Loaiza (Test)',
+      email: 'patriloaiza.perez@gmail.com',
+      whatsapp: '+57 300 123 4567',
+      profession: 'Consultora de Negocios y Estrategia',
+      currentActivity: 'Servicios de consultoría estratégica y programas de alto valor',
+      commercializationModel: 'servicios_1a1',
+      payingClientsStatus: 'irregulares',
+      company: 'Crea y Monetiza®',
+      role: 'Fundadora & Directora'
+    });
+    setErrorMessage(null);
+  };
+
+  // Simular prediagnóstico completo de prueba y enviar webhook directo a GoHighLevel
+  const handleSimulateFullDiagnosticAndSend = async () => {
+    const testCase = activeTestCase || AUTOMATED_TEST_CASES[1] || AUTOMATED_TEST_CASES[0];
+    const testLead: UserLeadInfo = {
+      ...testCase.lead,
+      name: 'Patricia Loaiza (Prueba Automatización)',
+      email: 'patriloaiza.perez@gmail.com',
+      whatsapp: '+57 300 123 4567',
+      company: 'Crea y Monetiza®',
+      role: 'Fundadora & Directora'
+    };
+    setActiveTestCase(testCase);
+    setLead(testLead);
+    setAnswers(testCase.answers);
+    setErrorMessage(null);
+
+    const calc = calculatePrediagnostic(testCase.answers, testLead);
+    setResult(calc);
+    setCurrentStep(RESULTS_STEP);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (ghlWebhook) {
+      executeWebhookDispatch(calc, ghlWebhook);
+    }
+  };
+
   // Ejecutar un escenario aleatorio de prueba
   const handleRunRandomTestCase = () => {
     if (!AUTOMATED_TEST_CASES || AUTOMATED_TEST_CASES.length === 0) return;
@@ -345,28 +387,49 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     const randomIndex = Math.floor(Math.random() * availablePool.length);
     const selectedCase = availablePool[randomIndex];
 
-    setActiveTestCase(selectedCase);
-    setLead(selectedCase.lead);
+    const testLead: UserLeadInfo = {
+      ...selectedCase.lead,
+      name: `Patricia Loaiza (${selectedCase.name.split(':')[0] || 'Prueba'})`,
+      email: 'patriloaiza.perez@gmail.com',
+      whatsapp: '+57 300 123 4567'
+    };
+
+    setActiveTestCase({ ...selectedCase, lead: testLead });
+    setLead(testLead);
     setAnswers(selectedCase.answers);
     setErrorMessage(null);
 
-    const calc = calculatePrediagnostic(selectedCase.answers, selectedCase.lead);
+    const calc = calculatePrediagnostic(selectedCase.answers, testLead);
     setResult(calc);
     setCurrentStep(RESULTS_STEP);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (ghlWebhook) {
+      executeWebhookDispatch(calc, ghlWebhook);
+    }
   };
 
   // Cargar caso de prueba automatizado específico
   const handleApplyTestCase = (testCase: TestCase, viewResultsDirectly: boolean) => {
-    setActiveTestCase(testCase);
-    setLead(testCase.lead);
+    const testLead: UserLeadInfo = {
+      ...testCase.lead,
+      name: `Patricia Loaiza (${testCase.name.split(':')[0] || 'Prueba'})`,
+      email: 'patriloaiza.perez@gmail.com',
+      whatsapp: '+57 300 123 4567'
+    };
+
+    setActiveTestCase({ ...testCase, lead: testLead });
+    setLead(testLead);
     setAnswers(testCase.answers);
     setErrorMessage(null);
 
     if (viewResultsDirectly) {
-      const calc = calculatePrediagnostic(testCase.answers, testCase.lead);
+      const calc = calculatePrediagnostic(testCase.answers, testLead);
       setResult(calc);
       setCurrentStep(RESULTS_STEP);
+      if (ghlWebhook) {
+        executeWebhookDispatch(calc, ghlWebhook);
+      }
     } else {
       setCurrentStep(1);
     }
@@ -722,7 +785,22 @@ ${calcResult.notFirstAdvice.warning}
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#D7192B] bg-[#D7192B]/10 px-2.5 py-1 rounded inline-flex items-center">
                 <span>METODOLOGÍA CREA Y MONETIZA</span>
-                <span className="ml-0.5 select-none">®</span>
+                <span
+                  onClick={(e) => {
+                    if (e.altKey || e.shiftKey) {
+                      setIsTestModalOpen(true);
+                    } else {
+                      handleRunRandomTestCase();
+                    }
+                  }}
+                  onDoubleClick={() => setIsTestModalOpen(true)}
+                  className="ml-0.5 select-none cursor-pointer hover:text-white transition-colors"
+                  role="button"
+                  tabIndex={-1}
+                  aria-label="Crea y Monetiza"
+                >
+                  ®
+                </span>
               </span>
               <span className="text-xs text-gray-400 font-mono">Patricia Loaiza</span>
             </div>
