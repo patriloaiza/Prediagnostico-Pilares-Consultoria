@@ -15,7 +15,12 @@ import {
   Check,
   FileText,
   UserCheck,
-  Sparkles
+  Sparkles,
+  ShieldAlert,
+  Search,
+  CheckCircle,
+  AlertTriangle,
+  ArrowRight
 } from 'lucide-react';
 import { OFFICIAL_ADMIN_EMAIL } from '../utils/ghlEmailTemplate';
 
@@ -38,7 +43,7 @@ export const GHLConfigModal: React.FC<GHLConfigModalProps> = ({
   onSaveBookingUrl,
   onSendTestLead
 }) => {
-  const [activeTab, setActiveTab] = useState<'workflow' | 'templates' | 'setup'>('workflow');
+  const [activeTab, setActiveTab] = useState<'audit' | 'workflow' | 'templates' | 'setup'>('audit');
   const [localWebhook, setLocalWebhook] = useState(webhookUrl);
   const [localBooking, setLocalBooking] = useState(bookingUrl);
   const [isSendingTest, setIsSendingTest] = useState(false);
@@ -75,40 +80,38 @@ export const GHLConfigModal: React.FC<GHLConfigModalProps> = ({
     }
   };
 
+  // Plantilla para Flujo 2: Cuando NO agendó (lee directo del webhook entrante)
   const emailTemplateNoBooking = `Hola {{contact.first_name}},
 
-Gracias por completar tu Prediagnóstico Estratégico en Crea y Monetiza®.
+Aquí tienes el informe completo de tu Prediagnóstico Estratégico en Crea y Monetiza®:
 
-Aquí tienes el resultado de tu evaluación:
+NIVEL DE MADUREZ DETECTADO:
+{{inboundWebhookRequest.diagnostico_perfil}}
 
---------------------------------------------------
-🎯 PERFIL DETECTADO:
-{{inboundWebhookRequest.perfil_profesional}}
+PRIORIDAD #1 A RESOLVER:
+{{inboundWebhookRequest.diagnostico_servicio_recomendado}}
 
-🏆 SERVICIO PRIORITARIO RECOMENDADO:
-{{inboundWebhookRequest.servicio_recomendado}}
-Programa Oficial: {{inboundWebhookRequest.programa_oficial}}
+Programa Recomendado: {{inboundWebhookRequest.diagnostico_programa_oficial}}
 
-⚠️ MOTIVO Y CUELLO DE BOTELLA:
-{{inboundWebhookRequest.motivo_discrepancia}}
+ANÁLISIS ESTRATÉGICO:
+{{inboundWebhookRequest.diagnostico_motivo_discrepancia}}
 
-⛔ LO QUE NO DEBES HACER AHORA:
-{{inboundWebhookRequest.lo_que_no_debe_hacer}}
---------------------------------------------------
+LO QUE NO DEBES HACER AHORA:
+{{inboundWebhookRequest.diagnostico_lo_que_no_debe_hacer}}
 
-Noté que aún no has reservado tu Sesión 1 a 1 Gratuita (valorada en $250 USD) para repasar estos resultados y diseñar tu plan de acción a la medida.
+PUNTUACIONES DE TUS 4 PILARES:
+1. Estrategia & Oferta: {{inboundWebhookRequest.puntuacion_pilar1}} pts
+2. Marca Personal: {{inboundWebhookRequest.puntuacion_pilar2}} pts
+3. Contenido de Ventas: {{inboundWebhookRequest.puntuacion_pilar3}} pts
+4. Digital Business & IA: {{inboundWebhookRequest.puntuacion_pilar4}} pts
 
-He reservado temporalmente 1 cupo para ti. Puedes agendar el día y la hora que mejor te acomode en el siguiente enlace:
+Ahora es momento de agendar tu sesión 1 a 1 de Regalo (45 min):
+{{inboundWebhookRequest.enlace_calendario}}
 
-👉 Agendar mi Sesión Gratuita:
-${bookingUrl || '{{inboundWebhookRequest.enlace_calendario}}'}
+¡Nos vemos pronto!
+Patricia Loaiza - Crea y Monetiza®`;
 
-¡Nos vemos en la sesión!
-
-Patricia Loaiza
-Crea y Monetiza®
-Email de contacto: ${OFFICIAL_ADMIN_EMAIL}`;
-
+  // Plantilla para Flujo 3: Cuando SÍ agendó (lee de los campos guardados en el contacto)
   const emailTemplateYesBooking = `Hola {{contact.first_name}},
 
 ¡Tu cita para la Sesión Estratégica 1 a 1 está confirmada! 🎉
@@ -116,28 +119,27 @@ Email de contacto: ${OFFICIAL_ADMIN_EMAIL}`;
 📅 Fecha y Hora de tu sesión: {{appointment.start_time}}
 🔗 Enlace de la reunión: {{appointment.meeting_location}}
 
-Para aprovechar al máximo nuestros 30 minutos juntos, he preparado una copia del resultado de tu Prediagnóstico que analizaremos a fondo:
+Para aprovechar al máximo nuestros 45 minutos juntos, he preparado una copia del resultado de tu Prediagnóstico que analizaremos a fondo:
 
 --------------------------------------------------
 🎯 PERFIL DETECTADO:
-{{inboundWebhookRequest.perfil_profesional}}
+{{contact.perfil_profesional}}
 
 🏆 SERVICIO PRIORITARIO RECOMENDADO:
-{{inboundWebhookRequest.servicio_recomendado}} ({{inboundWebhookRequest.programa_oficial}})
+{{contact.servicio_recomendado}}
 
 ⚠️ ANÁLISIS ESTRATÉGICO:
-{{inboundWebhookRequest.motivo_discrepancia}}
+{{contact.motivo_discrepancia}}
 
 ⛔ LO QUE NO DEBES HACER:
-{{inboundWebhookRequest.lo_que_no_debe_hacer}}
+{{contact.lo_que_no_debe_hacer}}
 --------------------------------------------------
 
 Ten a mano este correo el día de nuestra sesión. Revisaremos exactamente cómo destrabar tu facturación y escalar tus servicios de alto valor.
 
 ¡Nos vemos pronto!
 
-Patricia Loaiza
-Crea y Monetiza®
+Patricia Loaiza · Crea y Monetiza®
 Copia enviada a: ${OFFICIAL_ADMIN_EMAIL}`;
 
   const emailTemplateAllInOne = `Hola {{contact.first_name}},
@@ -147,7 +149,7 @@ Aquí tienes el informe completo y consolidado de tu Prediagnóstico Estratégic
 {{inboundWebhookRequest.resumen_ejecutivo}}
 
 --------------------------------------------------
-👉 Reserva aquí tu Sesión Estratégica 1 a 1 de 30 minutos (Sin Costo):
+👉 Reserva aquí tu Sesión Estratégica 1 a 1 de 45 minutos (Sin Costo):
 ${bookingUrl || '{{inboundWebhookRequest.enlace_calendario}}'}
 --------------------------------------------------
 
@@ -155,7 +157,7 @@ Patricia Loaiza · Crea y Monetiza®`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-4xl w-full max-h-[94vh] flex flex-col overflow-hidden">
         
         {/* Cabecera */}
         <div className="bg-[#111111] text-white p-4 sm:p-5 flex items-center justify-between border-b-2 border-[#D7192B]">
@@ -165,10 +167,10 @@ Patricia Loaiza · Crea y Monetiza®`;
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                Guía de Automatización en GoHighLevel (GHL)
+                Auditoría y Corrección de Automatizaciones GHL
               </h3>
               <p className="text-xs text-gray-300">
-                Envío de copias del diagnóstico al prospecto con copia a <strong className="text-white">{OFFICIAL_ADMIN_EMAIL}</strong>
+                Garantiza que siempre te llegue la copia a <strong className="text-white underline">{OFFICIAL_ADMIN_EMAIL}</strong>
               </p>
             </div>
           </div>
@@ -181,46 +183,240 @@ Patricia Loaiza · Crea y Monetiza®`;
         </div>
 
         {/* Selector de Pestañas */}
-        <div className="flex border-b border-gray-200 bg-gray-50 px-4 pt-2 gap-2 text-xs">
+        <div className="flex border-b border-gray-200 bg-gray-50 px-4 pt-2 gap-2 text-xs overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={`px-4 py-2.5 font-extrabold border-b-2 transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
+              activeTab === 'audit'
+                ? 'border-[#D7192B] text-[#D7192B] bg-white rounded-t-lg shadow-2xs'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4 text-[#D7192B]" />
+            <span>Auditoría de tus 2 Flujos (Corrección de Copias)</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('workflow')}
-            className={`px-4 py-2.5 font-extrabold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2.5 font-extrabold border-b-2 transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
               activeTab === 'workflow'
                 ? 'border-[#D7192B] text-[#D7192B] bg-white rounded-t-lg shadow-2xs'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             <GitFork className="w-4 h-4" />
-            <span>1. Estructura del Workflow (Si Agendó vs No Agendó)</span>
+            <span>Paso a Paso en GoHighLevel</span>
           </button>
 
           <button
             onClick={() => setActiveTab('templates')}
-            className={`px-4 py-2.5 font-extrabold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2.5 font-extrabold border-b-2 transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
               activeTab === 'templates'
                 ? 'border-[#D7192B] text-[#D7192B] bg-white rounded-t-lg shadow-2xs'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             <FileText className="w-4 h-4" />
-            <span>2. Plantillas de Correo Listas</span>
+            <span>Plantillas de Correo Listas</span>
           </button>
 
           <button
             onClick={() => setActiveTab('setup')}
-            className={`px-4 py-2.5 font-extrabold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2.5 font-extrabold border-b-2 transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
               activeTab === 'setup'
                 ? 'border-[#D7192B] text-[#D7192B] bg-white rounded-t-lg shadow-2xs'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             <Settings className="w-4 h-4" />
-            <span>3. Conexión & Prueba en Vivo</span>
+            <span>Conexión & Lead de Prueba</span>
           </button>
         </div>
 
         {/* Contenido scrolleable */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 text-xs space-y-6">
+
+          {/* TAB 0: AUDITORÍA ESPECÍFICA DE LAS CAPTURAS */}
+          {activeTab === 'audit' && (
+            <div className="space-y-6">
+              
+              {/* Resumen Superior */}
+              <div className="bg-gradient-to-r from-gray-900 to-black text-white p-4 sm:p-5 rounded-2xl border-l-4 border-[#D7192B] shadow-md">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-black text-white mb-1">
+                      Diagnóstico Forense de tus 2 Automatizaciones
+                    </h4>
+                    <p className="text-gray-300 text-xs leading-relaxed">
+                      Revisando tus registros de ejecución y la configuración de tus dos flujos (<strong>2 CM - Prediagnostico NO AGENDA</strong> y <strong>3. Confirmar agendamiento</strong>), detectamos exactamente por qué no te están llegando las copias a tu correo <strong className="text-white underline">{OFFICIAL_ADMIN_EMAIL}</strong> en todos los casos:
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comparativa Caso Fernando vs Caso María */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Caso Fernando Morales (NO agendó) */}
+                <div className="border-2 border-red-200 bg-red-50/50 rounded-2xl p-4 shadow-2xs">
+                  <div className="flex items-center justify-between pb-2 mb-3 border-b border-red-200">
+                    <span className="font-black text-red-900 text-xs flex items-center gap-1.5">
+                      <AlertTriangle className="w-4 h-4 text-red-600" />
+                      CASO 1: NO AGENDÓ (Ej. Fernando Morales)
+                    </span>
+                    <span className="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      Flujo 2: NO AGENDA
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5 text-[11px] text-gray-700">
+                    <p>
+                      <strong>Lo que pasó en tus registros:</strong> Fernando llenó el prediagnóstico, esperó los 15 minutos, cayó en la rama <em>«None»</em> y GoHighLevel ejecutó la acción <em>«Correo electrónico No Agendaste Tu Cita»</em> (a las 1:14 pm).
+                    </p>
+                    <div className="p-2.5 bg-white rounded-xl border border-red-300 text-red-900 font-medium">
+                      ❌ <strong>¿Por qué no te llegó copia a ti?</strong>
+                      <br />
+                      Porque en GoHighLevel la acción <strong>«Send Email»</strong> por defecto <u>únicamente</u> le manda el correo al prospecto (<code>{'{{contact.email}}'}</code>). No tiene configurado el campo <strong>«Cc»</strong> (Copia) ni hay una acción de notificación para ti en esa rama.
+                    </div>
+                    <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-300 text-emerald-950 font-bold">
+                      ✅ <strong>La Solución Inmediata:</strong>
+                      <ol className="list-decimal pl-4 mt-1 space-y-1 font-normal text-[11px]">
+                        <li>Abre la acción <strong>«Correo electrónico No Agendaste Tu Cita»</strong>.</li>
+                        <li>En el panel lateral derecho, abre <strong>«Configuraciones adicionales»</strong> o despliega el campo <strong>«Cc»</strong>.</li>
+                        <li>Escribe exactamente tu correo: <code className="bg-white px-1.5 py-0.5 rounded border border-emerald-400 font-bold text-gray-900 select-all">{OFFICIAL_ADMIN_EMAIL}</code>.</li>
+                        <li><em>(Opcional recomendado)</em> Agrega justo después una acción <strong>Internal Notification</strong> (Tipo: Email) enviada a tu correo.</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Caso María Vélez (SÍ agendó) */}
+                <div className="border-2 border-emerald-200 bg-emerald-50/50 rounded-2xl p-4 shadow-2xs">
+                  <div className="flex items-center justify-between pb-2 mb-3 border-b border-emerald-200">
+                    <span className="font-black text-emerald-900 text-xs flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      CASO 2: SÍ AGENDÓ (Ej. María Vélez)
+                    </span>
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      Flujo 3: Confirmar Agendamiento
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5 text-[11px] text-gray-700">
+                    <p>
+                      <strong>Lo que pasó en tus registros:</strong> María agendó en el calendario a la 1:03 pm. Entró al Flujo 3, se le añadió la etiqueta <code>agendo-cita</code>, y se ejecutaron <em>«Enviar correo de confirmación y diagnóstico»</em> y <em>«Internal Notification»</em>. Luego a la 1:17 pm en el Flujo 2 se detectó la etiqueta y terminó sin enviar correo de no agendó.
+                    </p>
+                    <div className="p-2.5 bg-white rounded-xl border border-amber-300 text-amber-950 font-medium">
+                      ⚠️ <strong>Los 2 errores detectados en este caso:</strong>
+                      <br />
+                      1. La acción <strong>Internal Notification</strong> en GHL muchas veces se deja como <em>«In-App Notification»</em> (la campana de la app de GHL) o como <em>«Assigned User»</em> (si el contacto no tiene usuario asignado, el correo no sale).
+                      <br />
+                      2. <strong>¡Variables Vacías!</strong> En el Flujo 3 el activador es la <u>Cita</u> (no el Webhook). Por eso <code>{'{{inboundWebhookRequest...}}'}</code> llega <strong>en blanco</strong> en el Flujo 3.
+                    </div>
+                    <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-300 text-emerald-950 font-bold">
+                      ✅ <strong>La Solución Inmediata:</strong>
+                      <ol className="list-decimal pl-4 mt-1 space-y-1 font-normal text-[11px]">
+                        <li>En la acción <strong>Internal Notification</strong>: selecciona Tipo: <strong>Email</strong>, y en «Send to» elige <strong>Custom Email</strong> escribiendo <code className="bg-white px-1.5 py-0.5 rounded border border-emerald-400 font-bold text-gray-900 select-all">{OFFICIAL_ADMIN_EMAIL}</code>.</li>
+                        <li>En el correo de confirmación, agrega también en el campo <strong>Cc</strong> tu correo.</li>
+                        <li>Usa campos del contacto (ver pestaña de Estructura) para que los datos del diagnóstico no salgan vacíos.</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Guía Visual: Las 3 Modificaciones Exactas en tu Pantalla de GHL */}
+              <div className="border border-gray-200 rounded-2xl p-4 sm:p-5 bg-white shadow-xs space-y-4">
+                <h4 className="font-extrabold text-gray-900 text-sm flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[#111111] text-white flex items-center justify-center text-xs">
+                    🛠️
+                  </span>
+                  Pasos exactos para aplicar en tu cuenta de GoHighLevel hoy mismo:
+                </h4>
+
+                <div className="space-y-3">
+                  
+                  {/* Modificación 1 */}
+                  <div className="p-3.5 rounded-xl border border-gray-200 bg-gray-50 flex items-start gap-3">
+                    <span className="w-5 h-5 rounded-full bg-[#D7192B] text-white flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                      1
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <strong className="text-gray-900 text-xs">
+                          En el Flujo «2 CM - Prediagnostico NO AGENDA»: Agregar CC al correo de No Agendaste
+                        </strong>
+                        <button
+                          onClick={() => handleCopy(OFFICIAL_ADMIN_EMAIL, 'copy_email_1')}
+                          className="px-2 py-0.5 bg-gray-200 hover:bg-gray-300 text-gray-800 text-[10px] font-bold rounded cursor-pointer transition-colors"
+                        >
+                          {copiedKey === 'copy_email_1' ? '¡Copiado!' : 'Copiar Email'}
+                        </button>
+                      </div>
+                      <p className="text-gray-600 text-[11px] mt-1 leading-relaxed">
+                        Entra a la acción <em>«Correo electrónico No Agendaste Tu Cita»</em>. En la columna derecha donde escribes el correo, busca la sección de remitente o despliega <strong>«Configuraciones adicionales» / «Cc»</strong> y pega <code className="bg-white px-1 py-0.5 rounded border font-bold text-[#D7192B]">{OFFICIAL_ADMIN_EMAIL}</code>.
+                        <br />
+                        <span className="text-emerald-700 font-semibold">
+                          → Resultado: Cada vez que un usuario como Fernando Morales reciba el correo de los 15 minutos, te llegará a ti una copia instantánea e idéntica a tu Gmail.
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Modificación 2 */}
+                  <div className="p-3.5 rounded-xl border border-gray-200 bg-gray-50 flex items-start gap-3">
+                    <span className="w-5 h-5 rounded-full bg-[#D7192B] text-white flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                      2
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <strong className="text-gray-900 text-xs">
+                          En el Flujo «3. Confirmar agendamiento»: Configurar «Internal Notification»
+                        </strong>
+                      </div>
+                      <p className="text-gray-600 text-[11px] mt-1 leading-relaxed">
+                        Haz clic en la acción <em>«Internal Notification»</em> que ya tienes creada:
+                        <br />
+                        • <strong>Type of Notification:</strong> Selecciona <strong>Email</strong> (no In-App Notification).
+                        <br />
+                        • <strong>Send to:</strong> Selecciona <strong>Custom Email</strong> (NO «Assigned User»).
+                        <br />
+                        • <strong>To Email:</strong> Pega <code className="bg-white px-1 py-0.5 rounded border font-bold text-[#D7192B]">{OFFICIAL_ADMIN_EMAIL}</code>.
+                        <br />
+                        • <strong>Subject:</strong> <code>🚨 [NUEVA CITA CONFIRMADA] - {'{{contact.name}}'}</code>.
+                        <br />
+                        • Además, entra en la acción <em>«Enviar correo de confirmación y diagnóstico»</em> y agrega tu email en el campo <strong>Cc</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Modificación 3 */}
+                  <div className="p-3.5 rounded-xl border border-gray-200 bg-gray-50 flex items-start gap-3">
+                    <span className="w-5 h-5 rounded-full bg-[#D7192B] text-white flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                      3
+                    </span>
+                    <div className="flex-1">
+                      <strong className="text-gray-900 text-xs">
+                        Para que las variables del diagnóstico NO salgan vacías en el Flujo 3:
+                      </strong>
+                      <p className="text-gray-600 text-[11px] mt-1 leading-relaxed">
+                        En tu captura del Flujo 2 tienes el paso 2: <em>«Actualizar campos personalizados del contacto»</em>.
+                        Asegúrate de que en ese paso se guarde la variable:
+                        <br />
+                        Campo: <strong>Resumen Diagnóstico</strong> (Custom Field tipo Texto Multi-línea) → Valor: <code className="bg-white px-1 py-0.5 rounded border text-[#D7192B] font-bold">{'{{inboundWebhookRequest.resumen_ejecutivo}}'}</code>.
+                        <br />
+                        Luego, en el Flujo 3, en lugar de usar <code>{'{{inboundWebhookRequest...}}'}</code>, usas <code className="bg-white px-1 py-0.5 rounded border text-emerald-700 font-bold">{'{{contact.resumen_diagnostico}}'}</code> (ver Plantilla 2 en la siguiente pestaña).
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          )}
 
           {/* TAB 1: ESTRUCTURA DEL WORKFLOW */}
           {activeTab === 'workflow' && (
@@ -228,132 +424,70 @@ Patricia Loaiza · Crea y Monetiza®`;
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                 <h4 className="font-extrabold text-amber-900 text-sm flex items-center gap-2 mb-1">
                   <Sparkles className="w-4 h-4 text-amber-700" />
-                  ¿Cómo hacer que envíe el diagnóstico y diferencie si agendó o no?
+                  Estructura Óptima de tus 2 Flujos de Trabajo
                 </h4>
                 <p className="text-amber-800 leading-relaxed text-xs">
-                  En este momento el correo llega solo cuando no agenda porque no tiene una <strong>bifurcación (If/Else)</strong> con un tiempo de espera para que la persona complete el calendario. Además, no se incluye el diagnóstico porque falta insertar la variable del resultado en el correo. Aquí tienes el flujo exacto paso a paso:
+                  Tu arquitectura con 2 flujos (uno activado por Webhook con espera de 15 minutos y condición de tag, y otro activado por la Cita) es <strong>completamente correcta y profesional</strong>. Solo requiere asegurar los enlaces de notificación hacia tu buzón personal.
                 </p>
               </div>
 
-              {/* Diagrama de Pasos */}
-              <div className="space-y-3">
-                <div className="border border-gray-200 rounded-xl p-3.5 bg-gray-50 flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-[#111111] text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                    1
-                  </span>
-                  <div>
-                    <h5 className="font-extrabold text-gray-900 text-xs">
-                      Disparador (Trigger): Inbound Webhook
-                    </h5>
-                    <p className="text-gray-600 text-[11px] mt-0.5 leading-relaxed">
-                      El prospecto termina el prediagnóstico y la app envía inmediatamente todos sus datos y su resultado a tu webhook de GHL.
-                    </p>
+              {/* Diagrama Comparativo */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Flujo 2 */}
+                <div className="border border-gray-300 rounded-xl p-4 bg-gray-50 space-y-3">
+                  <div className="flex items-center gap-2 font-black text-gray-900 text-xs pb-2 border-b border-gray-200">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                    <span>Flujo 2: Prediagnóstico NO AGENDA</span>
                   </div>
-                </div>
-
-                <div className="border-2 border-indigo-300 rounded-xl p-3.5 bg-indigo-50/70 flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-indigo-700 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                    2
-                  </span>
-                  <div>
-                    <h5 className="font-extrabold text-indigo-950 text-xs">
-                      Paso Clave: Guardar el Diagnóstico en el Contacto (Update Contact Field)
-                    </h5>
-                    <p className="text-indigo-900 text-[11px] mt-0.5 leading-relaxed">
-                      Crea un Custom Field de tipo <strong>Texto Largo (Multi-line)</strong> llamado <code>Resumen Diagnóstico</code>. 
-                      Agrega la acción <strong>Update Contact Field</strong> asignando <code>{'{{inboundWebhookRequest.resumen_ejecutivo}}'}</code> a ese campo.
+                  <div className="space-y-2 text-[11px] text-gray-700">
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <strong>1. Trigger:</strong> Webhook Entrante (App Prediagnóstico).
+                    </div>
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <strong>2. Crear / Actualizar Contacto.</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <strong>3. Actualizar Campos:</strong> Guardar <code>{'{{inboundWebhookRequest.resumen_ejecutivo}}'}</code> en el campo <code>Resumen Diagnóstico</code>.
+                    </div>
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <strong>4. Espera 15 minutos:</strong> Tiempo para que la persona mire el calendario.
+                    </div>
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <strong>5. Condición:</strong> ¿Tiene tag <code>agendo-cita</code>?
                       <br />
-                      <strong>¿Por qué es indispensable?</strong> Porque cuando la persona agenda después en el calendario, GoHighLevel solo puede leer datos guardados en el contacto con <code>{'{{contact.resumen_diagnostico}}'}</code>.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="border border-blue-200 rounded-xl p-3.5 bg-blue-50/70 flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                    <Clock className="w-3.5 h-3.5" />
-                  </span>
-                  <div>
-                    <h5 className="font-extrabold text-blue-950 text-xs">
-                      Acción Clave: Wait (Esperar 15 o 20 minutos)
-                    </h5>
-                    <p className="text-blue-900 text-[11px] mt-0.5 leading-relaxed">
-                      <strong>¡El secreto para no enviar el correo equivocado!</strong> Dale al usuario 15 minutos para que revise su informe en pantalla y seleccione su fecha en el calendario. Sin este tiempo de espera, GHL enviaría de inmediato el correo de "no agendaste" mientras la persona apenas está mirando los horarios.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="border border-purple-200 rounded-xl p-4 bg-purple-50/60">
-                  <div className="flex items-center gap-2 font-extrabold text-purple-950 text-xs mb-2">
-                    <GitFork className="w-4 h-4 text-purple-700" />
-                    <span>Acción: Condición If / Else (Bifurcación en GHL)</span>
-                  </div>
-                  <p className="text-purple-900 text-[11px] mb-3 leading-relaxed">
-                    Crea una condición llamada <strong>¿Agendó Cita?</strong> evaluando:  
-                    <br />
-                    <em>Contact Details → Tags includes "cita-agendada"</em>  
-                    <strong> O </strong>  
-                    <em>Appointment Status is Confirmed</em>.
-                  </p>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                    {/* Rama SI */}
-                    <div className="bg-white border-2 border-emerald-400 rounded-xl p-3 shadow-xs">
-                      <div className="flex items-center gap-1.5 font-black text-emerald-800 text-xs mb-1">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span>RAMA SÍ (Si Agendó Cita)</span>
-                      </div>
-                      <p className="text-[11px] text-gray-700 leading-relaxed mb-2">
-                        Agrega la acción <strong>Send Email</strong> con el asunto:  
-                        <br />
-                        <span className="font-mono bg-gray-100 px-1 py-0.5 rounded text-[10px] text-gray-900">
-                          ¡Cita confirmada! + Tu Diagnóstico Estratégico
-                        </span>
-                      </p>
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-[10px] text-emerald-900 space-y-1">
-                        <div><strong>Para:</strong> {'{{contact.email}}'}</div>
-                        <div><strong>Cc (Copia):</strong> <span className="font-mono select-all bg-white px-1 rounded">{OFFICIAL_ADMIN_EMAIL}</span></div>
-                        <div><strong>Contenido:</strong> Detalles de su cita + Resumen de su Diagnóstico (ver Plantilla 2).</div>
-                      </div>
-                    </div>
-
-                    {/* Rama NO */}
-                    <div className="bg-white border-2 border-[#D7192B] rounded-xl p-3 shadow-xs">
-                      <div className="flex items-center gap-1.5 font-black text-[#D7192B] text-xs mb-1">
-                        <Calendar className="w-4 h-4 text-[#D7192B]" />
-                        <span>RAMA NO (Si NO Agendó Cita)</span>
-                      </div>
-                      <p className="text-[11px] text-gray-700 leading-relaxed mb-2">
-                        Agrega la acción <strong>Send Email</strong> con el asunto:  
-                        <br />
-                        <span className="font-mono bg-gray-100 px-1 py-0.5 rounded text-[10px] text-gray-900">
-                          Aquí tienes tu Diagnóstico Estratégico (+ Tu Sesión de Regalo)
-                        </span>
-                      </p>
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-2 text-[10px] text-red-900 space-y-1">
-                        <div><strong>Para:</strong> {'{{contact.email}}'}</div>
-                        <div><strong>Cc (Copia):</strong> <span className="font-mono select-all bg-white px-1 rounded">{OFFICIAL_ADMIN_EMAIL}</span></div>
-                        <div><strong>Contenido:</strong> Copia completa de su diagnóstico + Botón para agendar la sesión de regalo (ver Plantilla 1).</div>
-                      </div>
+                      • <strong>SÍ:</strong> Fin (No se envía correo duplicado).
+                      <br />
+                      • <strong>NO:</strong> Correo con Diagnóstico + Botón Agenda (Con <strong>Cc</strong> a {OFFICIAL_ADMIN_EMAIL}).
                     </div>
                   </div>
                 </div>
 
-                {/* Copia en GoHighLevel */}
-                <div className="bg-gray-100 border border-gray-300 rounded-xl p-3.5 flex items-start gap-3">
-                  <Mail className="w-5 h-5 text-gray-700 shrink-0 mt-0.5" />
-                  <div>
-                    <h5 className="font-extrabold text-gray-900 text-xs">
-                      ¿Cómo poner la copia a tu correo en GoHighLevel?
-                    </h5>
-                    <p className="text-gray-700 text-[11px] mt-0.5 leading-relaxed">
-                      En la acción <strong>Send Email</strong> de tu Workflow, despliega el campo <strong>«Cc»</strong> o <strong>«Bcc»</strong> y escribe exactamente:  
-                      <span className="inline-block bg-white px-2 py-0.5 rounded border border-gray-300 font-mono font-bold text-gray-900 mx-1 select-all">
-                        {OFFICIAL_ADMIN_EMAIL}
-                      </span>
-                      Así, cada vez que el prospecto reciba su correo con el diagnóstico, a ti te llegará una copia idéntica a tu bandeja de entrada en tiempo real.
-                    </p>
+                {/* Flujo 3 */}
+                <div className="border border-gray-300 rounded-xl p-4 bg-gray-50 space-y-3">
+                  <div className="flex items-center gap-2 font-black text-gray-900 text-xs pb-2 border-b border-gray-200">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
+                    <span>Flujo 3: Confirmar Agendamiento</span>
+                  </div>
+                  <div className="space-y-2 text-[11px] text-gray-700">
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <strong>1. Trigger:</strong> Cita Creada en Calendario (Appointment Created).
+                    </div>
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <strong>2. Añadir Tag:</strong> <code>agendo-cita</code> (evita que el Flujo 2 le mande el correo de no agendó).
+                    </div>
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <strong>3. Enviar Correo Confirmación:</strong> Detalles de la cita + copia del diagnóstico desde <code>{'{{contact.resumen_diagnostico}}'}</code> (Con <strong>Cc</strong> a {OFFICIAL_ADMIN_EMAIL}).
+                    </div>
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <strong>4. Internal Notification:</strong> Tipo Email a <code>{OFFICIAL_ADMIN_EMAIL}</code> avisándote de la nueva cita.
+                    </div>
+                    <div className="p-2 bg-white rounded border border-gray-200">
+                      <strong>5. Fin.</strong>
+                    </div>
                   </div>
                 </div>
+
               </div>
             </div>
           )}
@@ -361,13 +495,14 @@ Patricia Loaiza · Crea y Monetiza®`;
           {/* TAB 2: PLANTILLAS DE CORREO LISTAS */}
           {activeTab === 'templates' && (
             <div className="space-y-6">
-              {/* Plantilla 1: Si NO Agendó */}
+              
+              {/* Plantilla para Flujo 2: Cuando NO agendó */}
               <div className="border border-red-200 bg-red-50/30 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#D7192B]" />
                     <h4 className="font-extrabold text-gray-900 text-xs">
-                      Plantilla 1: Cuando NO Agendó (Envía Diagnóstico + Invitación con Calendario)
+                      Para Flujo 2 («NO AGENDA»): Correo cuando pasaron los 15 min sin agendar
                     </h4>
                   </div>
                   <button
@@ -391,21 +526,21 @@ Patricia Loaiza · Crea y Monetiza®`;
                 <div className="text-[11px] text-gray-600 mb-2 font-medium">
                   <strong>Asunto recomendado:</strong> Aquí tienes tu Diagnóstico Estratégico {'{{contact.first_name}}'} (+ Tu Sesión de Regalo)
                   <br />
-                  <strong>Campo Cc / Bcc:</strong> <code className="bg-white px-1 py-0.5 rounded border">{OFFICIAL_ADMIN_EMAIL}</code>
+                  <strong>Campo Cc / Bcc:</strong> <code className="bg-white px-1 py-0.5 rounded border font-bold text-[#D7192B]">{OFFICIAL_ADMIN_EMAIL}</code>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-56 overflow-y-auto leading-relaxed">
+                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-52 overflow-y-auto leading-relaxed">
                   {emailTemplateNoBooking}
                 </div>
               </div>
 
-              {/* Plantilla 2: Si SÍ Agendó */}
+              {/* Plantilla para Flujo 3: Cuando SÍ agendó */}
               <div className="border border-emerald-200 bg-emerald-50/30 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
                     <h4 className="font-extrabold text-gray-900 text-xs">
-                      Plantilla 2: Cuando SÍ Agendó (Confirmación de Cita + Copia de su Diagnóstico)
+                      Para Flujo 3 («CONFIRMAR AGENDAMIENTO»): Correo con datos de la cita + Diagnóstico
                     </h4>
                   </div>
                   <button
@@ -429,21 +564,21 @@ Patricia Loaiza · Crea y Monetiza®`;
                 <div className="text-[11px] text-gray-600 mb-2 font-medium">
                   <strong>Asunto recomendado:</strong> ¡Cita confirmada! + Tu Diagnóstico Estratégico {'{{contact.first_name}}'}
                   <br />
-                  <strong>Campo Cc / Bcc:</strong> <code className="bg-white px-1 py-0.5 rounded border">{OFFICIAL_ADMIN_EMAIL}</code>
+                  <strong>Campo Cc / Bcc:</strong> <code className="bg-white px-1 py-0.5 rounded border font-bold text-emerald-700">{OFFICIAL_ADMIN_EMAIL}</code>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-56 overflow-y-auto leading-relaxed">
+                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-52 overflow-y-auto leading-relaxed">
                   {emailTemplateYesBooking}
                 </div>
               </div>
 
-              {/* Plantilla 3: Reporte Consolidado Todo en Uno */}
+              {/* Plantilla Consolidada 3: Resumen Ejecutivo en 1 Variable */}
               <div className="border border-indigo-200 bg-indigo-50/30 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
                     <h4 className="font-extrabold text-gray-900 text-xs">
-                      Plantilla 3 (La más fácil y a prueba de fallos): Todo el Reporte en 1 Sola Variable
+                      Alternativa Todo en Uno: Reporte Completo en 1 Sola Variable
                     </h4>
                   </div>
                   <button
@@ -468,55 +603,11 @@ Patricia Loaiza · Crea y Monetiza®`;
                   <strong>Asunto:</strong> Tu Informe de Prediagnóstico Estratégico · Crea y Monetiza®
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed">
+                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed">
                   {emailTemplateAllInOne}
                 </div>
               </div>
 
-              {/* Nota Clave sobre la Sintaxis de GoHighLevel */}
-              <div className="border border-amber-300 bg-amber-50 rounded-xl p-3 text-[11px] text-amber-900">
-                <p className="font-bold flex items-center gap-1.5">
-                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                  ¿Por qué las variables salían vacías en tu correo de prueba?
-                </p>
-                <p className="mt-1 leading-relaxed text-amber-800">
-                  En GoHighLevel la etiqueta oficial para datos de Webhook lleva la palabra <strong>Request</strong> (ej: <code>{'{{inboundWebhookRequest.perfil_profesional}}'}</code>). 
-                  Además, en el editor de correos de GHL puedes hacer clic en el botón de etiquetas <strong>«Custom Values» → «Inbound Webhook»</strong> para insertar cualquier variable directamente sin escribir nada a mano.
-                </p>
-              </div>
-
-              {/* Tabla de Variables que envía la app a GHL */}
-              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                <h5 className="font-extrabold text-gray-900 text-xs mb-2">
-                  Variables que la aplicación le envía a tu Webhook de GHL (Sintaxis Oficial GHL):
-                </h5>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
-                  <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.resumen_ejecutivo}}'}</code>
-                    <p className="text-gray-500 mt-0.5">El reporte completo y estructurado listo para leer.</p>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.servicio_recomendado}}'}</code>
-                    <p className="text-gray-500 mt-0.5">Ej: Pilar 1: Estrategia y Oferta BMS</p>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.programa_oficial}}'}</code>
-                    <p className="text-gray-500 mt-0.5">Ej: Programa Intensivo BMS 1 a 1 (4 a 6 semanas)</p>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.motivo_discrepancia}}'}</code>
-                    <p className="text-gray-500 mt-0.5">Análisis del por qué no debe saltarse etapas.</p>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.lo_que_no_debe_hacer}}'}</code>
-                    <p className="text-gray-500 mt-0.5">Advertencia estratégica personalizada.</p>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-gray-200">
-                    <code className="text-[#D7192B] font-bold">{'{{inboundWebhookRequest.enlace_calendario}}'}</code>
-                    <p className="text-gray-500 mt-0.5">Enlace a la agenda del calendario.</p>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
@@ -548,7 +639,7 @@ Patricia Loaiza · Crea y Monetiza®`;
                     type="url"
                     value={localBooking}
                     onChange={(e) => setLocalBooking(e.target.value)}
-                    placeholder="https://api.leadconnectorhq.com/widget/booking/... o tu subpágina de agendamiento"
+                    placeholder="https://link.ghlespanol.com/widget/booking/... o tu página de agendamiento"
                     className="w-full px-3 py-2.5 rounded-xl border border-gray-300 text-xs font-mono focus:ring-2 focus:ring-[#D7192B] focus:border-transparent outline-hidden bg-gray-50"
                   />
                   <p className="text-[11px] text-gray-500 mt-1">
