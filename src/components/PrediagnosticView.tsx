@@ -335,18 +335,18 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     }
   };
 
-  // Autocompletar el formulario de inicio con los datos de prueba de Patricia Loaiza
+  // Autocompletar el formulario de inicio con datos de un prospecto de prueba realista
   const handleQuickFillForm = () => {
     setLead({
-      name: 'Patricia Loaiza (Test)',
-      email: 'patriloaiza.perez@gmail.com',
-      whatsapp: '+57 300 123 4567',
-      profession: 'Consultora de Negocios y Estrategia',
-      currentActivity: 'Servicios de consultoría estratégica y programas de alto valor',
+      name: 'Mariana Gómez',
+      email: 'mariana.gomez@nutricionpro.com',
+      whatsapp: '+52 55 9876 5432',
+      profession: 'Nutricionista Clínica & Coach de Hábitos',
+      currentActivity: 'Consultas individuales de nutrición y planes alimenticios personalizados',
       commercializationModel: 'servicios_1a1',
       payingClientsStatus: 'irregulares',
-      company: 'Crea y Monetiza®',
-      role: 'Fundadora & Directora'
+      company: 'Nutrición Integral Gómez',
+      role: 'Directora'
     });
     setErrorMessage(null);
   };
@@ -355,12 +355,7 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   const handleSimulateFullDiagnosticAndSend = async () => {
     const testCase = activeTestCase || AUTOMATED_TEST_CASES[1] || AUTOMATED_TEST_CASES[0];
     const testLead: UserLeadInfo = {
-      ...testCase.lead,
-      name: 'Patricia Loaiza (Prueba Automatización)',
-      email: 'patriloaiza.perez@gmail.com',
-      whatsapp: '+57 300 123 4567',
-      company: 'Crea y Monetiza®',
-      role: 'Fundadora & Directora'
+      ...testCase.lead
     };
     setActiveTestCase(testCase);
     setLead(testLead);
@@ -388,10 +383,7 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     const selectedCase = availablePool[randomIndex];
 
     const testLead: UserLeadInfo = {
-      ...selectedCase.lead,
-      name: `Patricia Loaiza (${selectedCase.name.split(':')[0] || 'Prueba'})`,
-      email: 'patriloaiza.perez@gmail.com',
-      whatsapp: '+57 300 123 4567'
+      ...selectedCase.lead
     };
 
     setActiveTestCase({ ...selectedCase, lead: testLead });
@@ -412,10 +404,7 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   // Cargar caso de prueba automatizado específico
   const handleApplyTestCase = (testCase: TestCase, viewResultsDirectly: boolean) => {
     const testLead: UserLeadInfo = {
-      ...testCase.lead,
-      name: `Patricia Loaiza (${testCase.name.split(':')[0] || 'Prueba'})`,
-      email: 'patriloaiza.perez@gmail.com',
-      whatsapp: '+57 300 123 4567'
+      ...testCase.lead
     };
 
     setActiveTestCase({ ...testCase, lead: testLead });
@@ -745,10 +734,7 @@ ${calcResult.notFirstAdvice.warning}
   const handleSendTestLeadToGhl = async (): Promise<boolean> => {
     const testCase = activeTestCase || AUTOMATED_TEST_CASES[1] || AUTOMATED_TEST_CASES[0];
     const testLead: UserLeadInfo = {
-      ...testCase.lead,
-      name: 'Patricia Loaiza (Prueba Automatización)',
-      email: OFFICIAL_ADMIN_EMAIL,
-      whatsapp: '+57 300 123 4567'
+      ...testCase.lead
     };
     const calc = calculatePrediagnostic(testCase.answers, testLead);
     try {
