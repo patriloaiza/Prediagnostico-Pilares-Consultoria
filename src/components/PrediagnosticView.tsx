@@ -499,22 +499,18 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
       const cleanFullName = extractCleanFullName(calcResult.lead.name);
       const properLastName = cleanFullName.split(/\s+/).slice(1).join(' ') || '';
 
-      // Resumen ejecutivo humanizado y limpio para correos de prospectos (fácil de leer)
-      const executiveEmailSummary = `🎯 PERFIL DE MADUREZ:
-${calcResult.profile.title} ("${calcResult.profile.subtitle}")
-
-🏆 PRIORIDAD #1 A RESOLVER:
-${calcResult.recommendedPillar.name}
-Programa Oficial: ${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration})
-
-⚠️ ANÁLISIS ESTRATÉGICO:
-${calcResult.contradictionAnalysis?.explanation || 'Tu objetivo actual está alineado con la madurez de tu negocio.'}
-
-⛔ LO QUE NO DEBES HACER EN ESTA ETAPA:
-${calcResult.notFirstAdvice.warning}
-
-📊 PUNTUACIONES:
-• Estrategia & Oferta: ${calcResult.scores.pilar1} pts | • Marca Personal: ${calcResult.scores.pilar2} pts
+      // Resumen ejecutivo con formato HTML para evitar que los editores de email colapsen las líneas
+      const executiveEmailSummary = `🎯 <strong>PERFIL DE MADUREZ:</strong><br/>
+${calcResult.profile.title} ("${calcResult.profile.subtitle}")<br/><br/>
+🏆 <strong>PRIORIDAD #1 A RESOLVER:</strong><br/>
+${calcResult.recommendedPillar.name}<br/>
+<em>Programa Oficial:</em> ${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration})<br/><br/>
+⚠️ <strong>ANÁLISIS ESTRATÉGICO:</strong><br/>
+${calcResult.contradictionAnalysis?.explanation || 'Tu objetivo actual está alineado con la madurez de tu negocio.'}<br/><br/>
+⛔ <strong>LO QUE NO DEBES HACER EN ESTA ETAPA:</strong><br/>
+${calcResult.notFirstAdvice.warning}<br/><br/>
+📊 <strong>PUNTUACIONES:</strong><br/>
+• Estrategia & Oferta: ${calcResult.scores.pilar1} pts | • Marca Personal: ${calcResult.scores.pilar2} pts<br/>
 • Contenidos de Venta: ${calcResult.scores.pilar3} pts | • Digitalización & IA: ${calcResult.scores.pilar4} pts`;
 
       const executiveEmailSummaryHtml = `
