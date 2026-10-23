@@ -766,11 +766,15 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
     }
   };
 
-  // Envío de Lead de prueba hacia GoHighLevel
+  // Envío de Lead de prueba hacia GoHighLevel dirigido directamente al correo de Patricia Loaiza
   const handleSendTestLeadToGhl = async (): Promise<boolean> => {
     const testCase = activeTestCase || AUTOMATED_TEST_CASES[1] || AUTOMATED_TEST_CASES[0];
     const testLead: UserLeadInfo = {
-      ...testCase.lead
+      ...testCase.lead,
+      name: 'Patricia Loaiza (Prueba)',
+      email: OFFICIAL_ADMIN_EMAIL, // patriloaiza.perez@gmail.com
+      whatsapp: '+57 300 123 4567',
+      profession: 'Consultora de Negocios & Mentora Estratégica'
     };
     const calc = calculatePrediagnostic(testCase.answers, testLead);
     try {
