@@ -19,7 +19,9 @@ import {
   ShieldCheck,
   Ban,
   SlidersHorizontal,
-  Mail
+  Mail,
+  FileDown,
+  FileText
 } from 'lucide-react';
 import {
   PREDIAGNOSTIC_QUESTIONS,
@@ -41,6 +43,10 @@ import {
   generateDiagnosticTextReport,
   OFFICIAL_ADMIN_EMAIL
 } from '../utils/ghlEmailTemplate';
+import {
+  downloadPrediagnosticPdf,
+  downloadPrediagnosticMarkdown
+} from '../utils/exportPrediagnostic';
 
 interface PrediagnosticViewProps {
   defaultWebhookUrl?: string;
@@ -122,6 +128,8 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [isTestModalOpen, setIsTestModalOpen] = useState<boolean>(false);
   const [isGhlModalOpen, setIsGhlModalOpen] = useState<boolean>(false);
+  const [isSecretExportModalOpen, setIsSecretExportModalOpen] = useState<boolean>(false);
+  const [downloadFeedback, setDownloadFeedback] = useState<string | null>(null);
   const [activeTestCase, setActiveTestCase] = useState<TestCase | null>(null);
   const [lead, setLead] = useState<UserLeadInfo>({
     name: '',
@@ -197,6 +205,22 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeTestCase]);
+
+  // Escuchar evento global desde el pie de página institucional para abrir exportación secreta
+  useEffect(() => {
+    const handleOpenSecretExport = () => {
+      setDownloadFeedback(null);
+      if (!result) {
+        const testCase = activeTestCase || AUTOMATED_TEST_CASES[0];
+        const calc = calculatePrediagnostic(testCase.answers, testCase.lead);
+        setResult(calc);
+      }
+      setIsSecretExportModalOpen(true);
+    };
+
+    window.addEventListener('open-secret-consultant-export', handleOpenSecretExport);
+    return () => window.removeEventListener('open-secret-consultant-export', handleOpenSecretExport);
+  }, [result, activeTestCase]);
 
   // Pre-carga los datos del prospecto en el enlace del calendario de GoHighLevel
   const getBookingUrlWithLead = () => {
@@ -1685,6 +1709,127 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
                 ) : null}
               </div>
             </div>
+          </div>
+
+          {/* Cierre Institucional Oculto (Totalmente invisible para prospectos; solo activo para Patricia) */}
+          <div className="pt-6 pb-2 text-center select-none">
+            <span
+              onClick={() => {
+                setDownloadFeedback(null);
+                setIsSecretExportModalOpen(true);
+              }}
+              onDoubleClick={() => {
+                setDownloadFeedback(null);
+                setIsSecretExportModalOpen(true);
+              }}
+              className="text-[11px] text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
+              title=""
+            >
+              Investigación, estrategia y consultoría.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Secreto y Confidencial para Patricia Loaiza (Descarga de Expediente) */}
+      {isSecretExportModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#111111] text-white rounded-2xl border-2 border-[#D7192B] shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#D7192B]" />
+                <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                  Expediente Confidencial · Consultora
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSecretExportModalOpen(false);
+                  setDownloadFeedback(null);
+                }}
+                className="text-gray-400 hover:text-white p-1 rounded-md text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {(() => {
+              const activeDiag =
+                result ||
+                calculatePrediagnostic(
+                  activeTestCase?.answers || AUTOMATED_TEST_CASES[0].answers,
+                  activeTestCase?.lead || AUTOMATED_TEST_CASES[0].lead
+                );
+
+              return (
+                <>
+                  <div className="py-4 space-y-2 text-xs text-gray-300">
+                    <p className="text-[11px] text-gray-400">
+                      Descarga el expediente confidencial del prospecto para tu llamada de diagnóstico:
+                    </p>
+                    <div className="bg-white/5 rounded-xl p-3 border border-white/10 text-xs">
+                      <div className="font-bold text-white text-sm mb-1">{activeDiag.lead.name || 'Prospecto'}</div>
+                      <div className="text-[11px] text-gray-400">• Perfil: <strong className="text-white">{activeDiag.profile.title}</strong></div>
+                      <div className="text-[11px] text-gray-400">• Pilar: <strong className="text-amber-300">{activeDiag.recommendedPillar.name}</strong></div>
+                      <div className="text-[11px] text-gray-400">• Correo: <span className="text-gray-200">{activeDiag.lead.email}</span></div>
+                    </div>
+
+                    {downloadFeedback && (
+                      <div className="p-2.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold text-center animate-fade-in">
+                        {downloadFeedback}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try {
+                          downloadPrediagnosticPdf(activeDiag);
+                          setDownloadFeedback('✓ ¡Informe PDF descargado con éxito!');
+                        } catch (err) {
+                          console.error(err);
+                          setDownloadFeedback('Error al generar PDF. Prueba Markdown.');
+                        }
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+                    >
+                      <FileDown className="w-4 h-4" />
+                      <span>Descargar Informe en PDF (.pdf)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try {
+                          downloadPrediagnosticMarkdown(activeDiag);
+                          setDownloadFeedback('✓ ¡Archivo Markdown (.md) descargado con éxito!');
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold flex items-center justify-center gap-2 transition-all border border-gray-700 cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>Descargar en Markdown (.md)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSecretExportModalOpen(false);
+                        setDownloadFeedback(null);
+                      }}
+                      className="w-full py-1.5 text-gray-500 hover:text-gray-300 text-xs transition-colors cursor-pointer text-center"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

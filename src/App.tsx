@@ -20,7 +20,14 @@ export default function App() {
               CREA Y MONETIZA®
             </span>{' '}
             · Metodología de Consultoría Estratégica por{' '}
-            <strong className="text-gray-200">Patricia Loaiza</strong>
+            <strong className="text-gray-200">Patricia Loaiza</strong> ·{' '}
+            <span
+              onClick={() => window.dispatchEvent(new CustomEvent('open-secret-consultant-export'))}
+              className="text-gray-400 hover:text-gray-200 transition-colors cursor-pointer select-none"
+              title=""
+            >
+              Investigación, estrategia y consultoría.
+            </span>
           </div>
           <div className="text-[11px] text-gray-500">
             Diagnóstico de Verificación de Evidencias © {new Date().getFullYear()}
