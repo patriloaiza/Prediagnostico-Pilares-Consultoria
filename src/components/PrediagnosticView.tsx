@@ -766,15 +766,16 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
     }
   };
 
-  // Envío de Lead de prueba hacia GoHighLevel dirigido directamente al correo de Patricia Loaiza
+  // Envío de Lead de prueba hacia GoHighLevel con correo nuevo y único para evitar bloqueos por contacto existente
   const handleSendTestLeadToGhl = async (): Promise<boolean> => {
     const testCase = activeTestCase || AUTOMATED_TEST_CASES[1] || AUTOMATED_TEST_CASES[0];
+    const uniqueSuffix = Date.now().toString().slice(-4);
     const testLead: UserLeadInfo = {
       ...testCase.lead,
-      name: 'Patricia Loaiza (Prueba)',
-      email: OFFICIAL_ADMIN_EMAIL, // patriloaiza.perez@gmail.com
-      whatsapp: '+57 300 123 4567',
-      profession: 'Consultora de Negocios & Mentora Estratégica'
+      name: `Carlos Mendoza (Prueba #${uniqueSuffix})`,
+      email: `patriloaiza.perez+test${uniqueSuffix}@gmail.com`,
+      whatsapp: `+57 310 ${Math.floor(1000000 + Math.random() * 9000000)}`,
+      profession: 'Consultor de Negocios y Mentor de Alto Valor'
     };
     const calc = calculatePrediagnostic(testCase.answers, testLead);
     try {
