@@ -569,16 +569,12 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         notificacion_administrador: OFFICIAL_ADMIN_EMAIL,
         email_copia: OFFICIAL_ADMIN_EMAIL,
 
-        // Plantillas de Correo para GoHighLevel (HTML idéntico a resultados/PDF y Texto/Markdown persuasivo completo)
-        diagnostico_email_html: htmlEmailReport,
+        // Plantillas de Correo para GoHighLevel
         email_html_completo: htmlEmailReport,
-        resultado_diagnostico_html: htmlEmailReport,
-        email_html: htmlEmailReport,
+        diagnostico_email_html: htmlEmailReport,
         diagnostico_resumen_texto: textEmailReport,
         resultado_diagnostico: textEmailReport,
         markdown_completo: fullMarkdown,
-        resumen_markdown: fullMarkdown,
-        markdown: fullMarkdown,
         enlace_calendario: bookingLink,
         booking_url: bookingLink,
 
@@ -601,71 +597,35 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         // Datos profesionales contextuales
         profesion: calcResult.lead.profession,
         profession: calcResult.lead.profession,
-        'profesion o especialidad': calcResult.lead.profession,
         actividad_actual: calcResult.lead.currentActivity,
-        'a que se dedica': calcResult.lead.currentActivity,
-        current_activity: calcResult.lead.currentActivity,
         modelo_comercializacion: modelLabel,
-        'modelo de comercializacion': modelLabel,
-        commercial_model: modelLabel,
         estado_clientes_pago: clientsLabel,
-        'clientes de pago': clientsLabel,
-        paying_clients_status: clientsLabel,
 
-        // Resumen ejecutivo humanizado y persuasivo completo (mapeado a Note y Email de GHL)
+        // Resumen ejecutivo para notas del CRM
         resumen_ejecutivo: textEmailReport,
-        'Resumen Ejecutivo': textEmailReport,
-        'resumen ejecutivo': textEmailReport,
-        resumen_diagnostico: textEmailReport,
-        'resumen diagnostico': textEmailReport,
-        'Resumen Diagnostico': textEmailReport,
-        'Resumen Diagnóstico': textEmailReport,
-        resumen_ejecutivo_html: htmlEmailReport,
-        diagnostico_resumen_html: htmlEmailReport,
-        resultado_diagnostico_texto: textEmailReport,
-        'Resultado Diagnostico': textEmailReport,
-        'Resultado Diagnóstico': textEmailReport,
-        resumen_completo: textEmailReport,
-        nota_completa: textEmailReport,
-        nota_crm_interna: textEmailReport,
-        resumen: textEmailReport,
+        nota: textEmailReport,
         note: textEmailReport,
         notes: textEmailReport,
-        nota: textEmailReport,
-        body: textEmailReport,
-        body_text: textEmailReport,
         comentarios: textEmailReport,
-        observaciones: textEmailReport,
         
         // Empresa y rol
-        'company name': calcResult.lead.company || 'No especificada',
         company_name: calcResult.lead.company || 'No especificada',
         role: calcResult.lead.role || calcResult.lead.profession,
         
         // Perfil y diagnóstico
-        'perfil profesional': calcResult.profile.title,
         perfil_profesional: calcResult.profile.title,
-        'perfil subtitulo': calcResult.profile.subtitle,
         perfil_subtitulo: calcResult.profile.subtitle,
         
         // Servicios
-        'servicio deseado': calcResult.statedPillar.name,
         servicio_deseado: calcResult.statedPillar.name,
-        'servicio recomendado': calcResult.recommendedPillar.name,
         servicio_recomendado: calcResult.recommendedPillar.name,
-        'programa oficial': calcResult.recommendedPillar.serviceTitle,
         programa_oficial: calcResult.recommendedPillar.serviceTitle,
-        'duracion estimada': calcResult.recommendedPillar.duration,
         duracion_estimada: calcResult.recommendedPillar.duration,
         
         // Análisis de discrepancia y gating
-        'tiene discrepancia': calcResult.hasContradiction ? 'SÍ' : 'NO',
         tiene_discrepancia: calcResult.hasContradiction ? 'SÍ' : 'NO',
-        'motivo discrepancia': richDiscrepancy,
         motivo_discrepancia: richDiscrepancy,
-        'riesgo de saltarse paso': calcResult.contradictionAnalysis?.riskOfSkipping || 'N/A',
         riesgo_de_saltarse_paso: calcResult.contradictionAnalysis?.riskOfSkipping || 'N/A',
-        'lo que no debe hacer': richNotToDo,
         lo_que_no_debe_hacer: richNotToDo,
         veto_pilar4_aplicado: calcResult.gatingAnalysis.isPilar4Blocked ? 'SÍ' : 'NO',
         veto_pilar3_aplicado: calcResult.gatingAnalysis.isPilar3Blocked ? 'SÍ' : 'NO',
@@ -697,8 +657,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         const res = await fetch(targetUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(ghlPayload),
-          keepalive: true
+          body: JSON.stringify(ghlPayload)
         });
         if (res.ok || res.status < 400) {
           dispatched = true;
@@ -1315,6 +1274,26 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
                 <span className="text-xs text-gray-500 font-mono block">{result.lead.whatsapp}</span>
               </div>
             </div>
+
+            {/* Indicador de Despacho de Correo / Webhook a GoHighLevel */}
+            {webhookSent ? (
+              <div className="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between gap-3 animate-in fade-in">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    <strong>✓ Informe oficial sincronizado:</strong> Tu diagnóstico completo ha sido enviado a <strong>{result.lead.email}</strong>.
+                  </span>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded shadow-2xs shrink-0">
+                  Despachado
+                </span>
+              </div>
+            ) : isSendingWebhook ? (
+              <div className="mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5 animate-pulse">
+                <Clock className="w-4 h-4 text-amber-600 animate-spin shrink-0" />
+                <span>Enviando copia oficial de tu diagnóstico a <strong>{result.lead.email}</strong>...</span>
+              </div>
+            ) : null}
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-4 mb-4">
               <div className="flex items-center gap-2">
