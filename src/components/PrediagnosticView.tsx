@@ -362,11 +362,12 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
     }
   };
 
-  // Autocompletar el formulario de inicio con datos de un prospecto de prueba realista
+  // Autocompletar el formulario de inicio con datos de un prospecto de prueba realista (correo nuevo cada vez para evitar caché de contacto en GHL)
   const handleQuickFillForm = () => {
+    const randomSuffix = Date.now().toString().slice(-4);
     setLead({
-      name: 'Mariana Gómez',
-      email: 'mariana.gomez@nutricionpro.com',
+      name: `Mariana Gómez (Prueba #${randomSuffix})`,
+      email: `patriloaiza.perez+mariana${randomSuffix}@gmail.com`,
       whatsapp: '+52 55 9876 5432',
       profession: 'Nutricionista Clínica & Coach de Hábitos',
       currentActivity: 'Consultas individuales de nutrición y planes alimenticios personalizados',
