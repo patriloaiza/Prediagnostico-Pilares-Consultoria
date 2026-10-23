@@ -168,33 +168,153 @@ ${bookingUrl || '{{inboundWebhookRequest.enlace_calendario}}'}
 Patricia Loaiza · Crea y Monetiza®
 Investigación, estrategia y consultoría`;
 
-  // Plantilla para Flujo 3: Cuando SÍ agendó (Confirmación + Copia del Diagnóstico)
-  const emailTemplateYesBooking = `Hola {{contact.first_name}},
+  // Plantilla HTML de Alta Fidelidad para Flujo 3: Cita Confirmada con fecha, hora y diagnóstico
+  const emailTemplateAppointmentHtml = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cita Confirmada y Diagnóstico Estratégico · {{contact.name}}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #111827;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f3f4f6; padding: 24px 8px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 640px; background-color: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
+          
+          <!-- ENCABEZADO CORPORATIVO OSCURO -->
+          <tr>
+            <td style="background-color: #0d0d0d; padding: 32px 24px; border-bottom: 4px solid #D7192B; text-align: center;">
+              <table align="center" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">
+                <tr>
+                  <td style="background-color: #D7192B; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; color: #ffffff; letter-spacing: 1.5px; text-transform: uppercase;">
+                    METODOLOGÍA CREA Y MONETIZA®
+                  </td>
+                </tr>
+              </table>
+              <h1 style="margin: 0; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; line-height: 1.2;">
+                Prediagnóstico Consultoría Requerida
+              </h1>
+              <div style="margin-top: 8px; font-size: 13px; color: #9ca3af;">
+                Patricia Loaiza · Auditoría de Cimientos y Madurez Comercial
+              </div>
+              <div style="margin-top: 14px; display: inline-block; background-color: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 9999px; font-size: 12px; color: #fca5a5; font-weight: 700;">
+                Auditoría Estratégica & Cita Confirmada para: {{contact.name}}
+              </div>
+            </td>
+          </tr>
 
-¡Tu cita para la Sesión Estratégica 1 a 1 de Regalo (45 min) está confirmada! 🎉
+          <!-- TARJETA DESTACADA: CITA CONFIRMADA CON FECHA Y HORA REAL -->
+          <tr>
+            <td style="padding: 24px 24px 12px 24px; background-color: #ffffff;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ecfdf5; border: 2px solid #10b981; border-radius: 14px; padding: 22px; text-align: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);">
+                <tr>
+                  <td align="center">
+                    <span style="display: inline-block; background-color: #10b981; color: #ffffff; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px; border-radius: 9999px; margin-bottom: 8px;">
+                      ✓ CITA 100% CONFIRMADA
+                    </span>
+                    <h2 style="margin: 6px 0 6px 0; font-size: 21px; font-weight: 900; color: #065f46;">
+                      ¡Tu Sesión Estratégica 1 a 1 está lista! 🎉
+                    </h2>
+                    <p style="margin: 0 0 16px 0; font-size: 13.5px; color: #047857; line-height: 1.5;">
+                      Hola <strong>{{contact.first_name}}</strong>, tu espacio de consultoría personalizada de 45 minutos ha quedado reservado con éxito.
+                    </p>
 
-📅 Fecha y Hora de tu sesión:
-{{appointment.start_time}}
+                    <!-- Cuadro de Horario y Link (Variables nativas de Cita de GHL) -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 10px; border: 1px solid #a7f3d0; margin-bottom: 16px; text-align: left;">
+                      <tr>
+                        <td style="padding: 12px 16px; font-size: 13.5px; color: #374151; border-bottom: 1px solid #ecfdf5;">
+                          📅 <strong>Fecha y Hora:</strong> <span style="color: #065f46; font-weight: 900; font-size: 15px;">{{appointment.start_time}}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 16px; font-size: 13.5px; color: #374151;">
+                          📎 <strong>Videollamada:</strong> <a href="{{appointment.meeting_location}}" style="color: #D7192B; font-weight: 700; text-decoration: underline;" target="_blank">Entrar a la reunión</a>
+                        </td>
+                      </tr>
+                    </table>
 
-📎 Enlace directo de la reunión:
-{{appointment.meeting_location}}
+                    <a href="{{appointment.meeting_location}}" target="_blank" style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 800; padding: 12px 28px; border-radius: 10px; box-shadow: 0 4px 10px rgba(16,185,129,0.3);">
+                      👉 Unirse a la Videollamada Aquí
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
---------------------------------------------------
-📋 TU INFORME OFICIAL DE PREDIAGNÓSTICO:
-Para aprovechar al máximo nuestros 45 minutos y enfocarnos directamente en destrabar tu facturación y escalar tus servicios de alto valor, aquí tienes los resultados detallados de tu auditoría:
+          <!-- INSTRUCCIONES RÁPIDAS -->
+          <tr>
+            <td style="padding: 0 24px 16px 24px; background-color: #ffffff;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f9fafb; border-radius: 10px; border: 1px solid #e5e7eb; padding: 12px 16px;">
+                <tr>
+                  <td>
+                    <div style="font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                      💡 INSTRUCCIONES CLAVE PARA LA SESIÓN:
+                    </div>
+                    <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #4b5563; line-height: 1.6;">
+                      <li>Conéctate puntual desde una computadora con cámara y micrófono para poder compartir pantalla.</li>
+                      <li>Ten a mano este correo con los resultados de tu prediagnóstico para ir directo a la solución.</li>
+                      <li>Bloquea los 45 minutos completos sin distracciones para trabajar con foco total en tu modelo.</li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-==================================================
-{{contact.diagnostico_estrategico_crea_y_monetiza}}
-==================================================
+          <!-- INTRODUCCIÓN EMPÁTICA -->
+          <tr>
+            <td style="padding: 8px 24px 16px 24px; background-color: #ffffff;">
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #D7192B; border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
+                <p style="margin: 0; font-size: 13px; font-style: italic; line-height: 1.6; color: #7f1d1d;">
+                  "<strong>{{contact.first_name}}</strong>, llevas años construyendo experiencia... pero algo no cierra. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles? Nuestro motor de auditoría de evidencias te revela la verdad exacta — y te protege de invertir en lo que no toca."
+                </p>
+              </div>
 
-💡 Recomendaciones para la sesión:
-• Conéctate puntual desde una computadora (laptop o desktop) para poder compartir pantalla.
-• Ten este correo y tus resultados a mano durante la llamada.
+              <h2 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 900; color: #111827;">
+                ¡Hola, <span style="color: #D7192B;">{{contact.first_name}}</span>! 👋
+              </h2>
+              <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #4b5563;">
+                Aquí tienes la radiografía oficial de tu prediagnóstico estratégico que analizaremos juntos durante nuestra sesión:
+              </p>
 
-¡Nos vemos muy pronto!
+              <!-- INFORME DE DIAGNÓSTICO EN CAJA FORMATEADA (PRESERVA SALTOS Y ESTRUCTURA) -->
+              <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; white-space: pre-wrap; font-size: 13px; line-height: 1.7; color: #1f2937; margin-bottom: 22px;">{{contact.diagnostico_estrategico_crea_y_monetiza}}</div>
 
-Patricia Loaiza · Crea y Monetiza®
-Investigación, estrategia y consultoría`;
+              <!-- CIERRE DE COMPROMISO DE LA SESIÓN -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(135deg, #0d0d0d 0%, #1f2937 100%); border-radius: 14px; text-align: center; margin-bottom: 12px; border: 1px solid #374151;">
+                <tr>
+                  <td style="padding: 24px 20px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px;">
+                      ✓ SESIÓN ESTRATÉGICA 1 A 1 CONFIRMADA
+                    </div>
+                    <h3 style="margin: 0 0 8px 0; font-size: 19px; font-weight: 900; color: #ffffff;">
+                      Revisaremos a Fondo tu Hoja de Ruta, {{contact.first_name}}
+                    </h3>
+                    <p style="margin: 0 auto; font-size: 13px; line-height: 1.5; color: #d1d5db; max-width: 460px;">
+                      Nos vemos el día <strong>{{appointment.start_time}}</strong> en el enlace de la reunión. Ten a mano este correo para ir directo a la solución quirúrgica.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- PIE DE CORREO -->
+          <tr>
+            <td style="background-color: #f9fafb; padding: 20px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
+              <div style="font-size: 13px; font-weight: 900; color: #111827;">CREA Y MONETIZA®</div>
+              <div style="font-size: 11.5px; color: #6b7280; margin-top: 3px;">Metodología de Consultoría e Investigación Estratégica por Patricia Loaiza</div>
+              <div style="font-size: 10.5px; color: #9ca3af; margin-top: 8px;">Copia enviada a: {{contact.email}} · Notificación administrativa: patriloaiza.perez@gmail.com</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
   const emailTemplateHtmlGuide = `<!-- En GoHighLevel puedes usar el diseño HTML idéntico a la página de resultados y al PDF.
 Para enviarlo de forma 100% dinámica, en tu acción "Send Email", activa el modo código (<>) y pega: -->
@@ -693,49 +813,62 @@ con fondo negro, tarjetas de contraste, insignias rojas, las 5 evidencias y el b
                       </strong>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleCopy('{{contact.diagnostico_estrategico_crea_y_monetiza}}', 'temp_yes_booking_html')}
-                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs shrink-0"
-                  >
-                    {copiedKey === 'temp_yes_booking_html' ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-white" />
-                        <span>¡Variable Copiada!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copiar Variable HTML</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleCopy(emailTemplateAppointmentHtml, 'temp_yes_booking_full_html')}
+                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs shrink-0"
+                    >
+                      {copiedKey === 'temp_yes_booking_full_html' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-white" />
+                          <span>¡Plantilla HTML Copiada!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copiar Plantilla HTML para Flujo 3</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleCopy('{{contact.diagnostico_estrategico_crea_y_monetiza}}', 'temp_yes_booking_html')}
+                      className="px-3 py-1.5 bg-gray-800 hover:bg-black text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs shrink-0"
+                    >
+                      {copiedKey === 'temp_yes_booking_html' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>¡Variable Copiada!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copiar Variable</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-2 text-[11px] text-gray-700 mb-3">
                   <p>
-                    <strong>¿Cómo funciona?:</strong> Al completar el prediagnóstico, la app inyecta en el campo personalizado de contacto <code className="bg-white px-1 py-0.5 rounded border font-mono font-bold text-emerald-800">diagnostico_estrategico_crea_y_monetiza</code> todo el código HTML de alta fidelidad: encabezado corporativo negro, insignia Crea y Monetiza®, <strong>tarjeta verde con fecha y enlace de videollamada al inicio</strong>, perfil evolutivo, discrepancia, claves de crecimiento, 5 evidencias y el pie corporativo.
+                    <strong>¿Por qué la fecha y hora solo funcionan en el Flujo 3?:</strong> En GoHighLevel, las variables <code>{'{{appointment.start_time}}'}</code> y <code>{'{{appointment.meeting_location}}'}</code> <u>únicamente se activan en el Flujo 3</u>, porque su disparador es la Cita creada en el calendario. En el Flujo 2 el disparador fue el Webhook, por lo que GHL no sabe cuál cita es y las deja en blanco.
                   </p>
                   
                   <div className="p-3 bg-white rounded-xl border border-emerald-300 text-emerald-950 font-medium space-y-1.5">
                     <div>
-                      📌 <strong>Configuración en la acción «Enviar correo de confirmación y diagnóstico»:</strong>
+                      📌 <strong>Configuración en el Flujo 3 («Confirmar agendamiento»):</strong>
                     </div>
                     <ul className="list-disc pl-4 space-y-1 text-[11px]">
-                      <li><strong>Asunto:</strong> <code>¡Tu Cita está Confirmada! 🎉 + Informe Oficial de Prediagnóstico · {'{{contact.name}}'}</code></li>
+                      <li><strong>Asunto:</strong> <code>{'{{contact.first_name}}'}, ¡Tu Cita está Confirmada! 🎉 + Informe Oficial de Prediagnóstico</code></li>
                       <li><strong>Remitente (From):</strong> <code>Patricia Loaiza &lt;patricia@info.creaymonetiza.online&gt;</code></li>
-                      <li><strong>Campo Cco / Bcc:</strong> <code className="bg-emerald-100 text-emerald-900 px-1.5 py-0.5 rounded font-black">{OFFICIAL_ADMIN_EMAIL}</code> (¡para recibir tu copia idéntica!).</li>
-                      <li><strong>Cuerpo del correo:</strong> Activa el modo código fuente (ícono <code>&lt;&gt;</code>) y pega únicamente:
-                        <div className="mt-1">
-                          <code className="bg-gray-900 text-emerald-400 px-2 py-1 rounded font-black text-xs select-all block sm:inline">
-                            {'{{contact.diagnostico_estrategico_crea_y_monetiza}}'}
-                          </code>
-                        </div>
-                      </li>
+                      <li><strong>Campo Cco / Bcc:</strong> <code className="bg-emerald-100 text-emerald-900 px-1.5 py-0.5 rounded font-black">{OFFICIAL_ADMIN_EMAIL}</code>.</li>
+                      <li><strong>Cuerpo del correo:</strong> Haz clic en el ícono de código fuente <code>&lt;&gt;</code>, borra todo y pega la <strong>Plantilla HTML de Cita Confirmada</strong> (botón verde de arriba).</li>
                     </ul>
                   </div>
 
-                  <div className="p-2.5 bg-red-50 rounded-xl border border-red-200 text-red-900 font-medium text-[11px]">
-                    🗑️ <strong>Elimina el «Tercer Correo Feo»:</strong> En este Flujo 3, elimina o desactiva la acción <em>«Internal Notification»</em>. Como ya te llega la copia exacta en <strong>Bcc</strong> a <code className="font-bold underline">{OFFICIAL_ADMIN_EMAIL}</code>, esa notificación interna sobra y ensucia tu bandeja.
+                  <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 font-medium text-[11px]">
+                    ⚙️ <strong>En tu Flujo 2 («NO AGENDA»):</strong> Elimina la acción <em>«Correo electrónico SI AGENDÓ»</em> y deja esa rama vacía (FINAL). Así el Flujo 2 solo se encargará de los que <u>NO</u> agendaron tras 15 minutos, y el Flujo 3 confirmará la cita de inmediato con fecha y hora real.
                   </div>
                 </div>
               </div>
