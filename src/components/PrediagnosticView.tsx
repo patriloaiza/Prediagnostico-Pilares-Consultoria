@@ -1731,13 +1731,13 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
         </div>
       )}
 
-      {/* Modal Secreto y Confidencial para Patricia Loaiza (Descarga de Expediente) */}
+      {/* Panel Secreto y Confidencial Flotante para Patricia Loaiza (Sin oscurecer ni bloquear la pantalla) */}
       {isSecretExportModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#111111] text-white rounded-2xl border-2 border-[#D7192B] shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 pointer-events-auto">
+          <div className="bg-[#111111] text-white rounded-2xl border-2 border-[#D7192B] shadow-2xl p-4 sm:p-5 animate-in slide-in-from-bottom-5 duration-200">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-800">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#D7192B]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#D7192B] animate-pulse" />
                 <h3 className="text-xs font-black uppercase tracking-wider text-white">
                   Expediente Confidencial · Consultora
                 </h3>
@@ -1748,7 +1748,8 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
                   setIsSecretExportModalOpen(false);
                   setDownloadFeedback(null);
                 }}
-                className="text-gray-400 hover:text-white p-1 rounded-md text-xs cursor-pointer"
+                className="text-gray-400 hover:text-white p-1 rounded-md text-xs cursor-pointer hover:bg-white/10"
+                title="Cerrar panel"
               >
                 ✕
               </button>
@@ -1763,41 +1764,37 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
                 );
 
               return (
-                <>
-                  <div className="py-4 space-y-2 text-xs text-gray-300">
-                    <p className="text-[11px] text-gray-400">
-                      Descarga el expediente confidencial del prospecto para tu llamada de diagnóstico:
-                    </p>
-                    <div className="bg-white/5 rounded-xl p-3 border border-white/10 text-xs">
-                      <div className="font-bold text-white text-sm mb-1">{activeDiag.lead.name || 'Prospecto'}</div>
-                      <div className="text-[11px] text-gray-400">• Perfil: <strong className="text-white">{activeDiag.profile.title}</strong></div>
-                      <div className="text-[11px] text-gray-400">• Pilar: <strong className="text-amber-300">{activeDiag.recommendedPillar.name}</strong></div>
-                      <div className="text-[11px] text-gray-400">• Correo: <span className="text-gray-200">{activeDiag.lead.email}</span></div>
+                <div className="space-y-3">
+                  <div className="bg-white/5 rounded-xl p-2.5 border border-white/10 text-xs">
+                    <div className="font-bold text-white text-sm">{activeDiag.lead.name || 'Prospecto'}</div>
+                    <div className="text-[11px] text-gray-400 flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
+                      <span>• Perfil: <strong className="text-white">{activeDiag.profile.title}</strong></span>
+                      <span>• Servicio: <strong className="text-amber-300">{activeDiag.recommendedPillar.name}</strong></span>
                     </div>
-
-                    {downloadFeedback && (
-                      <div className="p-2.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold text-center animate-fade-in">
-                        {downloadFeedback}
-                      </div>
-                    )}
                   </div>
 
-                  <div className="flex flex-col gap-2 pt-1">
+                  {downloadFeedback && (
+                    <div className="p-2 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center animate-fade-in">
+                      {downloadFeedback}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
                     <button
                       type="button"
                       onClick={() => {
                         try {
                           downloadPrediagnosticPdf(activeDiag);
-                          setDownloadFeedback('✓ ¡Informe PDF descargado con éxito!');
+                          setDownloadFeedback('✓ ¡PDF descargado con éxito!');
                         } catch (err) {
                           console.error(err);
-                          setDownloadFeedback('Error al generar PDF. Prueba Markdown.');
+                          setDownloadFeedback('Error al generar PDF');
                         }
                       }}
-                      className="w-full py-2.5 px-4 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
                     >
                       <FileDown className="w-4 h-4" />
-                      <span>Descargar Informe en PDF (.pdf)</span>
+                      <span>Descargar PDF</span>
                     </button>
 
                     <button
@@ -1805,29 +1802,18 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
                       onClick={() => {
                         try {
                           downloadPrediagnosticMarkdown(activeDiag);
-                          setDownloadFeedback('✓ ¡Archivo Markdown (.md) descargado con éxito!');
+                          setDownloadFeedback('✓ ¡Markdown (.md) descargado!');
                         } catch (err) {
                           console.error(err);
                         }
                       }}
-                      className="w-full py-2.5 px-4 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold flex items-center justify-center gap-2 transition-all border border-gray-700 cursor-pointer"
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold flex items-center justify-center gap-2 transition-all border border-gray-700 cursor-pointer"
                     >
                       <FileText className="w-4 h-4" />
-                      <span>Descargar en Markdown (.md)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSecretExportModalOpen(false);
-                        setDownloadFeedback(null);
-                      }}
-                      className="w-full py-1.5 text-gray-500 hover:text-gray-300 text-xs transition-colors cursor-pointer text-center"
-                    >
-                      Cerrar
+                      <span>Markdown (.md)</span>
                     </button>
                   </div>
-                </>
+                </div>
               );
             })()}
           </div>
