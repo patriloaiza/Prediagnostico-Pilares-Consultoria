@@ -130,6 +130,7 @@ export const PrediagnosticView: React.FC<PrediagnosticViewProps> = ({
   const [isGhlModalOpen, setIsGhlModalOpen] = useState<boolean>(false);
   const [isSecretExportModalOpen, setIsSecretExportModalOpen] = useState<boolean>(false);
   const [downloadFeedback, setDownloadFeedback] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
   const [activeTestCase, setActiveTestCase] = useState<TestCase | null>(null);
   const [lead, setLead] = useState<UserLeadInfo>({
     name: '',
@@ -1174,10 +1175,10 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
       {/* PASO FINAL: RESULTADOS, VERIFICACIÓN DE SESGOS Y AGENDAMIENTO */}
       {/* ============================================================ */}
       {currentStep === RESULTS_STEP && result && (
-        <div className="space-y-6 animate-in fade-in duration-300">
+        <div id="prediagnostic-results-export" className="space-y-6 animate-in fade-in duration-300">
           {/* BARRA DE CONTROL DE PRUEBAS DE ADMINISTRADORA */}
           {activeTestCase && (
-            <div className="bg-neutral-900 border-2 border-amber-400/80 rounded-2xl p-4 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
+            <div data-pdf-ignore="true" className="bg-neutral-900 border-2 border-amber-400/80 rounded-2xl p-4 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
                   <Sparkles className="w-4 h-4" />
@@ -1227,7 +1228,7 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
           )}
 
           {/* BANNER DE FOMO Y CUPOS LIMITADOS */}
-          <div className="bg-gradient-to-r from-[#D7192B] to-[#990d1b] text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-red-400/40 relative overflow-hidden">
+          <div data-pdf-ignore="true" className="bg-gradient-to-r from-[#D7192B] to-[#990d1b] text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-red-400/40 relative overflow-hidden">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
@@ -1630,7 +1631,7 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
           </div>
 
           {/* LLAMADO A LA ACCIÓN PRINCIPAL (FOMO DE AGENDAMIENTO GOHIGHLEVEL) */}
-          <div className="bg-gradient-to-br from-[#080808] via-[#141414] to-[#200508] text-white rounded-2xl border-3 border-[#D7192B] shadow-2xl p-6 sm:p-9 text-center relative overflow-hidden">
+          <div data-pdf-ignore="true" className="bg-gradient-to-br from-[#080808] via-[#141414] to-[#200508] text-white rounded-2xl border-3 border-[#D7192B] shadow-2xl p-6 sm:p-9 text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 bg-[#D7192B]/20 rounded-full blur-3xl pointer-events-none" />
             <div className="max-w-2xl mx-auto space-y-4 relative z-10">
               
@@ -1712,7 +1713,7 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
           </div>
 
           {/* Cierre Institucional Oculto (Totalmente invisible para prospectos; solo activo para Patricia) */}
-          <div className="pt-6 pb-2 text-center select-none">
+          <div data-pdf-ignore="true" className="pt-6 pb-2 text-center select-none">
             <span
               onClick={() => {
                 setDownloadFeedback(null);
@@ -1782,19 +1783,24 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
                   <div className="flex flex-col sm:flex-row gap-2 pt-1">
                     <button
                       type="button"
-                      onClick={() => {
+                      disabled={isGeneratingPdf}
+                      onClick={async () => {
                         try {
-                          downloadPrediagnosticPdf(activeDiag);
+                          setIsGeneratingPdf(true);
+                          setDownloadFeedback('⏳ Generando PDF con diseño exacto...');
+                          await downloadPrediagnosticPdf(activeDiag);
                           setDownloadFeedback('✓ ¡PDF descargado con éxito!');
                         } catch (err) {
                           console.error(err);
-                          setDownloadFeedback('Error al generar PDF');
+                          setDownloadFeedback('Error al generar PDF. Prueba Markdown.');
+                        } finally {
+                          setIsGeneratingPdf(false);
                         }
                       }}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-[#D7192B] hover:bg-[#b91222] text-white text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-60"
                     >
                       <FileDown className="w-4 h-4" />
-                      <span>Descargar PDF</span>
+                      <span>{isGeneratingPdf ? 'Generando PDF...' : 'Descargar PDF'}</span>
                     </button>
 
                     <button
