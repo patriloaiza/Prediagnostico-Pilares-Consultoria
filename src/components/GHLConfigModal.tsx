@@ -420,43 +420,61 @@ con fondo negro, tarjetas de contraste, insignias rojas, las 5 evidencias y el b
                       2
                     </span>
                     <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <strong className="text-gray-900 text-xs">
-                          En el Flujo «3. Confirmar agendamiento»: Configurar «Internal Notification»
-                        </strong>
-                      </div>
+                      <strong className="text-gray-900 text-xs">
+                        En el Flujo «3. Confirmar agendamiento»: Eliminar el «Tercer Correo Feo» (Internal Notification)
+                      </strong>
                       <p className="text-gray-600 text-[11px] mt-1 leading-relaxed">
-                        Haz clic en la acción <em>«Internal Notification»</em> que ya tienes creada:
+                        Haz clic en los tres puntos de la acción <em>«Internal Notification»</em> y dale <strong>Eliminar (o desactívala)</strong>.
                         <br />
-                        • <strong>Type of Notification:</strong> Selecciona <strong>Email</strong> (no In-App Notification).
-                        <br />
-                        • <strong>Send to:</strong> Selecciona <strong>Custom Email</strong> (NO «Assigned User»).
-                        <br />
-                        • <strong>To Email:</strong> Pega <code className="bg-white px-1 py-0.5 rounded border font-bold text-[#D7192B]">{OFFICIAL_ADMIN_EMAIL}</code>.
-                        <br />
-                        • <strong>Subject:</strong> <code>🚨 [NUEVA CITA CONFIRMADA] - {'{{contact.name}}'}</code>.
-                        <br />
-                        • Además, entra en la acción <em>«Enviar correo de confirmación y diagnóstico»</em> y agrega tu email en el campo <strong>Cc</strong>.
+                        <span className="text-emerald-700 font-semibold">
+                          → ¿Por qué?: Esa acción era la que te enviaba el tercer correo feo sin diseño. Como en la acción de envío de correo le agregas tu email en <strong>Bcc / Cco</strong>, ya recibirás tu copia perfecta y hermosa sin saturar tu bandeja.
+                        </span>
                       </p>
                     </div>
                   </div>
 
                   {/* Modificación 3 */}
                   <div className="p-3.5 rounded-xl border border-gray-200 bg-gray-50 flex items-start gap-3">
-                    <span className="w-5 h-5 rounded-full bg-[#D7192B] text-white flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                       3
                     </span>
                     <div className="flex-1">
                       <strong className="text-gray-900 text-xs">
-                        Para que las variables del diagnóstico NO salgan vacías en el Flujo 3:
+                        En el Flujo «3. Confirmar agendamiento»: Poner el diseño HTML idéntico al Flujo 2
                       </strong>
                       <p className="text-gray-600 text-[11px] mt-1 leading-relaxed">
-                        En tu captura del Flujo 2 tienes el paso 2: <em>«Actualizar campos personalizados del contacto»</em>.
-                        Asegúrate de que en ese paso se guarde la variable:
+                        1. Abre la acción <em>«Enviar correo de confirmación y diagnóstico»</em>.
                         <br />
-                        Campo: <strong>Resumen Diagnóstico</strong> (Custom Field tipo Texto Multi-línea) → Valor: <code className="bg-white px-1 py-0.5 rounded border text-[#D7192B] font-bold">{'{{inboundWebhookRequest.resumen_ejecutivo}}'}</code>.
+                        2. En configuraciones de remitente, pon en <strong>Bcc (Copia oculta)</strong>: <code className="bg-white px-1 py-0.5 rounded border text-[#D7192B] font-bold">{OFFICIAL_ADMIN_EMAIL}</code>.
                         <br />
-                        Luego, en el Flujo 3, en lugar de usar <code>{'{{inboundWebhookRequest...}}'}</code>, usas <code className="bg-white px-1 py-0.5 rounded border text-emerald-700 font-bold">{'{{contact.resumen_diagnostico}}'}</code> (ver Plantilla 2 en la siguiente pestaña).
+                        3. En el editor de correo, haz clic en el ícono de código fuente <code>&lt;&gt;</code> y pega:
+                        <br />
+                        <code className="bg-emerald-100 text-emerald-950 px-2 py-0.5 rounded font-black text-xs select-all inline-block mt-1">
+                          {'{{contact.diagnostico_estrategico_crea_y_monetiza}}'}
+                        </code>
+                        <br />
+                        <span className="text-emerald-700 font-semibold mt-1 inline-block">
+                          → Resultado: El correo que le llega al cliente y a ti en Flujo 3 tendrá <u>exactamente el mismo diseño visual premium</u> de tus 8 capturas (encabezado negro, insignias rojas, 5 evidencias, análisis de cimientos y puntuaciones) con los datos de la cita agendada al inicio.
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Modificación 4 */}
+                  <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50 flex items-start gap-3">
+                    <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                      4
+                    </span>
+                    <div className="flex-1">
+                      <strong className="text-gray-900 text-xs">
+                        En el Flujo «2 CM - Prediagnostico NO AGENDA»: Regresar el Wait de 15 segundos a 15 minutos
+                      </strong>
+                      <p className="text-gray-600 text-[11px] mt-1 leading-relaxed">
+                        En el paso <strong>Wait</strong> (Espera), cambia los <code>15 segundos</code> que pusiste para hacer pruebas rápidas de nuevo a <strong>15 o 20 minutos</strong>.
+                        <br />
+                        <span className="text-amber-800 font-semibold">
+                          → ¿Por qué?: Al tenerlo en 15 segundos, si el prospecto se demora 1 minuto eligiendo el día en el calendario, el Flujo 2 se disparaba primero creyendo que no agendó. Con 15 minutos, le das el tiempo perfecto para completar su cita con tranquilidad.
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -661,41 +679,64 @@ con fondo negro, tarjetas de contraste, insignias rojas, las 5 evidencias y el b
                 </div>
               </div>
 
-              {/* Plantilla para Flujo 3: Cuando SÍ agendó */}
-              <div className="border border-emerald-200 bg-emerald-50/30 rounded-2xl p-4 shadow-xs">
-                <div className="flex items-center justify-between mb-2">
+              {/* Plantilla para Flujo 3: Cuando SÍ agendó (DISEÑO HTML IDÉNTICO A LAS 8 CAPTURAS) */}
+              <div className="border-2 border-emerald-400 bg-emerald-50/40 rounded-2xl p-4 sm:p-5 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
-                    <h4 className="font-extrabold text-gray-900 text-xs">
-                      Para Flujo 3 («CONFIRMAR AGENDAMIENTO»): Correo con datos de la cita + Diagnóstico
-                    </h4>
+                    <span className="w-3 h-3 rounded-full bg-emerald-600 animate-pulse" />
+                    <div>
+                      <span className="bg-emerald-600 text-white font-black text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider mr-2">
+                        ⭐ DISEÑO IDÉNTICO A TUS 8 CAPTURAS
+                      </span>
+                      <strong className="text-gray-900 text-xs sm:text-sm">
+                        Para Flujo 3 («CONFIRMAR AGENDAMIENTO»): Cita Confirmada + Diagnóstico Completo
+                      </strong>
+                    </div>
                   </div>
                   <button
-                    onClick={() => handleCopy(emailTemplateYesBooking, 'temp_yes_booking')}
-                    className="px-3 py-1 bg-[#111111] hover:bg-black text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                    onClick={() => handleCopy('{{contact.diagnostico_estrategico_crea_y_monetiza}}', 'temp_yes_booking_html')}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs shrink-0"
                   >
-                    {copiedKey === 'temp_yes_booking' ? (
+                    {copiedKey === 'temp_yes_booking_html' ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>¡Copiado!</span>
+                        <Check className="w-3.5 h-3.5 text-white" />
+                        <span>¡Variable Copiada!</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5" />
-                        <span>Copiar Texto</span>
+                        <span>Copiar Variable HTML</span>
                       </>
                     )}
                   </button>
                 </div>
 
-                <div className="text-[11px] text-gray-600 mb-2 font-medium">
-                  <strong>Asunto recomendado:</strong> ¡Cita confirmada! + Tu Diagnóstico Estratégico {'{{contact.first_name}}'}
-                  <br />
-                  <strong>Campo Cc / Bcc:</strong> <code className="bg-white px-1 py-0.5 rounded border font-bold text-emerald-700">{OFFICIAL_ADMIN_EMAIL}</code>
-                </div>
+                <div className="space-y-2 text-[11px] text-gray-700 mb-3">
+                  <p>
+                    <strong>¿Cómo funciona?:</strong> Al completar el prediagnóstico, la app inyecta en el campo personalizado de contacto <code className="bg-white px-1 py-0.5 rounded border font-mono font-bold text-emerald-800">diagnostico_estrategico_crea_y_monetiza</code> todo el código HTML de alta fidelidad: encabezado corporativo negro, insignia Crea y Monetiza®, <strong>tarjeta verde con fecha y enlace de videollamada al inicio</strong>, perfil evolutivo, discrepancia, claves de crecimiento, 5 evidencias y el pie corporativo.
+                  </p>
+                  
+                  <div className="p-3 bg-white rounded-xl border border-emerald-300 text-emerald-950 font-medium space-y-1.5">
+                    <div>
+                      📌 <strong>Configuración en la acción «Enviar correo de confirmación y diagnóstico»:</strong>
+                    </div>
+                    <ul className="list-disc pl-4 space-y-1 text-[11px]">
+                      <li><strong>Asunto:</strong> <code>¡Tu Cita está Confirmada! 🎉 + Informe Oficial de Prediagnóstico · {'{{contact.name}}'}</code></li>
+                      <li><strong>Remitente (From):</strong> <code>Patricia Loaiza &lt;patricia@info.creaymonetiza.online&gt;</code></li>
+                      <li><strong>Campo Cco / Bcc:</strong> <code className="bg-emerald-100 text-emerald-900 px-1.5 py-0.5 rounded font-black">{OFFICIAL_ADMIN_EMAIL}</code> (¡para recibir tu copia idéntica!).</li>
+                      <li><strong>Cuerpo del correo:</strong> Activa el modo código fuente (ícono <code>&lt;&gt;</code>) y pega únicamente:
+                        <div className="mt-1">
+                          <code className="bg-gray-900 text-emerald-400 px-2 py-1 rounded font-black text-xs select-all block sm:inline">
+                            {'{{contact.diagnostico_estrategico_crea_y_monetiza}}'}
+                          </code>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed">
-                  {emailTemplateYesBooking}
+                  <div className="p-2.5 bg-red-50 rounded-xl border border-red-200 text-red-900 font-medium text-[11px]">
+                    🗑️ <strong>Elimina el «Tercer Correo Feo»:</strong> En este Flujo 3, elimina o desactiva la acción <em>«Internal Notification»</em>. Como ya te llega la copia exacta en <strong>Bcc</strong> a <code className="font-bold underline">{OFFICIAL_ADMIN_EMAIL}</code>, esa notificación interna sobra y ensucia tu bandeja.
+                  </div>
                 </div>
               </div>
 

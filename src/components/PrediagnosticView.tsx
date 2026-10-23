@@ -40,6 +40,7 @@ import { AutomatedTestsModal, TestCase, AUTOMATED_TEST_CASES } from './Automated
 import { GHLConfigModal } from './GHLConfigModal';
 import {
   generateDiagnosticHtmlReport,
+  generateAppointmentConfirmationHtmlReport,
   generateDiagnosticTextReport,
   OFFICIAL_ADMIN_EMAIL
 } from '../utils/ghlEmailTemplate';
@@ -527,6 +528,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 
       const bookingLink = ghlBookingUrl || OFFICIAL_BOOKING;
       const htmlEmailReport = generateDiagnosticHtmlReport(calcResult, bookingLink);
+      const htmlAppointmentReport = generateAppointmentConfirmationHtmlReport(calcResult);
       const textEmailReport = generateDiagnosticTextReport(calcResult, bookingLink);
       const fullMarkdown = generatePrediagnosticMarkdown(calcResult);
 
@@ -572,6 +574,11 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         // Plantillas de Correo para GoHighLevel
         email_html_completo: htmlEmailReport,
         diagnostico_email_html: htmlEmailReport,
+        email_html_prediagnostico: htmlEmailReport,
+        email_html_cita_confirmada: htmlAppointmentReport,
+        email_html_agendado: htmlAppointmentReport,
+        diagnostico_estrategico_crea_y_monetiza: htmlAppointmentReport,
+        diagnostico_estrategico_html: htmlAppointmentReport,
         diagnostico_resumen_texto: textEmailReport,
         resultado_diagnostico: textEmailReport,
         markdown_completo: fullMarkdown,
@@ -603,8 +610,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
 
         // Resumen ejecutivo para notas y campos del CRM
         resumen_ejecutivo: textEmailReport,
-        diagnostico_estrategico_crea_y_monetiza: textEmailReport,
-        diagnostico_estrategico: textEmailReport,
+        resumen_ejecutivo_texto: textEmailReport,
         resumen_diagnostico: textEmailReport,
         nota: textEmailReport,
         note: textEmailReport,
