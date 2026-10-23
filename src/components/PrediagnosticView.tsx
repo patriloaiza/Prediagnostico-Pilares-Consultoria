@@ -45,7 +45,8 @@ import {
 } from '../utils/ghlEmailTemplate';
 import {
   downloadPrediagnosticPdf,
-  downloadPrediagnosticMarkdown
+  downloadPrediagnosticMarkdown,
+  generatePrediagnosticMarkdown
 } from '../utils/exportPrediagnostic';
 
 interface PrediagnosticViewProps {
@@ -524,32 +525,33 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
       const cleanFullName = extractCleanFullName(calcResult.lead.name);
       const properLastName = cleanFullName.split(/\s+/).slice(1).join(' ') || '';
 
-      // Resumen ejecutivo con formato HTML para evitar que los editores de email colapsen las líneas
-      const executiveEmailSummary = `🎯 <strong>PERFIL DE MADUREZ:</strong><br/>
-${calcResult.profile.title} ("${calcResult.profile.subtitle}")<br/><br/>
-🏆 <strong>PRIORIDAD #1 A RESOLVER:</strong><br/>
-${calcResult.recommendedPillar.name}<br/>
-<em>Programa Oficial:</em> ${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration})<br/><br/>
-⚠️ <strong>ANÁLISIS ESTRATÉGICO:</strong><br/>
-${calcResult.contradictionAnalysis?.explanation || 'Tu objetivo actual está alineado con la madurez de tu negocio.'}<br/><br/>
-⛔ <strong>LO QUE NO DEBES HACER EN ESTA ETAPA:</strong><br/>
-${calcResult.notFirstAdvice.warning}<br/><br/>
-📊 <strong>PUNTUACIONES:</strong><br/>
-• Estrategia & Oferta: ${calcResult.scores.pilar1} pts | • Marca Personal: ${calcResult.scores.pilar2} pts<br/>
-• Contenidos de Venta: ${calcResult.scores.pilar3} pts | • Digitalización & IA: ${calcResult.scores.pilar4} pts`;
-
-      const executiveEmailSummaryHtml = `
-<div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-left: 4px solid #D7192B; border-radius: 8px; padding: 16px; margin: 16px 0; font-family: sans-serif; line-height: 1.5; color: #111827;">
-  <p style="margin: 0 0 12px 0; font-size: 14px;"><strong>🎯 PERFIL DE MADUREZ:</strong><br>${calcResult.profile.title} (<em>"${calcResult.profile.subtitle}"</em>)</p>
-  <p style="margin: 0 0 12px 0; font-size: 14px;"><strong>🏆 PRIORIDAD #1 A RESOLVER:</strong><br><span style="color: #D7192B; font-weight: bold; font-size: 15px;">${calcResult.recommendedPillar.name}</span><br><span style="font-size: 12px; color: #4b5563;">Programa: ${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration})</span></p>
-  <p style="margin: 0 0 12px 0; font-size: 13px;"><strong>⚠️ ANÁLISIS ESTRATÉGICO:</strong><br>${calcResult.contradictionAnalysis?.explanation || 'Tu objetivo actual está alineado con la madurez de tu negocio.'}</p>
-  <p style="margin: 0 0 12px 0; font-size: 13px; color: #991b1b; background-color: #fee2e2; padding: 8px 12px; border-radius: 6px;"><strong>⛔ LO QUE NO DEBES HACER:</strong><br>${calcResult.notFirstAdvice.warning}</p>
-  <p style="margin: 0; font-size: 12px; color: #4b5563;"><strong>📊 PUNTUACIONES:</strong><br>Pilar 1: ${calcResult.scores.pilar1} pts · Pilar 2: ${calcResult.scores.pilar2} pts · Pilar 3: ${calcResult.scores.pilar3} pts · Pilar 4: ${calcResult.scores.pilar4} pts</p>
-</div>`.trim();
-
       const bookingLink = ghlBookingUrl || OFFICIAL_BOOKING;
       const htmlEmailReport = generateDiagnosticHtmlReport(calcResult, bookingLink);
       const textEmailReport = generateDiagnosticTextReport(calcResult, bookingLink);
+      const fullMarkdown = generatePrediagnosticMarkdown(calcResult);
+
+      // Cadenas ricas, persuasivas y de alto valor para los campos de GoHighLevel y correos
+      const richProfile = `${calcResult.profile.title} ("${calcResult.profile.subtitle}")\n\n${calcResult.profile.description}\n\n⚡ Obstáculo Central: ${calcResult.profile.corePain}\n🎯 Paso Inmediato: ${calcResult.profile.priorityNeed}`;
+
+      const richRecommendedService = `${calcResult.recommendedPillar.name}\n\n${calcResult.recommendedPillar.description}`;
+
+      const richOfficialProgram = `${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration}) - ${calcResult.recommendedPillar.lessonsCount || 'Fases de Acompañamiento Estratégico'}`;
+
+      const richTransformation = calcResult.recommendedPillar.transformation;
+
+      const richDiscrepancy = calcResult.hasContradiction && calcResult.contradictionAnalysis
+        ? `${calcResult.contradictionAnalysis.explanation}\n\n💡 ¿Por qué este es el camino más inteligente para ti?:\n${calcResult.contradictionAnalysis.riskOfSkipping}`
+        : 'Tu objetivo manifestado coincide con el cimiento prioritario que tu negocio requiere consolidar en este momento.';
+
+      const richNotToDo = `${calcResult.notFirstAdvice.warning}\n\n⚠️ Motivo estratégico:\n${calcResult.notFirstAdvice.recommendation}`;
+
+      const richGrowthKeys = calcResult.detectedIncoherences.length > 0
+        ? calcResult.detectedIncoherences.map((inc, i) =>
+            `• [Clave ${i + 1}] ${inc.title.toUpperCase()}:\n  - Lectura Estratégica: ${inc.verdict}\n  - El Secreto para Crecer: ${inc.revealedTruth}\n  - Próximo Paso: ${inc.actionRequired}`
+          ).join('\n\n')
+        : 'Tus respuestas muestran una base alineada sin cuellos de botella críticos detectados.';
+
+      const richEvidences = calcResult.evidences.map((e, idx) => `• Evidencia ${idx + 1}: ${e}`).join('\n');
 
       const ghlPayload: Record<string, any> = {
         name: cleanFullName,
@@ -567,21 +569,34 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
         notificacion_administrador: OFFICIAL_ADMIN_EMAIL,
         email_copia: OFFICIAL_ADMIN_EMAIL,
 
-        // Plantillas de Correo para GoHighLevel
+        // Plantillas de Correo para GoHighLevel (HTML idéntico a resultados/PDF y Texto/Markdown persuasivo completo)
         diagnostico_email_html: htmlEmailReport,
-        diagnostico_resumen_texto: textEmailReport,
+        email_html_completo: htmlEmailReport,
         resultado_diagnostico_html: htmlEmailReport,
+        email_html: htmlEmailReport,
+        diagnostico_resumen_texto: textEmailReport,
         resultado_diagnostico: textEmailReport,
+        markdown_completo: fullMarkdown,
+        resumen_markdown: fullMarkdown,
+        markdown: fullMarkdown,
         enlace_calendario: bookingLink,
         booking_url: bookingLink,
 
-        // Variables directas para workflows
-        diagnostico_perfil: `${calcResult.profile.title} ("${calcResult.profile.subtitle}")`,
-        diagnostico_servicio_recomendado: calcResult.recommendedPillar.name,
-        diagnostico_programa_oficial: `${calcResult.recommendedPillar.serviceTitle} (${calcResult.recommendedPillar.duration})`,
-        diagnostico_motivo_discrepancia: calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia; objetivo alineado con la madurez actual.',
-        diagnostico_lo_que_no_debe_hacer: calcResult.notFirstAdvice.warning,
-        diagnostico_advertencia: calcResult.notFirstAdvice.warning,
+        // Variables directas enriquecidas para workflows y correos de GoHighLevel
+        diagnostico_perfil: richProfile,
+        diagnostico_perfil_simple: `${calcResult.profile.title} ("${calcResult.profile.subtitle}")`,
+        diagnostico_servicio_recomendado: richRecommendedService,
+        diagnostico_servicio_simple: calcResult.recommendedPillar.name,
+        diagnostico_programa_oficial: richOfficialProgram,
+        diagnostico_programa_simple: calcResult.recommendedPillar.serviceTitle,
+        diagnostico_transformacion: richTransformation,
+        diagnostico_motivo_discrepancia: richDiscrepancy,
+        diagnostico_discrepancia_simple: calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia',
+        diagnostico_lo_que_no_debe_hacer: richNotToDo,
+        diagnostico_advertencia: richNotToDo,
+        diagnostico_advertencia_simple: calcResult.notFirstAdvice.warning,
+        diagnostico_claves_crecimiento: richGrowthKeys,
+        diagnostico_evidencias: richEvidences,
         
         // Datos profesionales contextuales
         profesion: calcResult.lead.profession,
@@ -597,30 +612,30 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
         'clientes de pago': clientsLabel,
         paying_clients_status: clientsLabel,
 
-        // Resumen ejecutivo humanizado y legible para correos
-        resumen_ejecutivo: executiveEmailSummary,
-        'Resumen Ejecutivo': executiveEmailSummary,
-        'resumen ejecutivo': executiveEmailSummary,
-        resumen_diagnostico: executiveEmailSummary,
-        'resumen diagnostico': executiveEmailSummary,
-        'Resumen Diagnostico': executiveEmailSummary,
-        'Resumen Diagnóstico': executiveEmailSummary,
-        resumen_ejecutivo_html: executiveEmailSummaryHtml,
-        diagnostico_resumen_html: executiveEmailSummaryHtml,
-        resultado_diagnostico_texto: executiveEmailSummary,
-        'Resultado Diagnostico': executiveEmailSummary,
-        'Resultado Diagnóstico': executiveEmailSummary,
-        resumen_completo: executiveEmailSummary,
-        nota_completa: formattedNoteText,
-        nota_crm_interna: formattedNoteText,
-        resumen: executiveEmailSummary,
-        note: formattedNoteText,
-        notes: formattedNoteText,
-        nota: formattedNoteText,
-        body: executiveEmailSummary,
-        body_text: executiveEmailSummary,
-        comentarios: formattedNoteText,
-        observaciones: formattedNoteText,
+        // Resumen ejecutivo humanizado y persuasivo completo (mapeado a Note y Email de GHL)
+        resumen_ejecutivo: textEmailReport,
+        'Resumen Ejecutivo': textEmailReport,
+        'resumen ejecutivo': textEmailReport,
+        resumen_diagnostico: textEmailReport,
+        'resumen diagnostico': textEmailReport,
+        'Resumen Diagnostico': textEmailReport,
+        'Resumen Diagnóstico': textEmailReport,
+        resumen_ejecutivo_html: htmlEmailReport,
+        diagnostico_resumen_html: htmlEmailReport,
+        resultado_diagnostico_texto: textEmailReport,
+        'Resultado Diagnostico': textEmailReport,
+        'Resultado Diagnóstico': textEmailReport,
+        resumen_completo: textEmailReport,
+        nota_completa: textEmailReport,
+        nota_crm_interna: textEmailReport,
+        resumen: textEmailReport,
+        note: textEmailReport,
+        notes: textEmailReport,
+        nota: textEmailReport,
+        body: textEmailReport,
+        body_text: textEmailReport,
+        comentarios: textEmailReport,
+        observaciones: textEmailReport,
         
         // Empresa y rol
         'company name': calcResult.lead.company || 'No especificada',
@@ -646,12 +661,12 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
         // Análisis de discrepancia y gating
         'tiene discrepancia': calcResult.hasContradiction ? 'SÍ' : 'NO',
         tiene_discrepancia: calcResult.hasContradiction ? 'SÍ' : 'NO',
-        'motivo discrepancia': calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia; objetivo alineado con la madurez actual.',
-        motivo_discrepancia: calcResult.contradictionAnalysis?.explanation || 'Sin discrepancia; objetivo alineado con la madurez actual.',
+        'motivo discrepancia': richDiscrepancy,
+        motivo_discrepancia: richDiscrepancy,
         'riesgo de saltarse paso': calcResult.contradictionAnalysis?.riskOfSkipping || 'N/A',
         riesgo_de_saltarse_paso: calcResult.contradictionAnalysis?.riskOfSkipping || 'N/A',
-        'lo que no debe hacer': calcResult.notFirstAdvice.warning,
-        lo_que_no_debe_hacer: calcResult.notFirstAdvice.warning,
+        'lo que no debe hacer': richNotToDo,
+        lo_que_no_debe_hacer: richNotToDo,
         veto_pilar4_aplicado: calcResult.gatingAnalysis.isPilar4Blocked ? 'SÍ' : 'NO',
         veto_pilar3_aplicado: calcResult.gatingAnalysis.isPilar3Blocked ? 'SÍ' : 'NO',
         

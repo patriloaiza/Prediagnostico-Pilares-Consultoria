@@ -80,80 +80,122 @@ export const GHLConfigModal: React.FC<GHLConfigModalProps> = ({
     }
   };
 
-  // Plantilla para Flujo 2: Cuando NO agendó (lee directo del webhook entrante)
-  const emailTemplateNoBooking = `Hola {{contact.first_name}},
+  // Plantilla Granular para Flujo 2 (Actualización directa del correo de Patricia en GHL con todas las variables persuasivas)
+  const emailTemplateGranular = `Hola {{contact.first_name}},
 
-Aquí tienes el informe completo de tu Prediagnóstico Estratégico en Crea y Monetiza®:
+Llevas años construyendo experiencia... pero algo no cierra en la monetización de tus servicios de alto valor. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles?
 
-NIVEL DE MADUREZ DETECTADO:
+Aquí tienes el informe completo y detallado de tu Prediagnóstico Estratégico en Crea y Monetiza®:
+
+==================================================
+🎯 NIVEL DE MADUREZ DETECTADO:
+
 {{inboundWebhookRequest.diagnostico_perfil}}
 
-PRIORIDAD #1 A RESOLVER:
+==================================================
+🏆 PRIORIDAD #1 A RESOLVER:
+
 {{inboundWebhookRequest.diagnostico_servicio_recomendado}}
 
-Programa Recomendado: {{inboundWebhookRequest.diagnostico_programa_oficial}}
+Programa Oficial: {{inboundWebhookRequest.diagnostico_programa_oficial}}
 
-ANÁLISIS ESTRATÉGICO:
+✨ Transformación Diseñada:
+{{inboundWebhookRequest.diagnostico_transformacion}}
+
+==================================================
+⚠️ ANÁLISIS ESTRATÉGICO & DISCREPANCIA:
+
 {{inboundWebhookRequest.diagnostico_motivo_discrepancia}}
 
-LO QUE NO DEBES HACER AHORA:
+==================================================
+💡 CLAVES DE CRECIMIENTO DETECTADAS:
+
+{{inboundWebhookRequest.diagnostico_claves_crecimiento}}
+
+==================================================
+⛔ LO QUE NO DEBES HACER AHORA:
+
 {{inboundWebhookRequest.diagnostico_lo_que_no_debe_hacer}}
 
-PUNTUACIONES DE TUS 4 PILARES:
-1. Estrategia & Oferta: {{inboundWebhookRequest.puntuacion_pilar1}} pts
-2. Marca Personal: {{inboundWebhookRequest.puntuacion_pilar2}} pts
-3. Contenido de Ventas: {{inboundWebhookRequest.puntuacion_pilar3}} pts
-4. Digital Business & IA: {{inboundWebhookRequest.puntuacion_pilar4}} pts
+==================================================
+🔎 EVIDENCIAS CLAVE IDENTIFICADAS EN TUS RESPUESTAS:
 
-Ahora es momento de agendar tu sesión 1 a 1 de Regalo (45 min):
-{{inboundWebhookRequest.enlace_calendario}}
+{{inboundWebhookRequest.diagnostico_evidencias}}
 
-¡Nos vemos pronto!
-Patricia Loaiza - Crea y Monetiza®`;
+==================================================
+📊 PUNTUACIONES DE TUS 4 PILARES:
 
-  // Plantilla para Flujo 3: Cuando SÍ agendó (lee de los campos guardados en el contacto)
-  const emailTemplateYesBooking = `Hola {{contact.first_name}},
-
-¡Tu cita para la Sesión Estratégica 1 a 1 está confirmada! 🎉
-
-📅 Fecha y Hora de tu sesión: {{appointment.start_time}}
-🔗 Enlace de la reunión: {{appointment.meeting_location}}
-
-Para aprovechar al máximo nuestros 45 minutos juntos, he preparado una copia del resultado de tu Prediagnóstico que analizaremos a fondo:
+• 1. Estrategia & Oferta: {{inboundWebhookRequest.puntuacion_pilar1}} pts
+• 2. Marca Personal: {{inboundWebhookRequest.puntuacion_pilar2}} pts
+• 3. Contenido de Ventas: {{inboundWebhookRequest.puntuacion_pilar3}} pts
+• 4. Digital Business & IA: {{inboundWebhookRequest.puntuacion_pilar4}} pts
 
 --------------------------------------------------
-🎯 PERFIL DETECTADO:
-{{contact.perfil_profesional}}
+🎯 ¿CUÁL ES EL SIGUIENTE PASO?
+Tener este diagnóstico es el primer paso. El verdadero salto ocurre cuando analizamos juntos cómo destrabar tu facturación, proteger tu tiempo y aplicar este plan en tu negocio con precisión quirúrgica.
 
-🏆 SERVICIO PRIORITARIO RECOMENDADO:
-{{contact.servicio_recomendado}}
+👉 Ahora es momento de agendar tu sesión 1 a 1 de Regalo (45 min):
 
-⚠️ ANÁLISIS ESTRATÉGICO:
-{{contact.motivo_discrepancia}}
+${bookingUrl || '{{inboundWebhookRequest.enlace_calendario}}'}
 
-⛔ LO QUE NO DEBES HACER:
-{{contact.lo_que_no_debe_hacer}}
+(Cupo reservado temporalmente para ti, {{contact.first_name}})
 --------------------------------------------------
-
-Ten a mano este correo el día de nuestra sesión. Revisaremos exactamente cómo destrabar tu facturación y escalar tus servicios de alto valor.
 
 ¡Nos vemos pronto!
 
 Patricia Loaiza · Crea y Monetiza®
+Investigación, estrategia y consultoría`;
+
+  // Plantilla para Flujo 2: Cuando NO agendó (Persuasiva Completa con formato limpio)
+  const emailTemplateNoBooking = `Hola {{contact.first_name}},
+
+Llevas años construyendo experiencia... pero algo no cierra en la monetización de tus servicios de alto valor. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles?
+
+Aquí tienes el informe completo y detallado de tu Prediagnóstico Estratégico en Crea y Monetiza®:
+
+--------------------------------------------------
+{{inboundWebhookRequest.resumen_ejecutivo}}
+--------------------------------------------------
+
+🎯 ¿CUÁL ES EL SIGUIENTE PASO?
+Tener este diagnóstico es el primer paso. El verdadero salto ocurre cuando analizamos juntos cómo destrabar tu facturación, proteger tu tiempo y aplicar este plan en tu negocio con precisión quirúrgica.
+
+👉 Reserva aquí tu Sesión Estratégica 1 a 1 de 45 minutos (Sin Costo por tiempo limitado):
+${bookingUrl || '{{inboundWebhookRequest.enlace_calendario}}'}
+
+(Cupo reservado temporalmente para ti, {{contact.first_name}})
+
+Patricia Loaiza · Crea y Monetiza®
+Investigación, estrategia y consultoría`;
+
+  // Plantilla para Flujo 3: Cuando SÍ agendó (Confirmación + Copia del Diagnóstico)
+  const emailTemplateYesBooking = `¡Hola, {{contact.first_name}}! 🎉
+
+Tu cita para nuestra Sesión Estratégica 1 a 1 está 100% confirmada.
+
+📅 Fecha y Hora de tu sesión: {{appointment.start_time}}
+🔗 Enlace de la reunión: {{appointment.meeting_location}}
+
+Para aprovechar al máximo nuestros 45 minutos juntos, he preparado una copia del resultado completo de tu Prediagnóstico para que lo tengamos a mano durante la sesión:
+
+==================================================
+{{contact.resumen_diagnostico}}
+==================================================
+
+Ten a mano este correo el día de nuestra sesión. Revisaremos exactamente cómo destrabar tu facturación y escalar tus servicios de alto valor.
+
+¡Nos vemos muy pronto!
+
+Patricia Loaiza · Crea y Monetiza®
 Copia enviada a: ${OFFICIAL_ADMIN_EMAIL}`;
 
-  const emailTemplateAllInOne = `Hola {{contact.first_name}},
+  const emailTemplateHtmlGuide = `<!-- En GoHighLevel puedes usar el diseño HTML idéntico a la página de resultados y al PDF.
+Para enviarlo de forma 100% dinámica, en tu acción "Send Email", activa el modo código (<>) y pega: -->
 
-Aquí tienes el informe completo y consolidado de tu Prediagnóstico Estratégico en Crea y Monetiza®:
+{{inboundWebhookRequest.email_html_completo}}
 
-{{inboundWebhookRequest.resumen_ejecutivo}}
-
---------------------------------------------------
-👉 Reserva aquí tu Sesión Estratégica 1 a 1 de 45 minutos (Sin Costo):
-${bookingUrl || '{{inboundWebhookRequest.enlace_calendario}}'}
---------------------------------------------------
-
-Patricia Loaiza · Crea y Monetiza®`;
+<!-- De esta manera, el prospecto recibirá en su buzón de Gmail/Outlook el diseño corporativo
+con fondo negro, tarjetas de contraste, insignias rojas, las 5 evidencias y el botón para agendar. -->`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
@@ -496,18 +538,98 @@ Patricia Loaiza · Crea y Monetiza®`;
           {activeTab === 'templates' && (
             <div className="space-y-6">
               
-              {/* Plantilla para Flujo 2: Cuando NO agendó */}
-              <div className="border border-red-200 bg-red-50/30 rounded-xl p-4">
+              {/* Opción 1: HTML Visual de Alta Fidelidad */}
+              <div className="border-2 border-indigo-300 bg-indigo-50/40 rounded-2xl p-4 sm:p-5 shadow-xs">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-indigo-600 animate-pulse" />
+                    <div>
+                      <span className="bg-indigo-600 text-white font-black text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider mr-2">
+                        ⭐ OPCIÓN RECOMENDADA
+                      </span>
+                      <strong className="text-gray-900 text-xs sm:text-sm">
+                        Diseño Visual HTML (Idéntico a la Página de Resultados y PDF)
+                      </strong>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleCopy('{{inboundWebhookRequest.email_html_completo}}', 'temp_html_variable')}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                  >
+                    {copiedKey === 'temp_html_variable' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-white" />
+                        <span>¡Variable Copiada!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiar Variable</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="text-[11px] text-gray-700 mb-3 space-y-1.5">
+                  <p>
+                    <strong>¿Por qué es la más persuasiva?:</strong> El prospecto recibe en su bandeja un correo corporativo premium con el encabezado oscuro de Crea y Monetiza®, citas textuales, análisis de discrepancia, claves de crecimiento, 5 evidencias y el botón rojo de llamada a la acción para agendar.
+                  </p>
+                  <p className="p-2.5 bg-white rounded-xl border border-indigo-200 text-indigo-950 font-medium">
+                    📌 <strong>Cómo ponerlo en GoHighLevel:</strong> En tu acción <em>«Send Email»</em>, activa el modo código fuente (ícono <code>&lt;&gt;</code>) y pega únicamente: <code className="bg-indigo-100 text-indigo-900 px-2 py-0.5 rounded font-black text-xs select-all">{'{{inboundWebhookRequest.email_html_completo}}'}</code>
+                  </p>
+                </div>
+              </div>
+
+              {/* Opción 2: Plantilla Granular Actualizada (Directa para el correo de Patricia) */}
+              <div className="border border-red-200 bg-red-50/30 rounded-2xl p-4 sm:p-5 shadow-xs">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#D7192B]" />
+                    <h4 className="font-extrabold text-gray-900 text-xs sm:text-sm">
+                      Para Flujo 2 («NO AGENDA»): Plantilla Granular Enriquecida (Tu Correo Actual Mejorado)
+                    </h4>
+                  </div>
+                  <button
+                    onClick={() => handleCopy(emailTemplateGranular, 'temp_granular')}
+                    className="px-3 py-1.5 bg-[#111111] hover:bg-black text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                  >
+                    {copiedKey === 'temp_granular' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>¡Texto Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiar Todo el Correo</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="text-[11px] text-gray-600 mb-2 font-medium">
+                  <strong>Asunto recomendado:</strong> Aquí tienes tu Diagnóstico Estratégico {'{{contact.first_name}}'} (+ Tu Sesión de Regalo)
+                  <br />
+                  <strong>Campo Cc:</strong> <code className="bg-white px-1 py-0.5 rounded border font-bold text-[#D7192B]">{OFFICIAL_ADMIN_EMAIL}</code>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-xl p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-56 overflow-y-auto leading-relaxed shadow-inner">
+                  {emailTemplateGranular}
+                </div>
+              </div>
+
+              {/* Opción 3: Todo en 1 Sola Variable Consolidada */}
+              <div className="border border-gray-200 bg-gray-50/80 rounded-2xl p-4 shadow-xs">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-gray-600" />
                     <h4 className="font-extrabold text-gray-900 text-xs">
-                      Para Flujo 2 («NO AGENDA»): Correo cuando pasaron los 15 min sin agendar
+                      Opción Alternativa: Todo el Informe en 1 Sola Variable (resumen_ejecutivo)
                     </h4>
                   </div>
                   <button
                     onClick={() => handleCopy(emailTemplateNoBooking, 'temp_no_booking')}
-                    className="px-3 py-1 bg-[#111111] hover:bg-black text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer"
+                    className="px-3 py-1 bg-gray-800 hover:bg-black text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer"
                   >
                     {copiedKey === 'temp_no_booking' ? (
                       <>
@@ -523,19 +645,17 @@ Patricia Loaiza · Crea y Monetiza®`;
                   </button>
                 </div>
 
-                <div className="text-[11px] text-gray-600 mb-2 font-medium">
-                  <strong>Asunto recomendado:</strong> Aquí tienes tu Diagnóstico Estratégico {'{{contact.first_name}}'} (+ Tu Sesión de Regalo)
-                  <br />
-                  <strong>Campo Cc / Bcc:</strong> <code className="bg-white px-1 py-0.5 rounded border font-bold text-[#D7192B]">{OFFICIAL_ADMIN_EMAIL}</code>
-                </div>
+                <p className="text-[11px] text-gray-600 mb-2">
+                  Usa <code className="bg-white px-1 py-0.5 rounded border font-mono">{'{{inboundWebhookRequest.resumen_ejecutivo}}'}</code> para inyectar todo el reporte formateado en un solo bloque.
+                </p>
 
-                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-52 overflow-y-auto leading-relaxed">
+                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed">
                   {emailTemplateNoBooking}
                 </div>
               </div>
 
               {/* Plantilla para Flujo 3: Cuando SÍ agendó */}
-              <div className="border border-emerald-200 bg-emerald-50/30 rounded-xl p-4">
+              <div className="border border-emerald-200 bg-emerald-50/30 rounded-2xl p-4 shadow-xs">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
@@ -545,7 +665,7 @@ Patricia Loaiza · Crea y Monetiza®`;
                   </div>
                   <button
                     onClick={() => handleCopy(emailTemplateYesBooking, 'temp_yes_booking')}
-                    className="px-3 py-1 bg-[#111111] hover:bg-black text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer"
+                    className="px-3 py-1 bg-[#111111] hover:bg-black text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
                   >
                     {copiedKey === 'temp_yes_booking' ? (
                       <>
@@ -567,44 +687,8 @@ Patricia Loaiza · Crea y Monetiza®`;
                   <strong>Campo Cc / Bcc:</strong> <code className="bg-white px-1 py-0.5 rounded border font-bold text-emerald-700">{OFFICIAL_ADMIN_EMAIL}</code>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-52 overflow-y-auto leading-relaxed">
-                  {emailTemplateYesBooking}
-                </div>
-              </div>
-
-              {/* Plantilla Consolidada 3: Resumen Ejecutivo en 1 Variable */}
-              <div className="border border-indigo-200 bg-indigo-50/30 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
-                    <h4 className="font-extrabold text-gray-900 text-xs">
-                      Alternativa Todo en Uno: Reporte Completo en 1 Sola Variable
-                    </h4>
-                  </div>
-                  <button
-                    onClick={() => handleCopy(emailTemplateAllInOne, 'temp_all_in_one')}
-                    className="px-3 py-1 bg-[#111111] hover:bg-black text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    {copiedKey === 'temp_all_in_one' ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>¡Copiado!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copiar Texto</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="text-[11px] text-gray-600 mb-2 font-medium">
-                  <strong>Asunto:</strong> Tu Informe de Prediagnóstico Estratégico · Crea y Monetiza®
-                </div>
-
                 <div className="bg-white border border-gray-200 rounded-lg p-3 font-mono text-[11px] text-gray-800 whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed">
-                  {emailTemplateAllInOne}
+                  {emailTemplateYesBooking}
                 </div>
               </div>
 

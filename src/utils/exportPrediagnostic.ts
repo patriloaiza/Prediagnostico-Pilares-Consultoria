@@ -81,9 +81,9 @@ function downloadBlob(content: string, filename: string, mimeType: string) {
 }
 
 /**
- * Genera y descarga el resultado completo en formato Markdown (.md)
+ * Genera el resultado completo en formato Markdown (.md)
  */
-export function downloadPrediagnosticMarkdown(calc: PrediagnosticResult): void {
+export function generatePrediagnosticMarkdown(calc: PrediagnosticResult): string {
   const name = calc.lead.name.trim() || 'Emprendedor/a';
   const firstName = name.split(' ')[0] || 'Emprendedor/a';
   const model = COMMERCIAL_MODELS_LABELS[calc.lead.commercializationModel] || calc.lead.commercializationModel;
@@ -94,7 +94,7 @@ export function downloadPrediagnosticMarkdown(calc: PrediagnosticResult): void {
     day: 'numeric'
   });
 
-  const mdContent = `# METODOLOGÍA CREA Y MONETIZA® · Patricia Loaiza
+  return `# METODOLOGÍA CREA Y MONETIZA® · Patricia Loaiza
 # Prediagnóstico Consultoría Requerida · [• ${name}]
 
 > **${firstName}**, llevas años construyendo experiencia... pero algo no cierra. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles? Nuestro motor de auditoría de evidencias te revela la verdad exacta — y te protege de invertir en lo que no toca.
@@ -242,7 +242,14 @@ Sesión de Diagnóstico 1 a 1 de 30 minutos con Patricia Loaiza para analizar es
 © ${new Date().getFullYear()} CREA Y MONETIZA® · Metodología de Consultoría Estratégica por Patricia Loaiza.  
 *Investigación, estrategia y consultoría.*
 `;
+}
 
+/**
+ * Descarga el archivo Markdown en el navegador
+ */
+export function downloadPrediagnosticMarkdown(calc: PrediagnosticResult): void {
+  const name = calc.lead.name.trim() || 'Emprendedor/a';
+  const mdContent = generatePrediagnosticMarkdown(calc);
   const fileName = `Prediagnostico_${safeFileName(name)}_${new Date().toISOString().slice(0, 10)}.md`;
   downloadBlob(mdContent, fileName, 'text/markdown;charset=utf-8');
 }
