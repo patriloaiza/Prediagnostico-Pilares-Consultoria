@@ -169,25 +169,32 @@ Patricia Loaiza · Crea y Monetiza®
 Investigación, estrategia y consultoría`;
 
   // Plantilla para Flujo 3: Cuando SÍ agendó (Confirmación + Copia del Diagnóstico)
-  const emailTemplateYesBooking = `¡Hola, {{contact.first_name}}! 🎉
+  const emailTemplateYesBooking = `Hola {{contact.first_name}},
 
-Tu cita para nuestra Sesión Estratégica 1 a 1 está 100% confirmada.
+¡Tu cita para la Sesión Estratégica 1 a 1 de Regalo (45 min) está confirmada! 🎉
 
-📅 Fecha y Hora de tu sesión: {{appointment.start_time}}
-🔗 Enlace de la reunión: {{appointment.meeting_location}}
+📅 Fecha y Hora de tu sesión:
+{{appointment.start_time}}
 
-Para aprovechar al máximo nuestros 45 minutos juntos, he preparado una copia del resultado completo de tu Prediagnóstico para que lo tengamos a mano durante la sesión:
+📎 Enlace directo de la reunión:
+{{appointment.meeting_location}}
+
+--------------------------------------------------
+📋 TU INFORME OFICIAL DE PREDIAGNÓSTICO:
+Para aprovechar al máximo nuestros 45 minutos y enfocarnos directamente en destrabar tu facturación y escalar tus servicios de alto valor, aquí tienes los resultados detallados de tu auditoría:
 
 ==================================================
-{{contact.resumen_diagnostico}}
+{{contact.diagnostico_estrategico_crea_y_monetiza}}
 ==================================================
 
-Ten a mano este correo el día de nuestra sesión. Revisaremos exactamente cómo destrabar tu facturación y escalar tus servicios de alto valor.
+💡 Recomendaciones para la sesión:
+• Conéctate puntual desde una computadora (laptop o desktop) para poder compartir pantalla.
+• Ten este correo y tus resultados a mano durante la llamada.
 
 ¡Nos vemos muy pronto!
 
 Patricia Loaiza · Crea y Monetiza®
-Copia enviada a: ${OFFICIAL_ADMIN_EMAIL}`;
+Investigación, estrategia y consultoría`;
 
   const emailTemplateHtmlGuide = `<!-- En GoHighLevel puedes usar el diseño HTML idéntico a la página de resultados y al PDF.
 Para enviarlo de forma 100% dinámica, en tu acción "Send Email", activa el modo código (<>) y pega: -->

@@ -601,8 +601,11 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         modelo_comercializacion: modelLabel,
         estado_clientes_pago: clientsLabel,
 
-        // Resumen ejecutivo para notas del CRM
+        // Resumen ejecutivo para notas y campos del CRM
         resumen_ejecutivo: textEmailReport,
+        diagnostico_estrategico_crea_y_monetiza: textEmailReport,
+        diagnostico_estrategico: textEmailReport,
+        resumen_diagnostico: textEmailReport,
         nota: textEmailReport,
         note: textEmailReport,
         notes: textEmailReport,
