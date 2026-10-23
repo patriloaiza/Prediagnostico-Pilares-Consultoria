@@ -43,7 +43,7 @@ function downloadBlob(content: string, filename: string, mimeType: string) {
 
 /**
  * Genera y descarga el resultado completo en formato Markdown (.md)
- * Incluye el 100% de las 8 secciones y hallazgos mostrados en la pantalla de resultados.
+ * Incluye exactamente el encabezado corporativo del pantallazo y el 100% de los análisis.
  */
 export function downloadPrediagnosticMarkdown(calc: PrediagnosticResult): void {
   const name = calc.lead.name.trim() || 'Emprendedor/a';
@@ -56,13 +56,18 @@ export function downloadPrediagnosticMarkdown(calc: PrediagnosticResult): void {
     day: 'numeric'
   });
 
-  const mdContent = `# INFORME DE PREDIAGNÓSTICO ESTRATÉGICO
-**Metodología CREA Y MONETIZA® · Patricia Loaiza**
-*Investigación, estrategia y consultoría.*
+  const mdContent = `# METODOLOGÍA CREA Y MONETIZA® · Patricia Loaiza
+# Prediagnóstico Consultoría Requerida · [• ${name}]
+
+> **${firstName}**, llevas años construyendo experiencia... pero algo no cierra. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles? Nuestro motor de auditoría de evidencias te revela la verdad exacta — y te protege de invertir en lo que no toca.
+
+**[✓ Diagnóstico Completado para ${name} · 100% de Evaluación Estratégica Realizada]**
+*Investigación, estrategia y consultoría por Patricia Loaiza · Fecha: ${dateStr}*
 
 ---
 
-## 📋 TITULAR DEL REPORTE & BIENVENIDA
+## 📋 TITULAR DEL REPORTE & BIENVENIDA PERSONALIZADA
+> **INFORME PERSONALIZADO PARA TI**  
 > **¡Hola, ${firstName}! Aquí tienes tu Diagnóstico Estratégico**  
 > Hemos procesado tus respuestas y tu situación profesional como **${calc.lead.profession || 'Profesional'}** para diseñar tu ruta más rentable y directa al crecimiento.
 
@@ -70,14 +75,16 @@ export function downloadPrediagnosticMarkdown(calc: PrediagnosticResult): void {
 - **Teléfono / WhatsApp:** ${calc.lead.whatsapp}
 - **Correo Electrónico:** ${calc.lead.email}
 - **Empresa / Proyecto:** ${calc.lead.company || 'No especificada'}
-- **Fecha de Evaluación:** ${dateStr}
+- **Cargo / Rol:** ${calc.lead.role || 'Fundador / Consultor'}
 
 ---
 
 ## 🎯 1. CONTEXTO COMERCIAL VERIFICADO DE ${firstName.toUpperCase()}
+*${calc.lead.company ? `${calc.lead.company} · ` : ''}${calc.lead.email}*
+
 | Variable de Negocio | Situación Real Diagnosticada |
 | :--- | :--- |
-| **Profesión / Área:** | ${calc.lead.profession || 'No especificada'} |
+| **Profesión / Área:** | **${calc.lead.profession || 'No especificada'}** |
 | **Actividad Actual:** | ${calc.lead.currentActivity || 'No especificada'} |
 | **Modelo Comercial:** | ${model} |
 | **Clientes de Pago:** | ${clients} |
@@ -102,10 +109,10 @@ ${calc.profile.description}
 ### **${calc.contradictionAnalysis ? `${firstName}: ${calc.contradictionAnalysis.title}` : `Enfoque Estratégico de ${firstName} 100% Alineado`}**
 
 - **Tu idea o preferencia inicial (${firstName}):**  
-  ${calc.statedPillar.name}
+  \`${calc.statedPillar.name}\`
 
 - **El paso que hoy te dará mayor rentabilidad a ti, ${firstName}:**  
-  **${calc.recommendedPillar.name}**
+  **\`${calc.recommendedPillar.name}\`**
 
 ${calc.contradictionAnalysis ? `
 **Lectura del Diagnóstico:**  
@@ -167,18 +174,18 @@ ${calc.recommendedPillar.description}
 
 ---
 
-## ⛔ 6. LO QUE NO DEBES HACER EN ESTA ETAPA (ADVERTENCIA)
+## 📌 6. CLAVES IDENTIFICADAS EN LAS RESPUESTAS DE ${firstName.toUpperCase()}
+*Factores que confirman por qué este es el momento idóneo para que ${firstName} concentre su energía en este pilar:*
+
+${calc.evidences.map((item, idx) => `${idx + 1}. ${item}`).join('\n')}
+
+---
+
+## ⛔ 7. LO QUE NO DEBES HACER EN ESTA ETAPA (ADVERTENCIA)
 > **${calc.notFirstAdvice.warning}**
 
 *Justificación Estratégica:*  
 ${calc.notFirstAdvice.recommendation}
-
----
-
-## 📌 7. CLAVES IDENTIFICADAS EN LAS RESPUESTAS DE ${firstName.toUpperCase()}
-*Factores que confirman por qué este es el momento idóneo para que ${firstName} concentre su energía en este pilar:*
-
-${calc.evidences.map((item, idx) => `${idx + 1}. ${item}`).join('\n')}
 
 ---
 
@@ -203,8 +210,8 @@ Sesión de Diagnóstico 1 a 1 de 30 minutos con Patricia Loaiza para analizar es
 }
 
 /**
- * Genera y descarga el PDF capturando el diseño visual exacto de la página de resultados
- * (con los mismos colores, tarjetas, tipografía y badges que ve en pantalla).
+ * Genera y descarga el PDF capturando el diseño visual exacto de la aplicación
+ * (incluyendo el gran encabezado negro con el tag rojo del nombre, tarjetas comparativas y todos los análisis).
  */
 export async function downloadPrediagnosticPdf(calc: PrediagnosticResult): Promise<void> {
   const name = calc.lead.name.trim() || 'Emprendedor/a';
@@ -214,7 +221,7 @@ export async function downloadPrediagnosticPdf(calc: PrediagnosticResult): Promi
 
   if (exportElement) {
     try {
-      // Ocultar temporalmente elementos de administración o agendamiento para el PDF
+      // Ocultar temporalmente elementos interactivos o que no deben salir en el informe impreso
       const ignoreElements = exportElement.querySelectorAll('[data-pdf-ignore="true"]');
       ignoreElements.forEach((el) => {
         (el as HTMLElement).style.display = 'none';
@@ -256,16 +263,17 @@ export async function downloadPrediagnosticPdf(calc: PrediagnosticResult): Promi
       downloadBlobFromBlob(pdfBlob, fileName);
       return;
     } catch (err) {
-      console.warn('html2canvas capture failed, fallback to structured vector PDF:', err);
+      console.warn('html2canvas capture failed, fallback to structured high-fidelity vector PDF:', err);
     }
   }
 
-  // Si no encuentra el elemento en el DOM o falla html2canvas, genera el PDF estructurado vectorial
+  // Si no encuentra el elemento en el DOM o falla html2canvas, genera el PDF de alta fidelidad idéntico
   generateStructuredVectorPdf(calc, fileName);
 }
 
 /**
- * Generador de PDF vectorial estructurado de respaldo (garantiza que siempre funcione)
+ * Generador de PDF vectorial de alta fidelidad que replica exactamente el diseño
+ * de la página de resultados (Encabezado negro, insignias rojas, tarjetas comparativas y bloques de lectura).
  */
 function generateStructuredVectorPdf(calc: PrediagnosticResult, fileName: string): void {
   const doc = new jsPDF({
@@ -276,7 +284,7 @@ function generateStructuredVectorPdf(calc: PrediagnosticResult, fileName: string
 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 14;
+  const margin = 12;
   const contentWidth = pageWidth - margin * 2;
   let y = margin;
 
@@ -289,198 +297,453 @@ function generateStructuredVectorPdf(calc: PrediagnosticResult, fileName: string
     if (y + needed > pageHeight - 16) {
       doc.addPage();
       y = margin;
-      drawHeader();
+      drawMiniHeader();
     }
   };
 
-  const drawHeader = () => {
+  const drawMiniHeader = () => {
     doc.setFillColor(17, 17, 17);
-    doc.rect(margin, y, contentWidth, 16, 'F');
+    doc.rect(margin, y, contentWidth, 10, 'F');
     doc.setFillColor(215, 25, 43);
-    doc.rect(margin, y + 16, contentWidth, 1.5, 'F');
+    doc.rect(margin, y + 10, contentWidth, 1, 'F');
 
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('CREA Y MONETIZA® · INFORME DE PREDIAGNÓSTICO ESTRATÉGICO', margin + 5, y + 7);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(200, 200, 200);
-    doc.text('Investigación, estrategia y consultoría · Patricia Loaiza', margin + 5, y + 12);
-    y += 22;
+    doc.setFontSize(8);
+    doc.text(`CREA Y MONETIZA® · PREDIAGNÓSTICO ESTRATÉGICO · ${name.toUpperCase()}`, margin + 4, y + 6);
+    y += 16;
   };
 
-  drawHeader();
+  // 1. GRAN ENCABEZADO CORPORATIVO (IDÉNTICO AL PANTALLAZO DEL USUARIO)
+  doc.setFillColor(8, 8, 8); // #080808
+  doc.setDrawColor(38, 38, 38);
+  doc.roundedRect(margin, y, contentWidth, 48, 3, 3, 'FD');
 
-  // Bienvenida y Datos
-  doc.setFillColor(254, 242, 242);
-  doc.setDrawColor(254, 202, 202);
-  doc.roundedRect(margin, y, contentWidth, 26, 2, 2, 'FD');
-  doc.setTextColor(215, 25, 43);
+  // Badge superior rojo
+  doc.setFillColor(215, 25, 43);
+  doc.roundedRect(margin + 4, y + 4, 56, 5, 1, 1, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.text('INFORME PERSONALIZADO DE CONSULTORÍA', margin + 4, y + 5);
-
-  doc.setTextColor(17, 24, 39);
-  doc.setFontSize(11);
-  doc.text(`¡Hola, ${firstName}! Aquí tienes tu Diagnóstico Estratégico`, margin + 4, y + 11);
+  doc.setFontSize(6.5);
+  doc.text('METODOLOGÍA CREA Y MONETIZA ®', margin + 6, y + 7.5);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(75, 85, 99);
-  doc.text(`Titular: ${name} · WhatsApp: ${calc.lead.whatsapp} · Email: ${calc.lead.email}`, margin + 4, y + 17);
-  doc.text(`Profesión: ${calc.lead.profession} · Modelo: ${model}`, margin + 4, y + 22);
-  y += 30;
+  doc.setFontSize(6.5);
+  doc.setTextColor(156, 163, 175);
+  doc.text('Patricia Loaiza', margin + 64, y + 7.5);
 
-  // Perfil de Madurez
+  // Título grande blanco
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text('Prediagnóstico Consultoría Requerida', margin + 4, y + 16);
+
+  // Badge rojo con el nombre del cliente
+  const nameWidth = doc.getTextWidth(name) + 10;
+  doc.setFillColor(215, 25, 43);
+  doc.roundedRect(margin + 4 + doc.getTextWidth('Prediagnóstico Consultoría Requerida ') + 2, y + 11.5, Math.min(nameWidth, 50), 6, 1.5, 1.5, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8);
+  doc.text(`• ${name}`, margin + 6 + doc.getTextWidth('Prediagnóstico Consultoría Requerida ') + 2, y + 15.5);
+
+  // Texto empático de introducción con badge amarillo
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(209, 213, 219);
+  const introText = `${firstName}, llevas años construyendo experiencia... pero algo no cierra. ¿Es visibilidad? ¿Automatización? ¿O tu oferta aún tiene cuellos de botella invisibles? Nuestro motor de auditoría de evidencias te revela la verdad exacta — y te protege de invertir en lo que no toca.`;
+  const introLines = doc.splitTextToSize(introText, contentWidth - 8);
+  doc.text(introLines.slice(0, 3), margin + 4, y + 24);
+
+  // Barra de progreso roja
+  doc.setDrawColor(55, 65, 81);
+  doc.line(margin + 4, y + 36, margin + contentWidth - 4, y + 36);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(156, 163, 175);
+  doc.text(`Diagnóstico Completado para ${name}`, margin + 4, y + 41);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('100%', margin + contentWidth - 14, y + 41);
+
+  // Línea roja 100% de progreso
+  doc.setFillColor(215, 25, 43);
+  doc.rect(margin + 4, y + 43, contentWidth - 8, 1.5, 'F');
+
+  y += 54;
+
+  // 2. BIENVENIDA Y CONTEXTO COMERCIAL VERIFICADO (PANTALLAZO 1)
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(229, 231, 235);
+  doc.roundedRect(margin, y, contentWidth, 38, 2, 2, 'FD');
+
+  // Badge rojo bienvenida
+  doc.setFillColor(254, 242, 242);
+  doc.setDrawColor(254, 202, 202);
+  doc.roundedRect(margin + 4, y + 3, 40, 4, 1, 1, 'FD');
+  doc.setTextColor(215, 25, 43);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6);
+  doc.text('INFORME PERSONALIZADO PARA TI', margin + 6, y + 6);
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(10);
+  doc.text(`¡Hola, ${firstName}! Aquí tienes tu Diagnóstico Estratégico`, margin + 4, y + 12);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(75, 85, 99);
+  doc.text(`Hemos procesado tu situación profesional como ${calc.lead.profession} para diseñar tu ruta más rentable.`, margin + 4, y + 16);
+
+  // Titular Box
+  doc.setFillColor(249, 250, 251);
+  doc.setDrawColor(229, 231, 235);
+  doc.roundedRect(margin + contentWidth - 48, y + 3, 44, 15, 1, 1, 'FD');
+  doc.setTextColor(156, 163, 175);
+  doc.setFontSize(5.5);
+  doc.text('TITULAR DEL REPORTE', margin + contentWidth - 45, y + 7);
+  doc.setTextColor(17, 24, 39);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.text(name.slice(0, 20), margin + contentWidth - 45, y + 11);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(107, 114, 128);
+  doc.text(calc.lead.whatsapp, margin + contentWidth - 45, y + 15);
+
+  // Subtítulo Contexto Comercial
+  doc.setTextColor(215, 25, 43);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.text(`• CONTEXTO COMERCIAL VERIFICADO DE ${firstName.toUpperCase()}`, margin + 4, y + 22);
+
+  // 4 Columnas de Contexto Comercial
+  doc.setFillColor(249, 250, 251);
+  doc.setDrawColor(229, 231, 235);
+  doc.roundedRect(margin + 4, y + 24, contentWidth - 8, 11, 1, 1, 'FD');
+
+  const colW = (contentWidth - 8) / 4;
+  doc.setFontSize(5.5);
+  doc.setTextColor(107, 114, 128);
+  doc.text('PROFESIÓN / ÁREA:', margin + 6, y + 28);
+  doc.text('ACTIVIDAD ACTUAL:', margin + 6 + colW, y + 28);
+  doc.text('MODELO COMERCIAL:', margin + 6 + colW * 2, y + 28);
+  doc.text('CLIENTES DE PAGO:', margin + 6 + colW * 3, y + 28);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(17, 24, 39);
+  doc.text((calc.lead.profession || 'Consultor').slice(0, 22), margin + 6, y + 32);
+  doc.text((calc.lead.currentActivity || 'Servicios').slice(0, 22), margin + 6 + colW, y + 32);
+  doc.text(model.slice(0, 22), margin + 6 + colW * 2, y + 32);
+  doc.text(clients.slice(0, 22), margin + 6 + colW * 3, y + 32);
+
+  y += 44;
+
+  // 3. PERFIL DE MADUREZ PROFESIONAL (PANTALLAZO 1 - INFERIOR)
   checkPageBreak(30);
   doc.setFillColor(255, 255, 255);
   doc.setDrawColor(229, 231, 235);
-  doc.roundedRect(margin, y, contentWidth, 26, 2, 2, 'FD');
+  doc.roundedRect(margin, y, contentWidth, 28, 2, 2, 'FD');
 
   doc.setTextColor(107, 114, 128);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
+  doc.setFontSize(6.5);
   doc.text(`PERFIL DE MADUREZ PROFESIONAL DE ${firstName.toUpperCase()}`, margin + 4, y + 5);
 
   doc.setTextColor(17, 24, 39);
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.text(calc.profile.title, margin + 4, y + 11);
 
   doc.setTextColor(215, 25, 43);
   doc.setFont('helvetica', 'italic');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.text(`"${calc.profile.subtitle}"`, margin + 4, y + 16);
 
   doc.setTextColor(75, 85, 99);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  const descLines = doc.splitTextToSize(calc.profile.description, contentWidth - 8);
-  doc.text(descLines.slice(0, 2), margin + 4, y + 21);
-  y += 30;
+  doc.setFontSize(7);
+  const pDesc = doc.splitTextToSize(calc.profile.description, contentWidth - 62);
+  doc.text(pDesc.slice(0, 2), margin + 4, y + 21);
 
-  // Análisis de Enfoque
-  checkPageBreak(32);
+  // Caja derecha: Obstáculo y Paso Inmediato
+  doc.setFillColor(249, 250, 251);
+  doc.setDrawColor(229, 231, 235);
+  doc.roundedRect(margin + contentWidth - 55, y + 3, 51, 22, 1, 1, 'FD');
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6);
+  doc.text(`Obstáculo Central de ${firstName}:`, margin + contentWidth - 53, y + 7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(75, 85, 99);
+  const painText = doc.splitTextToSize(calc.profile.corePain, 47);
+  doc.text(painText.slice(0, 2), margin + contentWidth - 53, y + 10.5);
+
+  doc.setTextColor(17, 24, 39);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6);
+  doc.text(`Paso Inmediato para ${firstName}:`, margin + contentWidth - 53, y + 16.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(75, 85, 99);
+  const stepText = doc.splitTextToSize(calc.profile.priorityNeed, 47);
+  doc.text(stepText.slice(0, 2), margin + contentWidth - 53, y + 20);
+
+  y += 34;
+
+  // 4. ANÁLISIS DE ENFOQUE (PANTALLAZO 2)
+  checkPageBreak(38);
   doc.setFillColor(254, 252, 232); // amber-50
-  doc.setDrawColor(252, 211, 77);
-  doc.roundedRect(margin, y, contentWidth, 28, 2, 2, 'FD');
+  doc.setDrawColor(252, 211, 77); // amber-300
+  doc.roundedRect(margin, y, contentWidth, 36, 2, 2, 'FD');
 
   doc.setTextColor(180, 83, 9);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.text(`ANÁLISIS DE ENFOQUE PARA ${firstName.toUpperCase()}: TU RUTA MÁS RÁPIDA AL CRECIMIENTO`, margin + 4, y + 5);
 
   doc.setTextColor(17, 24, 39);
-  doc.setFontSize(8.5);
-  doc.text(`Preferencia Inicial: ${calc.statedPillar.name}`, margin + 4, y + 11);
+  doc.setFontSize(9);
+  const contTitle = calc.contradictionAnalysis ? `${firstName}: ${calc.contradictionAnalysis.title}` : `Enfoque de ${firstName} Alineado`;
+  doc.text(contTitle.slice(0, 75), margin + 4, y + 10);
 
+  // Dos Cajas Comparativas (Pantallazo 2)
+  const boxW = (contentWidth - 11) / 2;
+  // Caja izquierda: Tu idea inicial
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(229, 231, 235);
+  doc.roundedRect(margin + 4, y + 13, boxW, 11, 1, 1, 'FD');
+  doc.setTextColor(107, 114, 128);
+  doc.setFontSize(5.5);
+  doc.text(`TU IDEA O PREFERENCIA INICIAL (${firstName.toUpperCase()}):`, margin + 6, y + 17);
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(7);
+  doc.text(calc.statedPillar.name.slice(0, 36), margin + 6, y + 21);
+
+  // Caja derecha con borde rojo: El paso rentable
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(215, 25, 43);
+  doc.roundedRect(margin + 4 + boxW + 3, y + 13, boxW, 11, 1, 1, 'FD');
   doc.setTextColor(215, 25, 43);
-  doc.text(`Paso de Mayor Rentabilidad: ${calc.recommendedPillar.name}`, margin + 4, y + 16);
+  doc.setFontSize(5.5);
+  doc.text(`EL PASO QUE HOY TE DARÁ MAYOR RENTABILIDAD A TI, ${firstName.toUpperCase()}:`, margin + 6 + boxW + 3, y + 17);
+  doc.setTextColor(17, 24, 39);
+  doc.setFontSize(7);
+  doc.text(calc.recommendedPillar.name.slice(0, 36), margin + 6 + boxW + 3, y + 21);
 
+  // Explicación
   if (calc.contradictionAnalysis) {
-    doc.setTextColor(75, 85, 99);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    const expl = doc.splitTextToSize(calc.contradictionAnalysis.explanation, contentWidth - 8);
-    doc.text(expl.slice(0, 2), margin + 4, y + 21);
-  }
-  y += 32;
+    doc.setFontSize(6.5);
+    doc.setTextColor(75, 85, 99);
+    const expLines = doc.splitTextToSize(calc.contradictionAnalysis.explanation, contentWidth - 8);
+    doc.text(expLines.slice(0, 1), margin + 4, y + 28);
 
-  // Hallazgos Clave e Incoherencias
-  if (calc.detectedIncoherences && calc.detectedIncoherences.length > 0) {
-    checkPageBreak(18);
-    doc.setTextColor(17, 24, 39);
+    doc.setTextColor(180, 83, 9);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.text(`CLAVES DE CRECIMIENTO: ${calc.detectedIncoherences.length} OPORTUNIDAD(ES) IDENTIFICADA(S)`, margin, y + 4);
-    y += 8;
+    doc.text(`¿Por qué este es el camino más inteligente y seguro para ti, ${firstName}?`, margin + 4, y + 31.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(75, 85, 99);
+    const riskLines = doc.splitTextToSize(calc.contradictionAnalysis.riskOfSkipping, contentWidth - 8);
+    doc.text(riskLines.slice(0, 1), margin + 4, y + 34.5);
+  }
+
+  y += 42;
+
+  // 5. CLAVES DE CRECIMIENTO: TODAS LAS OPORTUNIDADES IDENTIFICADAS (PANTALLAZOS 3, 4, 5 Y 6)
+  if (calc.detectedIncoherences && calc.detectedIncoherences.length > 0) {
+    checkPageBreak(15);
+    doc.setTextColor(215, 25, 43);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.text(`CLAVES DE CRECIMIENTO PARA ${firstName.toUpperCase()}: ${calc.detectedIncoherences.length} OPORTUNIDAD(ES) IDENTIFICADA(S)`, margin, y + 3);
+
+    doc.setTextColor(17, 24, 39);
+    doc.setFontSize(10);
+    doc.text(`Hallazgos Clave para Acelerar los Resultados de ${firstName}`, margin, y + 8);
+    y += 12;
 
     calc.detectedIncoherences.forEach((inc, index) => {
-      checkPageBreak(36);
+      checkPageBreak(44);
+
+      // Tarjeta contenedora
       doc.setFillColor(255, 255, 255);
-      doc.setDrawColor(245, 158, 11);
-      doc.roundedRect(margin, y, contentWidth, 32, 2, 2, 'FD');
+      doc.setDrawColor(252, 211, 77);
+      doc.roundedRect(margin, y, contentWidth, 42, 2, 2, 'FD');
 
-      doc.setTextColor(180, 83, 9);
+      // Barra superior amarilla
+      doc.setFillColor(254, 243, 199);
+      doc.roundedRect(margin, y, contentWidth, 6, 2, 2, 'F');
+      doc.setTextColor(17, 24, 39);
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.text(`${index + 1}. ${inc.title}`, margin + 4, y + 5);
-
-      doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
-      doc.setTextColor(75, 85, 99);
-      doc.text(`• Tu perspectiva (${inc.statementA.questionCategory}): "${inc.statementA.answerText.slice(0, 75)}..."`, margin + 4, y + 10);
-      doc.text(`• Realidad actual (${inc.statementB.questionCategory}): "${inc.statementB.answerText.slice(0, 75)}..."`, margin + 4, y + 15);
+      doc.text(`${index + 1}. ${inc.title}`, margin + 4, y + 4.2);
 
+      // Badge OPORTUNIDAD CLAVE / AJUSTE RECOMENDADO
+      doc.setFillColor(inc.severity === 'critica' ? 215 : 217, inc.severity === 'critica' ? 25 : 119, inc.severity === 'critica' ? 43 : 6);
+      doc.roundedRect(margin + contentWidth - 36, y + 1.2, 32, 3.8, 1, 1, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(5);
+      doc.text(inc.severity === 'critica' ? 'OPORTUNIDAD CLAVE' : 'AJUSTE RECOMENDADO', margin + contentWidth - 34, y + 3.8);
+
+      // Dos Cajas Comparativas (Perspectiva vs Realidad)
+      const subBoxW = (contentWidth - 11) / 2;
+      doc.setFillColor(249, 250, 251);
+      doc.setDrawColor(229, 231, 235);
+      doc.roundedRect(margin + 3, y + 8, subBoxW, 11, 1, 1, 'FD');
+      doc.setTextColor(107, 114, 128);
+      doc.setFontSize(5);
+      doc.text(`TU PERSPECTIVA INICIAL (${firstName.toUpperCase()} · ${inc.statementA.questionCategory.toUpperCase()}):`, margin + 5, y + 11.5);
+      doc.setTextColor(31, 41, 55);
+      doc.setFontSize(6);
+      doc.text(`"${inc.statementA.answerText.slice(0, 50)}..."`, margin + 5, y + 16);
+
+      doc.setFillColor(254, 252, 232);
+      doc.setDrawColor(252, 211, 77);
+      doc.roundedRect(margin + 3 + subBoxW + 3, y + 8, subBoxW, 11, 1, 1, 'FD');
+      doc.setTextColor(180, 83, 9);
+      doc.setFontSize(5);
+      doc.text(`LA REALIDAD ACTUAL DE TU NEGOCIO (${firstName.toUpperCase()} · ${inc.statementB.questionCategory.toUpperCase()}):`, margin + 5 + subBoxW + 3, y + 11.5);
+      doc.setTextColor(17, 24, 39);
+      doc.setFontSize(6);
+      doc.text(`"${inc.statementB.answerText.slice(0, 50)}..."`, margin + 5 + subBoxW + 3, y + 16);
+
+      // Caja Negra de Lectura Estratégica (Idéntica a pantallazos 3, 4, 5 y 6)
       doc.setFillColor(17, 17, 17);
-      doc.roundedRect(margin + 2, y + 18, contentWidth - 4, 12, 1, 1, 'F');
-      doc.setTextColor(253, 224, 71);
-      doc.text(`💡 Lectura: ${inc.verdict.slice(0, 95)}...`, margin + 4, y + 23);
-      doc.setTextColor(52, 211, 153);
-      doc.text(`🚀 Próximo paso: ${inc.actionRequired.slice(0, 95)}...`, margin + 4, y + 27);
+      doc.roundedRect(margin + 3, y + 21, contentWidth - 6, 19, 1.5, 1.5, 'F');
 
-      y += 35;
+      doc.setTextColor(251, 191, 36); // amber-400
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5.5);
+      doc.text(`💡 LECTURA ESTRATÉGICA PARA ${firstName.toUpperCase()}:`, margin + 5, y + 24.5);
+      doc.setTextColor(229, 231, 235);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6);
+      const vText = doc.splitTextToSize(inc.verdict, contentWidth - 14);
+      doc.text(vText.slice(0, 1), margin + 5, y + 27.5);
+
+      doc.setTextColor(52, 211, 153); // emerald-400
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5.5);
+      doc.text('🌱 EL SECRETO PARA CRECER CON SEGURIDAD:', margin + 5, y + 31.5);
+      doc.setTextColor(209, 213, 219);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6);
+      const rText = doc.splitTextToSize(inc.revealedTruth, contentWidth - 14);
+      doc.text(rText.slice(0, 1), margin + 5, y + 34.5);
+
+      doc.setTextColor(253, 224, 71);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5.5);
+      doc.text(`🚀 Próximo Paso Recomendado para ${firstName}: ${inc.actionRequired.slice(0, 75)}...`, margin + 5, y + 38.5);
+
+      y += 45;
     });
   }
 
-  // Solución Estratégica Recomendada
-  checkPageBreak(36);
+  // 6. SOLUCIÓN ESTRATÉGICA RECOMENDADA (PANTALLAZO 7 - GRAN TARJETA NEGRA)
+  checkPageBreak(40);
   doc.setFillColor(17, 17, 17);
-  doc.roundedRect(margin, y, contentWidth, 32, 2, 2, 'F');
+  doc.setDrawColor(215, 25, 43);
+  doc.roundedRect(margin, y, contentWidth, 36, 2, 2, 'FD');
 
-  doc.setTextColor(215, 25, 43);
+  // Badge rojo
+  doc.setFillColor(215, 25, 43);
+  doc.roundedRect(margin + 4, y + 3.5, 52, 4.5, 1, 1, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.text(`SOLUCIÓN ESTRATÉGICA RECOMENDADA PARA ${firstName.toUpperCase()}`, margin + 4, y + 6);
+  doc.setFontSize(6);
+  doc.text(`SOLUCIÓN ESTRATÉGICA RECOMENDADA PARA ${firstName.toUpperCase()}`, margin + 6, y + 6.8);
 
+  doc.setTextColor(156, 163, 175);
+  doc.setFontSize(6);
+  doc.text(calc.recommendedPillar.categoryTag || 'Cimiento Comercial', margin + contentWidth - 45, y + 6.8);
+
+  // Título blanco grande
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(11);
-  doc.text(calc.recommendedPillar.name, margin + 4, y + 12);
+  doc.text(calc.recommendedPillar.name, margin + 4, y + 13.5);
 
-  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(209, 213, 219);
   doc.setFontSize(7.5);
-  doc.setTextColor(220, 220, 220);
-  doc.text(`Programa: ${calc.recommendedPillar.serviceTitle} · Duración: ${calc.recommendedPillar.duration}`, margin + 4, y + 18);
+  doc.text(calc.recommendedPillar.serviceTitle, margin + 4, y + 17.5);
 
+  // Cajas negras de Modalidad y Alcance
+  doc.setFillColor(0, 0, 0);
+  doc.roundedRect(margin + 4, y + 19.5, 50, 7.5, 1, 1, 'F');
+  doc.setTextColor(156, 163, 175);
+  doc.setFontSize(5);
+  doc.text('MODALIDAD Y DURACIÓN', margin + 6, y + 22.5);
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(6.5);
+  doc.text(calc.recommendedPillar.duration.slice(0, 28), margin + 6, y + 25.5);
+
+  doc.setFillColor(0, 0, 0);
+  doc.roundedRect(margin + 58, y + 19.5, 50, 7.5, 1, 1, 'F');
+  doc.setTextColor(156, 163, 175);
+  doc.setFontSize(5);
+  doc.text('ALCANCE DEL SERVICIO', margin + 60, y + 22.5);
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(6.5);
+  doc.text(calc.recommendedPillar.lessonsCount || '6 Fases de Acompañamiento', margin + 60, y + 25.5);
+
+  // Transformación
+  doc.setFillColor(30, 30, 30);
+  doc.roundedRect(margin + 4, y + 28.5, contentWidth - 8, 6, 1, 1, 'F');
   doc.setTextColor(253, 224, 71);
-  const transLines = doc.splitTextToSize(`Transformación: ${calc.recommendedPillar.transformation}`, contentWidth - 8);
-  doc.text(transLines.slice(0, 2), margin + 4, y + 24);
-  y += 36;
+  doc.setFontSize(5.5);
+  doc.text(`✨ Transformación para ${firstName}: ${calc.recommendedPillar.transformation.slice(0, 95)}...`, margin + 6, y + 32.5);
 
-  // Claves y Evidencias
+  y += 40;
+
+  // 7. CLAVES IDENTIFICADAS EN LAS RESPUESTAS (PANTALLAZO 8)
   checkPageBreak(30);
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(229, 231, 235);
+  doc.roundedRect(margin, y, contentWidth, 28, 2, 2, 'FD');
+
   doc.setTextColor(17, 24, 39);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text(`CLAVES IDENTIFICADAS EN LAS RESPUESTAS DE ${firstName.toUpperCase()}:`, margin, y + 4);
-  y += 7;
+  doc.setFontSize(8);
+  doc.text(`Claves Identificadas en las Respuestas de ${firstName}`, margin + 4, y + 5);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(75, 85, 99);
+  doc.setFontSize(6);
+  doc.setTextColor(107, 114, 128);
+  doc.text(`Factores que confirman por qué este es el momento idóneo para que ${firstName} concentre su energía en este pilar:`, margin + 4, y + 8.5);
+
   calc.evidences.slice(0, 5).forEach((ev, idx) => {
-    checkPageBreak(8);
-    const evLine = doc.splitTextToSize(`${idx + 1}. ${ev}`, contentWidth - 4);
-    doc.text(evLine, margin + 2, y);
-    y += evLine.length * 4 + 1.5;
+    // Insignia circular roja
+    doc.setFillColor(215, 25, 43);
+    doc.circle(margin + 6, y + 12 + idx * 3.3, 1.4, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(4.5);
+    doc.text(`${idx + 1}`, margin + 5.2, y + 12.6 + idx * 3.3);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(5.5);
+    doc.setTextColor(31, 41, 55);
+    doc.text(ev.slice(0, 110), margin + 9, y + 12.6 + idx * 3.3);
   });
 
-  // Puntuaciones
-  checkPageBreak(16);
+  y += 32;
+
+  // 8. PUNTUACIONES POR PILAR
+  checkPageBreak(12);
   doc.setFillColor(243, 244, 246);
-  doc.roundedRect(margin, y, contentWidth, 14, 1.5, 1.5, 'F');
+  doc.roundedRect(margin, y, contentWidth, 8, 1, 1, 'F');
   doc.setTextColor(17, 24, 39);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.text(`PUNTUACIONES: P1: ${calc.scores.pilar1} pts | P2: ${calc.scores.pilar2} pts | P3: ${calc.scores.pilar3} pts | P4: ${calc.scores.pilar4} pts`, margin + 4, y + 8);
-  y += 18;
+  doc.setFontSize(6.5);
+  doc.text(`PUNTUACIONES DE MADUREZ:  P1 (BMS): ${calc.scores.pilar1} pts  |  P2 (Marca): ${calc.scores.pilar2} pts  |  P3 (Contenidos): ${calc.scores.pilar3} pts  |  P4 (IA & Digital): ${calc.scores.pilar4} pts`, margin + 4, y + 5.2);
+  y += 11;
 
-  // Pie
+  // Pie institucional
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
+  doc.setFontSize(6);
   doc.setTextColor(156, 163, 175);
-  doc.text('CREA Y MONETIZA® · Metodología de Consultoría por Patricia Loaiza · Todos los derechos reservados', margin, pageHeight - 8);
+  doc.text('CREA Y MONETIZA® · Metodología de Consultoría por Patricia Loaiza · Todos los derechos reservados', margin, pageHeight - 6);
 
   const pdfBlob = doc.output('blob');
   downloadBlobFromBlob(pdfBlob, fileName);

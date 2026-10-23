@@ -783,7 +783,7 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
   const userFullName = activeUserName || 'Emprendedor/a';
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8">
+    <div id="prediagnostic-results-export" className="w-full max-w-4xl mx-auto px-4 py-8">
       {/* Encabezado Corporativo CREA Y MONETIZA */}
       <div className="bg-[#080808] text-white rounded-2xl p-6 sm:p-8 mb-6 border border-gray-800 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D7192B]/10 rounded-full blur-3xl pointer-events-none" />
@@ -1175,7 +1175,7 @@ ${calcResult.notFirstAdvice.warning}<br/><br/>
       {/* PASO FINAL: RESULTADOS, VERIFICACIÓN DE SESGOS Y AGENDAMIENTO */}
       {/* ============================================================ */}
       {currentStep === RESULTS_STEP && result && (
-        <div id="prediagnostic-results-export" className="space-y-6 animate-in fade-in duration-300">
+        <div className="space-y-6 animate-in fade-in duration-300">
           {/* BARRA DE CONTROL DE PRUEBAS DE ADMINISTRADORA */}
           {activeTestCase && (
             <div data-pdf-ignore="true" className="bg-neutral-900 border-2 border-amber-400/80 rounded-2xl p-4 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
