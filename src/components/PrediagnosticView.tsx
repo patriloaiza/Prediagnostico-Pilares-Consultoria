@@ -43,6 +43,8 @@ import {
   generateAppointmentConfirmationHtmlReport,
   generateDiagnosticTextReport,
   generateAppointmentDiagnosticReport,
+  generateAppointmentDiagnosticTextReport,
+  generateDiagnosticCardsHtml,
   OFFICIAL_ADMIN_EMAIL
 } from '../utils/ghlEmailTemplate';
 import {
@@ -532,7 +534,8 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
       const htmlEmailReport = generateDiagnosticHtmlReport(calcResult, bookingLink);
       const htmlAppointmentReport = generateAppointmentConfirmationHtmlReport(calcResult);
       const textEmailReport = generateDiagnosticTextReport(calcResult, bookingLink);
-      const appointmentDiagnosticReport = generateAppointmentDiagnosticReport(calcResult);
+      const appointmentDiagnosticReport = generateAppointmentDiagnosticReport(calcResult); // Tarjetas HTML de alta fidelidad idénticas a Valeria
+      const appointmentDiagnosticTextReport = generateAppointmentDiagnosticTextReport(calcResult); // Texto plano para notas de CRM
       const fullMarkdown = generatePrediagnosticMarkdown(calcResult);
 
       // Cadenas ricas, persuasivas y de alto valor para los campos de GoHighLevel y correos
@@ -580,10 +583,23 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         email_html_prediagnostico: htmlEmailReport,
         email_html_cita_confirmada: htmlAppointmentReport,
         email_html_agendado: htmlAppointmentReport,
+
+        // Informe Modular de Alta Fidelidad Visual (Tarjetas idénticas a las de Valeria)
         diagnostico_estrategico_crea_y_monetiza: appointmentDiagnosticReport,
-        diagnostico_estrategico_html: htmlAppointmentReport,
-        diagnostico_resumen_texto: appointmentDiagnosticReport,
+        diagnostico_estrategico_html: appointmentDiagnosticReport,
+        diagnostico_html: appointmentDiagnosticReport,
+        diagnostico_cards_html: appointmentDiagnosticReport,
+        resumen_diagnostico: appointmentDiagnosticReport,
         resultado_diagnostico: appointmentDiagnosticReport,
+
+        // Versión en texto plano para notas de contacto y CRM
+        diagnostico_resumen_texto: appointmentDiagnosticTextReport,
+        resumen_ejecutivo: appointmentDiagnosticTextReport,
+        resumen_ejecutivo_texto: appointmentDiagnosticTextReport,
+        nota: appointmentDiagnosticTextReport,
+        note: appointmentDiagnosticTextReport,
+        notes: appointmentDiagnosticTextReport,
+        comentarios: appointmentDiagnosticTextReport,
         markdown_completo: fullMarkdown,
         enlace_calendario: bookingLink,
         booking_url: bookingLink,
@@ -610,15 +626,6 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         actividad_actual: calcResult.lead.currentActivity,
         modelo_comercializacion: modelLabel,
         estado_clientes_pago: clientsLabel,
-
-        // Resumen ejecutivo para notas y campos del CRM (formato ejecutivo sin caracteres ASCII toscos)
-        resumen_ejecutivo: appointmentDiagnosticReport,
-        resumen_ejecutivo_texto: appointmentDiagnosticReport,
-        resumen_diagnostico: appointmentDiagnosticReport,
-        nota: appointmentDiagnosticReport,
-        note: appointmentDiagnosticReport,
-        notes: appointmentDiagnosticReport,
-        comentarios: appointmentDiagnosticReport,
         
         // Empresa y rol
         company_name: calcResult.lead.company || 'No especificada',
