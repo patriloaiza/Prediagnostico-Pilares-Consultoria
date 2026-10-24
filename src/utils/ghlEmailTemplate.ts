@@ -462,16 +462,25 @@ export function generateDiagnosticHtmlReport(
           </tr>
 
           <!-- PIE DEL CORREO -->
+          <!-- PIE DEL CORREO & CUMPLIMIENTO RGPD / GDPR -->
           <tr>
-            <td style="background-color: #f9fafb; padding: 22px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
-              <div style="font-size: 13px; font-weight: 900; color: #111827;">
+            <td style="background-color: #f9fafb; padding: 24px 24px 28px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
+              <div style="font-size: 13px; font-weight: 900; color: #111827; letter-spacing: 0.5px;">
                 CREA Y MONETIZA®
               </div>
               <div style="font-size: 11.5px; color: #6b7280; margin-top: 3px;">
-                Metodología de Consultoría e Investigación Estratégica por Patricia Loaiza
+                Metodología de Consultoría e Investigación Estratégica · Patricia Loaiza
               </div>
-              <div style="font-size: 10.5px; color: #9ca3af; margin-top: 10px;">
-                Copia enviada a: ${calc.lead.email} · Notificación administrativa: ${OFFICIAL_ADMIN_EMAIL}
+              <div style="margin-top: 12px; font-size: 11px; line-height: 1.5; color: #6b7280; max-width: 520px; margin-left: auto; margin-right: auto;">
+                Recibes este correo porque solicitaste y completaste el test de prediagnóstico estratégico en nuestra plataforma para evaluar la madurez de tu modelo de negocio.
+              </div>
+              <div style="margin-top: 10px; font-size: 10.5px; color: #9ca3af;">
+                Tratamiento confidencial de datos personales conforme al RGPD y normativas de privacidad.
+              </div>
+              <div style="margin-top: 12px; font-size: 11px;">
+                <a href="{{unsubscribe_link}}" target="_blank" style="color: #6b7280; text-decoration: underline;">
+                  Darse de baja / Cancelar suscripción
+                </a>
               </div>
             </td>
           </tr>
@@ -637,17 +646,25 @@ export function generateAppointmentConfirmationHtmlReport(
             </td>
           </tr>
 
-          <!-- 7. PIE DEL CORREO -->
+          <!-- 7. PIE DEL CORREO & CUMPLIMIENTO RGPD / GDPR -->
           <tr>
-            <td style="background-color: #f9fafb; padding: 22px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
-              <div style="font-size: 13px; font-weight: 900; color: #111827;">
+            <td style="background-color: #f9fafb; padding: 24px 24px 28px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
+              <div style="font-size: 13px; font-weight: 900; color: #111827; letter-spacing: 0.5px;">
                 CREA Y MONETIZA®
               </div>
               <div style="font-size: 11.5px; color: #6b7280; margin-top: 3px;">
-                Metodología de Consultoría e Investigación Estratégica por Patricia Loaiza
+                Metodología de Consultoría e Investigación Estratégica · Patricia Loaiza
               </div>
-              <div style="font-size: 10.5px; color: #9ca3af; margin-top: 10px;">
-                Copia enviada a: ${calc.lead.email} · Notificación administrativa: ${OFFICIAL_ADMIN_EMAIL}
+              <div style="margin-top: 12px; font-size: 11px; line-height: 1.5; color: #6b7280; max-width: 520px; margin-left: auto; margin-right: auto;">
+                Recibes este correo porque completaste tu prediagnóstico estratégico y agendaste una sesión de consultoría personalizada 1 a 1 en Crea y Monetiza®.
+              </div>
+              <div style="margin-top: 10px; font-size: 10.5px; color: #9ca3af;">
+                Tratamiento confidencial de datos personales conforme al RGPD y normativas de privacidad.
+              </div>
+              <div style="margin-top: 12px; font-size: 11px;">
+                <a href="{{unsubscribe_link}}" target="_blank" style="color: #6b7280; text-decoration: underline;">
+                  Darse de baja / Cancelar suscripción
+                </a>
               </div>
             </td>
           </tr>
@@ -751,7 +768,7 @@ Justificación: ${calc.notFirstAdvice.recommendation}
 Reserva aquí tu sesión sin costo para analizar estos hallazgos y trazar tu plan:
 ${bookingUrl}
 --------------------------------------------------
-Notificación administrativa: ${OFFICIAL_ADMIN_EMAIL}
+Información RGPD: Recibes este informe porque completaste el test de prediagnóstico en Crea y Monetiza®. Para cancelar suscripción: {{unsubscribe_link}}
 `.trim();
 }
 
