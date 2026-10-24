@@ -477,10 +477,8 @@ export function generateDiagnosticHtmlReport(
               <div style="margin-top: 10px; font-size: 10.5px; color: #9ca3af;">
                 Tratamiento confidencial de datos personales conforme al RGPD y normativas de privacidad.
               </div>
-              <div style="margin-top: 12px; font-size: 11px;">
-                <a href="{{unsubscribe_url}}" target="_blank" style="color: #6b7280; text-decoration: underline;">
-                  Darse de baja / Cancelar suscripción
-                </a>
+              <div style="margin-top: 12px; font-size: 11px; color: #6b7280;">
+                {{unsubscribe}}
               </div>
             </td>
           </tr>
@@ -661,10 +659,8 @@ export function generateAppointmentConfirmationHtmlReport(
               <div style="margin-top: 10px; font-size: 10.5px; color: #9ca3af;">
                 Tratamiento confidencial de datos personales conforme al RGPD y normativas de privacidad.
               </div>
-              <div style="margin-top: 12px; font-size: 11px;">
-                <a href="{{unsubscribe_url}}" target="_blank" style="color: #6b7280; text-decoration: underline;">
-                  Darse de baja / Cancelar suscripción
-                </a>
+              <div style="margin-top: 12px; font-size: 11px; color: #6b7280;">
+                {{unsubscribe}}
               </div>
             </td>
           </tr>
@@ -768,7 +764,7 @@ Justificación: ${calc.notFirstAdvice.recommendation}
 Reserva aquí tu sesión sin costo para analizar estos hallazgos y trazar tu plan:
 ${bookingUrl}
 --------------------------------------------------
-Información RGPD: Recibes este informe porque completaste el test de prediagnóstico en Crea y Monetiza®. Para cancelar suscripción: {{unsubscribe_link}}
+Información RGPD: Recibes este informe porque completaste el test de prediagnóstico en Crea y Monetiza®. Para cancelar suscripción: {{unsubscribe_url}}
 `.trim();
 }
 
