@@ -478,7 +478,7 @@ export function generateDiagnosticHtmlReport(
                 Tratamiento confidencial de datos personales conforme al RGPD y normativas de privacidad.
               </div>
               <div style="margin-top: 12px; font-size: 11px;">
-                <a href="{{unsubscribe_link}}" target="_blank" style="color: #6b7280; text-decoration: underline;">
+                <a href="{{unsubscribe_url}}" target="_blank" style="color: #6b7280; text-decoration: underline;">
                   Darse de baja / Cancelar suscripción
                 </a>
               </div>
@@ -662,7 +662,7 @@ export function generateAppointmentConfirmationHtmlReport(
                 Tratamiento confidencial de datos personales conforme al RGPD y normativas de privacidad.
               </div>
               <div style="margin-top: 12px; font-size: 11px;">
-                <a href="{{unsubscribe_link}}" target="_blank" style="color: #6b7280; text-decoration: underline;">
+                <a href="{{unsubscribe_url}}" target="_blank" style="color: #6b7280; text-decoration: underline;">
                   Darse de baja / Cancelar suscripción
                 </a>
               </div>
