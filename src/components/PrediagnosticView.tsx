@@ -584,18 +584,23 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         email_html_cita_confirmada: htmlAppointmentReport,
         email_html_agendado: htmlAppointmentReport,
 
-        // Informe Modular de Alta Fidelidad Visual (Tarjetas idénticas a las de Valeria)
+        // Informe Modular de Alta Fidelidad Visual (Tarjetas idénticas a las del correo de Valeria)
         diagnostico_estrategico_crea_y_monetiza: appointmentDiagnosticReport,
         diagnostico_estrategico_html: appointmentDiagnosticReport,
         diagnostico_html: appointmentDiagnosticReport,
         diagnostico_cards_html: appointmentDiagnosticReport,
         resumen_diagnostico: appointmentDiagnosticReport,
         resultado_diagnostico: appointmentDiagnosticReport,
+        resumen_ejecutivo: appointmentDiagnosticReport,
+        resumen_ejecutivo_html: appointmentDiagnosticReport,
+        diagnostico_completo: appointmentDiagnosticReport,
+        diagnostico: appointmentDiagnosticReport,
 
-        // Versión en texto plano para notas de contacto y CRM
+        // Versión en texto plano reservada exclusivamente para notas internas del CRM
+        nota_crm_texto_plano: appointmentDiagnosticTextReport,
+        nota_interna_crm: appointmentDiagnosticTextReport,
+        resumen_texto_plano: appointmentDiagnosticTextReport,
         diagnostico_resumen_texto: appointmentDiagnosticTextReport,
-        resumen_ejecutivo: appointmentDiagnosticTextReport,
-        resumen_ejecutivo_texto: appointmentDiagnosticTextReport,
         nota: appointmentDiagnosticTextReport,
         note: appointmentDiagnosticTextReport,
         notes: appointmentDiagnosticTextReport,

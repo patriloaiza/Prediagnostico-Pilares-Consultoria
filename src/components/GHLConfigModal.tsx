@@ -314,9 +314,13 @@ Investigación, estrategia y consultoría`;
         </table>
       </td>
     </tr>
-  </table>
 </body>
 </html>`;
+
+  const emailTemplateAppointmentHtmlResumen = emailTemplateAppointmentHtml.replace(
+    '{{contact.diagnostico_estrategico_crea_y_monetiza}}',
+    '{{contact.resumen_diagnostico}}'
+  );
 
   const emailTemplateHtmlGuide = `<!-- En GoHighLevel puedes usar el diseño HTML idéntico a la página de resultados y al PDF.
 Para enviarlo de forma 100% dinámica, en tu acción "Send Email", activa el modo código (<>) y pega: -->
@@ -823,29 +827,29 @@ con fondo negro, tarjetas de contraste, insignias rojas, las 5 evidencias y el b
                       {copiedKey === 'temp_yes_booking_full_html' ? (
                         <>
                           <Check className="w-3.5 h-3.5 text-white" />
-                          <span>¡Plantilla HTML Copiada!</span>
+                          <span>¡Plantilla Copiada (diagnostico_estrategico)!</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5" />
-                          <span>Copiar Plantilla HTML para Flujo 3</span>
+                          <span>Copiar HTML Flujo 3 (con diagnostico_estrategico)</span>
                         </>
                       )}
                     </button>
 
                     <button
-                      onClick={() => handleCopy('{{contact.diagnostico_estrategico_crea_y_monetiza}}', 'temp_yes_booking_html')}
-                      className="px-3 py-1.5 bg-gray-800 hover:bg-black text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs shrink-0"
+                      onClick={() => handleCopy(emailTemplateAppointmentHtmlResumen, 'temp_yes_booking_resumen_html')}
+                      className="px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white font-extrabold rounded-lg text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs shrink-0"
                     >
-                      {copiedKey === 'temp_yes_booking_html' ? (
+                      {copiedKey === 'temp_yes_booking_resumen_html' ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>¡Variable Copiada!</span>
+                          <Check className="w-3.5 h-3.5 text-white" />
+                          <span>¡Plantilla Copiada (resumen_diagnostico)!</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5" />
-                          <span>Copiar Variable</span>
+                          <span>Copiar HTML Flujo 3 (con resumen_diagnostico)</span>
                         </>
                       )}
                     </button>
@@ -853,10 +857,6 @@ con fondo negro, tarjetas de contraste, insignias rojas, las 5 evidencias y el b
                 </div>
 
                 <div className="space-y-2 text-[11px] text-gray-700 mb-3">
-                  <p>
-                    <strong>¿Por qué la fecha y hora solo funcionan en el Flujo 3?:</strong> En GoHighLevel, las variables <code>{'{{appointment.start_time}}'}</code> y <code>{'{{appointment.meeting_location}}'}</code> <u>únicamente se activan en el Flujo 3</u>, porque su disparador es la Cita creada en el calendario. En el Flujo 2 el disparador fue el Webhook, por lo que GHL no sabe cuál cita es y las deja en blanco.
-                  </p>
-                  
                   <div className="p-3 bg-white rounded-xl border border-emerald-300 text-emerald-950 font-medium space-y-1.5">
                     <div>
                       📌 <strong>Configuración en el Flujo 3 («Confirmar agendamiento»):</strong>
@@ -865,8 +865,22 @@ con fondo negro, tarjetas de contraste, insignias rojas, las 5 evidencias y el b
                       <li><strong>Asunto:</strong> <code>{'{{contact.first_name}}'}, ¡Tu Cita está Confirmada! 🎉 + Informe Oficial de Prediagnóstico</code></li>
                       <li><strong>Remitente (From):</strong> <code>Patricia Loaiza &lt;patricia@info.creaymonetiza.online&gt;</code></li>
                       <li><strong>Campo Cco / Bcc:</strong> <code className="bg-emerald-100 text-emerald-900 px-1.5 py-0.5 rounded font-black">{OFFICIAL_ADMIN_EMAIL}</code>.</li>
-                      <li><strong>Cuerpo del correo:</strong> Haz clic en el ícono de código fuente <code>&lt;&gt;</code>, borra todo y pega la <strong>Plantilla HTML de Cita Confirmada</strong> (botón verde de arriba).</li>
+                      <li><strong>Cuerpo del correo:</strong> Haz clic en el ícono de código fuente <code>&lt;&gt;</code>, borra todo y pega la plantilla copiada arriba.</li>
                     </ul>
+                  </div>
+
+                  <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-blue-950 font-medium space-y-1">
+                    <div className="font-bold text-blue-900 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-blue-600" />
+                      ¿Por qué en tu prueba anterior se vio el informe en texto plano con barras ━━━━?
+                    </div>
+                    <p className="text-[11px] text-blue-900/90 leading-relaxed">
+                      El contacto de prueba anterior (<code>patriloaiza.perez+2@gmail.com</code>) guardó en GoHighLevel la versión de texto plano antiguo porque la clave <code>resumen_ejecutivo</code> estaba enviando texto plano.  
+                      <strong>¡Ya está solucionado!</strong> Ahora todas las variables inyectan las <strong>tarjetas HTML con bordes, colores corporativos y tablas idénticas al correo de Valeria</strong>.
+                    </p>
+                    <p className="text-[11px] text-blue-900/90 font-semibold">
+                      👉 Para ver el cambio en tu buzón: haz una prueba con un correo nuevo (por ejemplo <code>+prueba3</code> o pulsando <em>«Enviar Lead de Prueba a GHL»</em>) y agenda tu cita con ese mismo correo.
+                    </p>
                   </div>
 
                   <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 font-medium text-[11px]">
