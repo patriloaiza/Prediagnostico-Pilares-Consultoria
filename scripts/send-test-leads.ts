@@ -3,6 +3,7 @@ import {
   generateDiagnosticHtmlReport,
   generateAppointmentConfirmationHtmlReport,
   generateDiagnosticTextReport,
+  generateAppointmentDiagnosticReport,
   OFFICIAL_ADMIN_EMAIL
 } from '../src/utils/ghlEmailTemplate';
 import { generatePrediagnosticMarkdown } from '../src/utils/exportPrediagnostic';
@@ -21,6 +22,7 @@ async function dispatchLead(
   const htmlEmailReport = generateDiagnosticHtmlReport(calcResult, bookingLink);
   const htmlAppointmentReport = generateAppointmentConfirmationHtmlReport(calcResult);
   const textEmailReport = generateDiagnosticTextReport(calcResult, bookingLink);
+  const appointmentDiagnosticReport = generateAppointmentDiagnosticReport(calcResult);
   const fullMarkdown = generatePrediagnosticMarkdown(calcResult);
 
   const tagsList = [
@@ -53,11 +55,11 @@ async function dispatchLead(
     email_html_prediagnostico: htmlEmailReport,
     email_html_cita_confirmada: htmlAppointmentReport,
     email_html_agendado: htmlAppointmentReport,
-    diagnostico_estrategico_crea_y_monetiza: htmlAppointmentReport,
+    diagnostico_estrategico_crea_y_monetiza: appointmentDiagnosticReport,
     diagnostico_estrategico_html: htmlAppointmentReport,
-    diagnostico_resumen_texto: textEmailReport,
-    resultado_diagnostico: textEmailReport,
-    resumen_ejecutivo: textEmailReport,
+    diagnostico_resumen_texto: appointmentDiagnosticReport,
+    resultado_diagnostico: appointmentDiagnosticReport,
+    resumen_ejecutivo: appointmentDiagnosticReport,
     markdown_completo: fullMarkdown,
     enlace_calendario: bookingLink,
 

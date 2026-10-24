@@ -42,6 +42,7 @@ import {
   generateDiagnosticHtmlReport,
   generateAppointmentConfirmationHtmlReport,
   generateDiagnosticTextReport,
+  generateAppointmentDiagnosticReport,
   OFFICIAL_ADMIN_EMAIL
 } from '../utils/ghlEmailTemplate';
 import {
@@ -531,6 +532,7 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
       const htmlEmailReport = generateDiagnosticHtmlReport(calcResult, bookingLink);
       const htmlAppointmentReport = generateAppointmentConfirmationHtmlReport(calcResult);
       const textEmailReport = generateDiagnosticTextReport(calcResult, bookingLink);
+      const appointmentDiagnosticReport = generateAppointmentDiagnosticReport(calcResult);
       const fullMarkdown = generatePrediagnosticMarkdown(calcResult);
 
       // Cadenas ricas, persuasivas y de alto valor para los campos de GoHighLevel y correos
@@ -578,10 +580,10 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         email_html_prediagnostico: htmlEmailReport,
         email_html_cita_confirmada: htmlAppointmentReport,
         email_html_agendado: htmlAppointmentReport,
-        diagnostico_estrategico_crea_y_monetiza: htmlAppointmentReport,
+        diagnostico_estrategico_crea_y_monetiza: appointmentDiagnosticReport,
         diagnostico_estrategico_html: htmlAppointmentReport,
-        diagnostico_resumen_texto: textEmailReport,
-        resultado_diagnostico: textEmailReport,
+        diagnostico_resumen_texto: appointmentDiagnosticReport,
+        resultado_diagnostico: appointmentDiagnosticReport,
         markdown_completo: fullMarkdown,
         enlace_calendario: bookingLink,
         booking_url: bookingLink,
@@ -609,14 +611,14 @@ ${calcResult.evidences.map((e) => `• ${e}`).join('\n')}
         modelo_comercializacion: modelLabel,
         estado_clientes_pago: clientsLabel,
 
-        // Resumen ejecutivo para notas y campos del CRM
-        resumen_ejecutivo: textEmailReport,
-        resumen_ejecutivo_texto: textEmailReport,
-        resumen_diagnostico: textEmailReport,
-        nota: textEmailReport,
-        note: textEmailReport,
-        notes: textEmailReport,
-        comentarios: textEmailReport,
+        // Resumen ejecutivo para notas y campos del CRM (formato ejecutivo sin caracteres ASCII toscos)
+        resumen_ejecutivo: appointmentDiagnosticReport,
+        resumen_ejecutivo_texto: appointmentDiagnosticReport,
+        resumen_diagnostico: appointmentDiagnosticReport,
+        nota: appointmentDiagnosticReport,
+        note: appointmentDiagnosticReport,
+        notes: appointmentDiagnosticReport,
+        comentarios: appointmentDiagnosticReport,
         
         // Empresa y rol
         company_name: calcResult.lead.company || 'No especificada',

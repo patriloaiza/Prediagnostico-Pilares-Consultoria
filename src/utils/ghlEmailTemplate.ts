@@ -1039,3 +1039,89 @@ ${bookingUrl}
 Notificación administrativa: ${OFFICIAL_ADMIN_EMAIL}
 `.trim();
 }
+
+/**
+ * Genera el informe de diagnóstico estructurado de forma ejecutiva y limpia para el campo de contacto
+ * de GoHighLevel (diagnostico_estrategico_crea_y_monetiza).
+ * Elimina separadores ASCII toscos (===, ---), elimina encabezados duplicados y enlaces de agendamiento
+ * innecesarios (ya que el lead ya agendó su cita), usando jerarquía visual clara y elegante.
+ */
+export function generateAppointmentDiagnosticReport(calc: PrediagnosticResult): string {
+  const name = calc.lead.name.trim() || 'Emprendedor/a';
+  const firstName = name.split(' ')[0] || 'Emprendedor/a';
+  const model = COMMERCIAL_MODELS_LABELS[calc.lead.commercializationModel] || calc.lead.commercializationModel;
+  const clients = PAYING_CLIENTS_LABELS[calc.lead.payingClientsStatus] || calc.lead.payingClientsStatus;
+  const incoherences = calc.detectedIncoherences || [];
+  const evidences = calc.evidences || [];
+
+  return `✓ CONTEXTO COMERCIAL VERIFICADO
+• Profesión / Especialidad: ${calc.lead.profession}
+• Actividad Actual: ${calc.lead.currentActivity}
+• Modelo Comercial: ${model}
+• Clientes de Pago: ${clients}
+• Contacto: ${name} (${calc.lead.email} · ${calc.lead.whatsapp})
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. PERFIL DE MADUREZ PROFESIONAL:
+${calc.profile.title}
+"${calc.profile.subtitle}"
+
+${calc.profile.description}
+
+⚡ Obstáculo Central de ${firstName}:
+${calc.profile.corePain}
+
+🎯 Paso Inmediato para ${firstName}:
+${calc.profile.priorityNeed}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. ANÁLISIS DE ENFOQUE Y RUTA MÁS RÁPIDA:
+• Tu idea inicial (${firstName}): ${calc.statedPillar.name}
+• PASO QUE HOY TE DARÁ MAYOR RENTABILIDAD: ${calc.recommendedPillar.name}
+
+${calc.hasContradiction && calc.contradictionAnalysis ? `⚠️ Discrepancia Detectada:
+${calc.contradictionAnalysis.explanation}
+
+¿Por qué este es el camino más inteligente y seguro para ti?
+${calc.contradictionAnalysis.riskOfSkipping}` : 'Tu objetivo manifestado coincide con el cimiento que tu negocio requiere consolidar.'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. SOLUCIÓN ESTRATÉGICA RECOMENDADA:
+★ ${calc.recommendedPillar.name}
+• Programa Oficial: ${calc.recommendedPillar.serviceTitle}
+• Modalidad y Duración: ${calc.recommendedPillar.duration}
+• Alcance: ${calc.recommendedPillar.lessonsCount || 'Fases de Acompañamiento Estratégico'}
+
+Descripción:
+${calc.recommendedPillar.description}
+
+✨ Transformación Diseñada para ${firstName}:
+${calc.recommendedPillar.transformation}
+${incoherences.length > 0 ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. CLAVES DE CRECIMIENTO (${incoherences.length} OPORTUNIDADES DETECTADAS):
+${incoherences.map((inc, i) => `
+[${i + 1}] ${inc.title.toUpperCase()} (${inc.severity === 'critica' ? 'OPORTUNIDAD CLAVE' : 'AJUSTE RECOMENDADO'})
+• Tu perspectiva: "${inc.statementA.answerText}"
+• La realidad actual: "${inc.statementB.answerText}"
+💡 Lectura Estratégica: ${inc.verdict}
+🌱 El Secreto para Crecer con Seguridad: ${inc.revealedTruth}
+🚀 Próximo Paso Recomendado: ${inc.actionRequired}`).join('\n')}
+` : ''}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. EVIDENCIAS CLAVE IDENTIFICADAS EN TUS RESPUESTAS:
+${evidences.map((e, idx) => `[${idx + 1}] ${e}`).join('\n')}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. LO QUE NO DEBES HACER EN ESTA ETAPA (ADVERTENCIA):
+⛔ ${calc.notFirstAdvice.warning}
+Justificación: ${calc.notFirstAdvice.recommendation}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. RADIOGRAFÍA DE PUNTUACIONES (SOBRE 100 PTS MÁXIMO):
+• Pilar 1 (Estrategia & Oferta BMS): ${calc.scores.pilar1} pts
+• Pilar 2 (Marca Personal & Autoridad): ${calc.scores.pilar2} pts
+• Pilar 3 (Viral Sales Content): ${calc.scores.pilar3} pts
+• Pilar 4 (Digital Business Day & IA): ${calc.scores.pilar4} pts`.trim();
+}
+

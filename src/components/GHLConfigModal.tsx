@@ -279,8 +279,30 @@ Investigación, estrategia y consultoría`;
                 Aquí tienes la radiografía oficial de tu prediagnóstico estratégico que analizaremos juntos durante nuestra sesión:
               </p>
 
-              <!-- INFORME DE DIAGNÓSTICO EN CAJA FORMATEADA (PRESERVA SALTOS Y ESTRUCTURA) -->
-              <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; white-space: pre-wrap; font-size: 13px; line-height: 1.7; color: #1f2937; margin-bottom: 22px;">{{contact.diagnostico_estrategico_crea_y_monetiza}}</div>
+              <!-- RADIOGRAFÍA OFICIAL DE PREDIAGNÓSTICO (ESTILO CORPORATIVO EJECUTIVO DE ALTA FIDELIDAD) -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border: 2px solid #e5e7eb; border-radius: 14px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 6px 18px rgba(0,0,0,0.04);">
+                <tr>
+                  <td style="background-color: #111827; padding: 14px 18px; border-bottom: 3px solid #D7192B;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td>
+                          <span style="font-size: 11px; font-weight: 800; color: #fca5a5; text-transform: uppercase; letter-spacing: 1.5px;">
+                            📋 INFORME OFICIAL DE AUDITORÍA ESTRATÉGICA
+                          </span>
+                        </td>
+                        <td align="right">
+                          <span style="display: inline-block; background-color: rgba(215,25,43,0.25); border: 1px solid #D7192B; color: #ffffff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">
+                            SESIÓN 1 A 1
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 22px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; white-space: pre-wrap; font-size: 13.5px; line-height: 1.75; color: #1f2937; letter-spacing: -0.1px;">{{contact.diagnostico_estrategico_crea_y_monetiza}}</td>
+                </tr>
+              </table>
 
               <!-- CIERRE DE COMPROMISO DE LA SESIÓN -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(135deg, #0d0d0d 0%, #1f2937 100%); border-radius: 14px; text-align: center; margin-bottom: 12px; border: 1px solid #374151;">
