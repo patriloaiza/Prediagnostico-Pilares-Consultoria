@@ -305,12 +305,16 @@ Investigación, estrategia y consultoría`;
 
           <!-- PIE DE CORREO & CUMPLIMIENTO RGPD / GDPR -->
           <tr>
-            <td style="background-color: #f9fafb; padding: 18px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
-              <div style="font-size: 11px; font-weight: 800; color: #4b5563; letter-spacing: 0.5px;">CREA Y MONETIZA®</div>
-              <div style="font-size: 9.5px; color: #6b7280; margin-top: 2px;">Metodología de Consultoría e Investigación Estratégica · Patricia Loaiza</div>
-              <div style="margin-top: 6px; font-size: 8.5px; line-height: 1.4; color: #9ca3af; max-width: 520px; margin-left: auto; margin-right: auto;">
+            <td style="background-color: #f9fafb; padding: 14px 20px; border-top: 1px solid #e5e7eb; text-align: center;">
+              <p style="margin: 0 0 2px 0 !important; font-size: 10px !important; font-weight: 800 !important; color: #4b5563 !important; letter-spacing: 0.5px !important; line-height: 1.2 !important;">
+                CREA Y MONETIZA®
+              </p>
+              <p style="margin: 0 0 4px 0 !important; font-size: 8.5px !important; color: #6b7280 !important; line-height: 1.3 !important;">
+                Metodología de Consultoría e Investigación Estratégica · Patricia Loaiza
+              </p>
+              <p style="margin: 0 !important; font-size: 8px !important; line-height: 1.3 !important; color: #9ca3af !important; max-width: 500px; display: inline-block;">
                 Recibes este correo porque completaste tu prediagnóstico estratégico y agendaste una sesión de consultoría personalizada 1 a 1 en Crea y Monetiza®. Tratamiento confidencial de datos personales conforme al RGPD y normativas de privacidad.
-              </div>
+              </p>
             </td>
           </tr>
         </table>
