@@ -305,17 +305,11 @@ Investigación, estrategia y consultoría`;
 
           <!-- PIE DE CORREO & CUMPLIMIENTO RGPD / GDPR -->
           <tr>
-            <td style="background-color: #f9fafb; padding: 24px 24px 28px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
-              <div style="font-size: 13px; font-weight: 900; color: #111827; letter-spacing: 0.5px;">CREA Y MONETIZA®</div>
-              <div style="font-size: 11.5px; color: #6b7280; margin-top: 3px;">Metodología de Consultoría e Investigación Estratégica · Patricia Loaiza</div>
-              <div style="margin-top: 12px; font-size: 11px; line-height: 1.5; color: #6b7280; max-width: 520px; margin-left: auto; margin-right: auto;">
-                Recibes este correo porque completaste tu prediagnóstico estratégico y agendaste una sesión de consultoría personalizada 1 a 1 en Crea y Monetiza®.
-              </div>
-              <div style="margin-top: 10px; font-size: 10.5px; color: #9ca3af;">
-                Tratamiento confidencial de datos personales conforme al RGPD y normativas de privacidad.
-              </div>
-              <div style="margin-top: 12px; font-size: 11px; color: #6b7280;">
-                {{unsubscribe}}
+            <td style="background-color: #f9fafb; padding: 20px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: #374151; letter-spacing: 0.5px;">CREA Y MONETIZA®</div>
+              <div style="font-size: 10.5px; color: #6b7280; margin-top: 2px;">Metodología de Consultoría e Investigación Estratégica · Patricia Loaiza</div>
+              <div style="margin-top: 8px; font-size: 10px; line-height: 1.4; color: #9ca3af; max-width: 520px; margin-left: auto; margin-right: auto;">
+                Recibes este correo porque completaste tu prediagnóstico estratégico y agendaste una sesión de consultoría personalizada 1 a 1 en Crea y Monetiza®. Tratamiento confidencial de datos personales conforme al RGPD y normativas de privacidad.
               </div>
             </td>
           </tr>
